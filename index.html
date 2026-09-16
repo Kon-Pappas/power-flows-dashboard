@@ -4,23 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Greek Power Flows (Imports - Exports) Analytics</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <!-- Plugin για να φαίνονται τα νούμερα πάνω από τις μπάρες -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between">
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500 px-4">
         <div class="w-16 h-16 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin mb-6"></div>
-        <div class="text-white text-xl font-semibold text-center mb-2" id="loading-title">
-            Loading Interconnection Data...
-        </div>
-        <div class="text-sm text-slate-400 text-center mb-6" id="loading-subtitle">
-            Fetching local flows history...
-        </div>
-        <div class="w-full max-w-md bg-slate-800 rounded-full h-4 p-0.5 border border-slate-700 overflow-hidden shadow-inner">
+        <div class="text-white text-xl font-semibold text-center mb-2" id="loading-title">Loading Interconnection Data...</div>
+        <div class="w-full max-w-md bg-slate-800 rounded-full h-4 p-0.5 border border-slate-700 overflow-hidden shadow-inner mt-4">
             <div id="loading-progress-bar" class="bg-cyan-500 h-full rounded-full transition-all duration-300" style="width: 25%;"></div>
         </div>
         <div class="text-cyan-400 text-sm font-mono font-bold mt-2" id="loading-percentage">25%</div>
@@ -34,7 +29,6 @@
                 <div>
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-cyan-400" id="mainTitle">Greek Power Flows Analytics</h1>
-                        <span id="scopeBadge" class="cursor-help text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded-full border border-slate-700 hover:border-cyan-500 transition" title="Imports and Exports via interconnections (Italy, Bulgaria, Albania, North Macedonia, Turkey). Negative values = Imports, Positive values = Exports.">[?]</span>
                     </div>
                     <p class="text-slate-400 text-sm mt-1" id="dataSourceText">Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)</p>
                     <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
@@ -42,11 +36,12 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="openMethodologyModal()" class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-cyan-400 transition bg-slate-800/80 px-3 py-1.5 rounded border border-slate-700 hover:border-cyan-500 shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span id="btnMethodologyText">Methodology & Assumptions</span>
-                    </button>
-                    <!-- Language Switcher -->
+                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm ml-auto">
+                        <label class="text-xs text-slate-300 font-medium" id="dateLabel">Date:</label>
+                        <select id="dateSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-cyan-500 transition cursor-pointer">
+                            <option>Loading...</option>
+                        </select>
+                    </div>
                     <div class="flex gap-2 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm">
                         <button onclick="setLang('el')" id="btnGr" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">GR</button>
                         <button onclick="setLang('en')" id="btnEn" class="px-2 py-1 rounded bg-cyan-600 text-white transition">EN</button>
@@ -57,144 +52,67 @@
 
         <!-- TABS NAVIGATION -->
         <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
-            <button id="tabBtnOverview" onclick="switchTab('overview')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Daily Flows & MCP</button>
-            <button id="tabBtnHistory" onclick="switchTab('history')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Monthly Trends (Soon)</button>
+            <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Total Daily Isp vs Scada</button>
+            <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
         </div>
 
-        <!-- VIEW 1: DAILY OVERVIEW -->
-        <div id="viewOverview" class="space-y-6 block">
-            
-            <!-- KPIs & Controls -->
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800/40 p-3 rounded-xl border border-slate-700 gap-4">
-                <div class="flex gap-4 px-2 w-full md:w-auto">
-                    <div>
-                        <span class="text-[11px] text-slate-500 block font-bold uppercase tracking-wider">TOTAL DAILY IMPORTS</span>
-                        <span class="text-xl font-bold text-rose-400" id="kpiTotalImports">0 MWh</span>
-                    </div>
-                    <div class="w-px bg-slate-600"></div>
-                    <div>
-                        <span class="text-[11px] text-slate-500 block font-bold uppercase tracking-wider">TOTAL DAILY EXPORTS</span>
-                        <span class="text-xl font-bold text-emerald-400" id="kpiTotalExports">0 MWh</span>
-                    </div>
-                    <div class="w-px bg-slate-600"></div>
-                    <div>
-                        <span class="text-[11px] text-slate-500 block font-bold uppercase tracking-wider">NET BALANCE</span>
-                        <span class="text-xl font-bold text-white" id="kpiNetBalance">0 MWh</span>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm ml-auto">
-                    <label class="text-xs text-slate-300 font-medium" id="dateLabel">Date:</label>
-                    <select id="dateSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-cyan-500 transition cursor-pointer">
-                        <option>Loading...</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- CHART 1: FLOWS (SCADA vs ISP) -->
+        <!-- VIEW 1: TOTALS PER COUNTRY (BAR CHART) -->
+        <div id="viewTotals" class="space-y-6 block">
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Net Interconnection Flows (ISP vs SCADA)</h2>
-                        <p class="text-xs text-slate-400">Negative values = Imports. Positive values = Exports.</p>
+                        <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Interconnection Flows per Country (ISP vs SCADA)</h2>
+                        <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Imports. Positive values (+) = Exports.</p>
                     </div>
                 </div>
-                <div class="relative h-[400px]">
+                <div class="relative h-[500px]">
+                    <canvas id="totalsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: HOURLY FLOWS & MCP -->
+        <div id="viewHourly" class="space-y-6 hidden">
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Total Hourly Net Flows (ISP vs SCADA)</h2>
+                    </div>
+                </div>
+                <div class="relative h-[350px]">
                     <canvas id="flowsChart"></canvas>
                 </div>
             </div>
 
-            <!-- CHART 2: MCPs -->
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-200" id="mcpChartTitle">Day-Ahead Market Clearing Prices</h2>
-                        <p class="text-xs text-slate-400">Comparison across interconnected bidding zones</p>
                     </div>
                 </div>
-                <div class="relative h-[400px]">
+                <div class="relative h-[350px]">
                     <canvas id="mcpChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- VIEW 2: HISTORY (COMING SOON) -->
-        <div id="viewHistory" class="space-y-6 hidden">
-            <div class="bg-slate-800/40 p-12 rounded-xl border border-slate-700 text-center">
-                <h2 class="text-2xl font-bold text-slate-400 mb-2">Monthly Trends & Analytics</h2>
-                <p class="text-slate-500">This module is under construction and will be available soon.</p>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center text-slate-500 text-xs border-t border-slate-800 pt-6 mt-12 space-y-1 pb-8">
-        <p class="font-semibold text-slate-400">Konstantinos Pappas | Energy Market Analyst</p>
-        <p>Business Operations & Risk Management | Data Insights on Energy Transition & Grid Stability</p>
-    </footer>
-
-    <!-- MODAL: METHODOLOGY -->
-    <div id="methodologyModal" class="fixed inset-0 z-[10000] bg-black/80 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300 backdrop-blur-sm">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="modalContent">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-4 mb-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-cyan-500/20 p-2 rounded-lg text-cyan-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <h2 class="text-xl font-bold text-slate-100" id="modalTitle">Methodology & Core Assumptions</h2>
-                </div>
-                <button onclick="closeMethodologyModal()" class="text-slate-500 hover:text-rose-400 transition text-3xl leading-none">&times;</button>
-            </div>
-            
-            <div class="text-sm text-slate-300 leading-relaxed" id="modalBody">
-                <!-- Text will be injected via JS based on language -->
-            </div>
-            
-            <div class="mt-6 pt-4 border-t border-slate-800 text-right">
-                <button onclick="closeMethodologyModal()" id="btnClose" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded border border-slate-600 transition">Close</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Scripts (Will load our logic directly to avoid multiple file creation for now) -->
     <script>
-        // --- 1. MODAL LOGIC ---
-        function openMethodologyModal() {
-            const modal = document.getElementById('methodologyModal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                document.getElementById('modalContent').classList.remove('scale-95');
-            }, 10);
-        }
-        function closeMethodologyModal() {
-            const modal = document.getElementById('methodologyModal');
-            modal.classList.add('opacity-0');
-            document.getElementById('modalContent').classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        // --- 2. TABS LOGIC ---
         function switchTab(tabId) {
-            // Hide all
-            document.getElementById('viewOverview').classList.add('hidden');
-            document.getElementById('viewHistory').classList.add('hidden');
-            // Reset styles
-            document.getElementById('tabBtnOverview').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
-            document.getElementById('tabBtnHistory').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
+            document.getElementById('viewTotals').classList.add('hidden');
+            document.getElementById('viewHourly').classList.add('hidden');
+            document.getElementById('tabBtnTotals').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
+            document.getElementById('tabBtnHourly').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
             
-            // Activate selected
-            if (tabId === 'overview') {
-                document.getElementById('viewOverview').classList.remove('hidden');
-                document.getElementById('tabBtnOverview').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
-            } else if (tabId === 'history') {
-                document.getElementById('viewHistory').classList.remove('hidden');
-                document.getElementById('tabBtnHistory').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            if (tabId === 'totals') {
+                document.getElementById('viewTotals').classList.remove('hidden');
+                document.getElementById('tabBtnTotals').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'hourly') {
+                document.getElementById('viewHourly').classList.remove('hidden');
+                document.getElementById('tabBtnHourly').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
             }
         }
-        
-        // (Το επόμενο βήμα θα είναι το αρχείο Javascript με τη λογική των δεδομένων)
     </script>
     <script src="dashboard.js" defer></script>
 </body>
