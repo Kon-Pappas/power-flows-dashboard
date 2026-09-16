@@ -1,0 +1,39 @@
+name: Daily Power Flows Fetcher
+
+on:
+  schedule:
+    # Τρέχει κάθε μέρα στις 08:30 UTC (11:30 ώρα Ελλάδος)
+    - cron: '30 8 * * *'
+  workflow_dispatch: # Αυτό μας επιτρέπει να το τρέχουμε και χειροκίνητα με ένα κουμπί!
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Απαραίτητο για να μπορεί το ρομπότ να κάνει commit
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas requests openpyxl
+
+      - name: Run Python script
+        env:
+          ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
+        run: python scripts/update_flows.py
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Fetcher"
+          git add data/historical_flows.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update power flows data" && git push)
