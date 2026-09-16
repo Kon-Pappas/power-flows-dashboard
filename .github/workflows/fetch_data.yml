@@ -3,7 +3,7 @@ name: Daily Power Flows Fetcher
 on:
   schedule:
     # Τρέχει κάθε μέρα στις 08:30 UTC (11:30 ώρα Ελλάδος)
-    - cron: '30 8 * * *'
+    - cron: '0 4 * * *'
   workflow_dispatch: # Αυτό μας επιτρέπει να το τρέχουμε και χειροκίνητα με ένα κουμπί!
 
 jobs:
