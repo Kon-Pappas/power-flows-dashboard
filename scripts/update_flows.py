@@ -76,7 +76,6 @@ def extract_last_col_val(df, keyword, col_index):
     try:
         row = df[df[col_index].astype(str).str.contains(keyword, case=False, na=False)]
         if not row.empty:
-            # Παίρνουμε την τελευταία στήλη, αφαιρώντας τυχόν κενά/NaN
             vals = row.iloc[0].dropna().values
             val = vals[-1]
             if isinstance(val, (int, float)): return float(val)
@@ -86,51 +85,50 @@ def extract_last_col_val(df, keyword, col_index):
 def process_day(date_str):
     print(f"Επεξεργασία: {date_str}")
     
-    # 1. SCADA - Ανά Χώρα (Net = EXP - IMP)
+    # 1. SCADA - Ανά Χώρα
     scada_net = {"Albania": 0, "Bulgaria": 0, "Italy": 0, "North Macedonia": 0, "Turkey": 0}
     scada_hourly_net = [0.0] * 24
     scada_file = fetch_admie_excel(date_str, "SystemRealizationSCADA")
     if scada_file:
         df_scada = pd.read_excel(scada_file, header=None)
         
-        # Συνολικά ανά χώρα
-        scada_net["Albania"] = extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_EXP", 1) - extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_IMP", 1)
-        scada_net["Bulgaria"] = extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_EXP", 1) - extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_IMP", 1)
-        scada_net["Italy"] = extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_EXP", 1) - extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_IMP", 1)
-        # Προσοχή: Στο Excel σου η Β. Μακεδονία αναφέρεται συχνά ως FYROM
-        scada_net["North Macedonia"] = extract_last_col_val(df_scada, "FYROM_EXP", 1) - extract_last_col_val(df_scada, "FYROM_IMP", 1)
-        scada_net["Turkey"] = extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_EXP", 1) - extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_IMP", 1)
+        # Υπολογισμός Net = IMPORTS - EXPORTS (Θετικά = Εισαγωγές, Αρνητικά = Εξαγωγές)
+        scada_net["Albania"] = extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_EXP", 1)
+        scada_net["Bulgaria"] = extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_EXP", 1)
+        scada_net["Italy"] = extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_EXP", 1)
+        scada_net["North Macedonia"] = extract_last_col_val(df_scada, "FYROM_IMP", 1) - extract_last_col_val(df_scada, "FYROM_EXP", 1)
+        scada_net["Turkey"] = extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_EXP", 1)
         
-        # Συνολικό Ωριαίο Net (για το συνολικό γράφημα)
+        # Συνολικό Ωριαίο Net (Το excel γράφει EXPORTS-IMPORTS, οπότε πολλαπλασιάζουμε με -1)
         net_row = df_scada[df_scada[1] == 'EXPORTS-IMPORTS']
-        if not net_row.empty: scada_hourly_net = np.nan_to_num(net_row.iloc[0, 2:26].values.astype(float)).round(2).tolist()
+        if not net_row.empty: 
+            vals_24 = np.nan_to_num(net_row.iloc[0, 2:26].values.astype(float))
+            scada_hourly_net = (vals_24 * -1).round(2).tolist()
 
-    # 2. ISP - Ανά Χώρα (Έτοιμο Net)
+    # 2. ISP - Ανά Χώρα
     isp_net = {"Albania": 0, "Bulgaria": 0, "Italy": 0, "North Macedonia": 0, "Turkey": 0}
     isp_hourly_net = [0.0] * 24
     isp_file = fetch_admie_excel(date_str, "ISP2ISPResults")
     if isp_file:
         df_isp = pd.read_excel(isp_file, header=None)
         
-        # Συνολικά ανά χώρα (Στο ISP είναι στην πρώτη στήλη)
-        isp_net["Albania"] = extract_last_col_val(df_isp, "ALBANIA", 0)
-        isp_net["Bulgaria"] = extract_last_col_val(df_isp, "BULGARIA", 0)
-        isp_net["Italy"] = extract_last_col_val(df_isp, "ITALY", 0)
-        isp_net["North Macedonia"] = extract_last_col_val(df_isp, "MACEDONIA", 0)
-        isp_net["Turkey"] = extract_last_col_val(df_isp, "TURKEY", 0)
+        # Πολλαπλασιάζουμε με -1 επειδή στο ISP οι εισαγωγές έχουν αρνητικό πρόσημο
+        isp_net["Albania"] = extract_last_col_val(df_isp, "ALBANIA", 0) * -1
+        isp_net["Bulgaria"] = extract_last_col_val(df_isp, "BULGARIA", 0) * -1
+        isp_net["Italy"] = extract_last_col_val(df_isp, "ITALY", 0) * -1
+        isp_net["North Macedonia"] = extract_last_col_val(df_isp, "MACEDONIA", 0) * -1
+        isp_net["Turkey"] = extract_last_col_val(df_isp, "TURKEY", 0) * -1
         
-        # Συνολικό Ωριαίο Net (96->24)
         cbs_row = df_isp[df_isp[0] == 'Net CBS Schedules']
         if not cbs_row.empty:
             vals_96 = np.nan_to_num(cbs_row.iloc[0, 1:97].values.astype(float))
-            isp_hourly_net = vals_96.reshape(24, 4).mean(axis=1).round(2).tolist()
+            isp_hourly_net = (vals_96.reshape(24, 4).mean(axis=1) * -1).round(2).tolist()
 
     # 3. ENTSO-E MCP (GR, BG, IT)
     mcp_gr = fetch_entsoe_mcp(date_str, "GR")
     mcp_bg = fetch_entsoe_mcp(date_str, "BG")
     mcp_it = fetch_entsoe_mcp(date_str, "IT")
     
-    # Ετοιμάζουμε ένα ενιαίο JSON αντικείμενο για αυτή τη μέρα
     daily_data = {
         "Date": date_str,
         "Totals": {
@@ -153,7 +151,6 @@ def process_day(date_str):
     return daily_data
 
 if __name__ == "__main__":
-    # Τρέχουμε το script για Σήμερα, Χθες και Προχθές
     dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
     
     json_path = "data/historical_flows.json"
@@ -166,7 +163,6 @@ if __name__ == "__main__":
             
     for d in dates_to_fetch:
         new_day = process_day(d)
-        # Αφαιρούμε την παλιά εγγραφή για αυτή τη μέρα (αν υπάρχει)
         all_data = [x for x in all_data if x.get("Date") != d]
         all_data.append(new_day)
         
