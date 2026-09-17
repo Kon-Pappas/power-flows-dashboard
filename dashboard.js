@@ -9,24 +9,30 @@ const i18n = {
     en: {
         title: "Greek Power Flows Analytics",
         source: "Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)",
-        lastUpdate: "Latest Available Data:",
+        lastUpdate: "Last Update:",
+        nextUpdate: "Next Update:",
         dateLabel: "Date:",
         tabTotals: "Total Daily Isp vs Scada",
         tabHourly: "Hourly Profiles",
         totalsChartTitle: "Net Interconnection Flows per Country (ISP vs SCADA)",
-        totalsChartSub: "Negative values (-) = Imports. Positive values (+) = Exports (MWh).",
+        totalsChartSub: "Negative values (-) = Exports (Load). Positive values (+) = Imports.",
+        scheduled: "Scheduled (ISP)",
+        actual: "Actual (SCADA)",
         flowsChartTitle: "Total Hourly Net Flows (ISP vs SCADA)",
         mcpChartTitle: "Day-Ahead Market Clearing Prices"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
         source: "Πηγή δεδομένων: ΑΔΜΗΕ (SCADA & ISP) & ENTSO-E",
-        lastUpdate: "Τελευταία Διαθέσιμα Δεδομένα:",
+        lastUpdate: "Τελευταία Ενημέρωση:",
+        nextUpdate: "Επόμενη Ενημέρωση:",
         dateLabel: "Ημερομηνία:",
         tabTotals: "Σύνολο Ημερήσιων Ροών (Isp vs Scada)",
         tabHourly: "Ωριαία Προφίλ & MCP",
         totalsChartTitle: "Καθαρές Ροές Διασυνδέσεων ανά Χώρα (ISP vs SCADA)",
-        totalsChartSub: "Αρνητικές τιμές (-) = Εισαγωγές. Θετικές τιμές (+) = Εξαγωγές (MWh).",
+        totalsChartSub: "Αρνητικές τιμές (-) = Εξαγωγές. Θετικές τιμές (+) = Εισαγωγές (MWh).",
+        scheduled: "Πρόγραμμα (ISP)",
+        actual: "Πραγματικό (SCADA)",
         flowsChartTitle: "Συνολικές Ωριαίες Καθαρές Ροές (ISP vs SCADA)",
         mcpChartTitle: "Τιμές Εκκαθάρισης Αγοράς Επόμενης Ημέρας"
     }
@@ -40,11 +46,11 @@ function setLang(lang) {
     document.getElementById('mainTitle').innerText = t.title;
     document.getElementById('dataSourceText').innerText = t.source;
     document.getElementById('lastUpdateLabel').innerText = t.lastUpdate;
+    document.getElementById('nextUpdateLabel').innerText = t.nextUpdate;
     document.getElementById('dateLabel').innerText = t.dateLabel;
     
     document.getElementById('tabBtnTotals').innerText = t.tabTotals;
     document.getElementById('tabBtnHourly').innerText = t.tabHourly;
-    
     document.getElementById('totalsChartTitle').innerText = t.totalsChartTitle;
     document.getElementById('totalsChartSub').innerText = t.totalsChartSub;
     document.getElementById('flowsChartTitle').innerText = t.flowsChartTitle;
@@ -59,6 +65,25 @@ function setLang(lang) {
     }
 
     if (rawData.length > 0) renderCharts();
+}
+
+function updateUpdateTimes(latestDateStr) {
+    if (!latestDateStr) return;
+    let parts = latestDateStr.split('-');
+    if (parts.length === 3) {
+        // Η τελευταία ενημέρωση (για τα δεδομένα του date) έγινε στις 08:00
+        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 08:00`;
+        
+        // Η επόμενη ενημέρωση θα γίνει την επόμενη μέρα στις 08:00
+        let d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + 1);
+        let day = String(d.getDate()).padStart(2, '0');
+        let month = String(d.getMonth() + 1).padStart(2, '0');
+        let year = d.getFullYear();
+        let nextStr = `${day}/${month}/${year} 08:00`;
+
+        document.getElementById('lastUpdateVal').innerText = lastStr;
+        document.getElementById('nextUpdateVal').innerText = nextStr;
+    }
 }
 
 async function fetchLocalData() {
@@ -81,7 +106,7 @@ async function fetchLocalData() {
         select.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
         
         if (dates.length > 0) {
-            document.getElementById('lastUpdateVal').innerText = dates[0];
+            updateUpdateTimes(dates[0]);
         }
 
         progressBar.style.width = '100%'; 
@@ -91,7 +116,6 @@ async function fetchLocalData() {
             overlay.classList.add('opacity-0');
             setTimeout(() => overlay.style.display = 'none', 500);
             
-            // Register DataLabels Plugin
             Chart.register(ChartDataLabels);
             setLang('en');
         }, 500);
@@ -109,12 +133,11 @@ function renderCharts() {
     
     if (!dayData) return;
 
-    // --- 1. DATA PREP: BAR CHART (Totals per Country) ---
     const countries = ["Albania", "Bulgaria", "Italy", "North Macedonia", "Turkey"];
-    const scadaTotals = countries.map(c => dayData.Totals.SCADA[c] || 0);
+    // Αντλούμε τα Totals (Προσοχή: Η Python έχει ήδη κάνει την αναστροφή προσήμων)
     const ispTotals = countries.map(c => dayData.Totals.ISP[c] || 0);
+    const scadaTotals = countries.map(c => dayData.Totals.SCADA[c] || 0);
 
-    // --- 2. DATA PREP: LINE CHARTS (Hourly) ---
     const hours = dayData.Hourly.map(h => h.Hour);
     const scadaHourly = dayData.Hourly.map(h => h.SCADA_Net);
     const ispHourly = dayData.Hourly.map(h => h.ISP_Net);
@@ -122,13 +145,14 @@ function renderCharts() {
     const mcpBG = dayData.Hourly.map(h => h.MCP_BG);
     const mcpIT = dayData.Hourly.map(h => h.MCP_IT);
 
-    // Global Chart configs
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#334155';
 
     if (totalsChartInstance) totalsChartInstance.destroy();
     if (flowsChartInstance) flowsChartInstance.destroy();
     if (mcpChartInstance) mcpChartInstance.destroy();
+
+    const t = i18n[currentLang];
 
     // --- CHART 1: TOTALS BAR CHART (Side-by-Side) ---
     const ctxTotals = document.getElementById('totalsChart').getContext('2d');
@@ -138,18 +162,18 @@ function renderCharts() {
             labels: currentLang === 'el' ? ["Αλβανία", "Βουλγαρία", "Ιταλία", "Β. Μακεδονία", "Τουρκία"] : countries,
             datasets: [
                 {
-                    label: currentLang === 'el' ? 'Πραγματικό (SCADA)' : 'Actual (SCADA)',
-                    data: scadaTotals,
-                    backgroundColor: 'rgba(6, 182, 212, 0.8)', // Cyan
-                    borderColor: '#06b6d4',
+                    label: t.scheduled,
+                    data: ispTotals,
+                    backgroundColor: 'rgba(244, 63, 94, 0.8)', // Rose (ISP Πρώτο)
+                    borderColor: '#f43f5e',
                     borderWidth: 1,
                     borderRadius: 4
                 },
                 {
-                    label: currentLang === 'el' ? 'Πρόγραμμα (ISP)' : 'Scheduled (ISP)',
-                    data: ispTotals,
-                    backgroundColor: 'rgba(244, 63, 94, 0.8)', // Rose
-                    borderColor: '#f43f5e',
+                    label: t.actual,
+                    data: scadaTotals,
+                    backgroundColor: 'rgba(6, 182, 212, 0.8)', // Cyan (SCADA Δεύτερο)
+                    borderColor: '#06b6d4',
                     borderWidth: 1,
                     borderRadius: 4
                 }
@@ -159,13 +183,13 @@ function renderCharts() {
             responsive: true, maintainAspectRatio: false,
             plugins: {
                 tooltip: {
-                    callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toLocaleString()} MWh` }
+                    callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toLocaleString('el-GR')} MWh` }
                 },
                 datalabels: {
                     color: '#f8fafc',
                     anchor: (context) => context.dataset.data[context.dataIndex] >= 0 ? 'end' : 'start',
                     align: (context) => context.dataset.data[context.dataIndex] >= 0 ? 'top' : 'bottom',
-                    formatter: Math.round,
+                    formatter: (value) => Math.round(value).toLocaleString('el-GR'), // Διαχωριστικό χιλιάδων
                     font: { weight: 'bold', size: 11 }
                 }
             },
@@ -174,9 +198,7 @@ function renderCharts() {
                     title: { display: true, text: 'MWh' },
                     grid: { color: '#334155' }
                 },
-                x: {
-                    grid: { display: false }
-                }
+                x: { grid: { display: false } }
             }
         }
     });
@@ -189,20 +211,22 @@ function renderCharts() {
             labels: hours,
             datasets: [
                 {
-                    label: 'SCADA Net (MW)', data: scadaHourly,
-                    borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                    borderWidth: 2, fill: true, tension: 0.2
-                },
-                {
-                    label: 'ISP Net (MW)', data: ispHourly,
+                    label: currentLang === 'el' ? 'Πρόγραμμα ISP (MW)' : 'Scheduled ISP (MW)', 
+                    data: ispHourly,
                     borderColor: '#f43f5e', borderDash: [5, 5],
                     borderWidth: 2, fill: false, tension: 0.2
+                },
+                {
+                    label: currentLang === 'el' ? 'Πραγματικό SCADA (MW)' : 'Actual SCADA (MW)', 
+                    data: scadaHourly,
+                    borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    borderWidth: 2, fill: true, tension: 0.2
                 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { datalabels: { display: false } }, // Κρύβουμε τα νούμερα στις γραμμές
+            plugins: { datalabels: { display: false } },
             scales: { y: { title: { display: true, text: 'MW' } } }
         }
     });
@@ -221,7 +245,7 @@ function renderCharts() {
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { datalabels: { display: false } }, // Κρύβουμε τα νούμερα στις γραμμές
+            plugins: { datalabels: { display: false } },
             scales: { y: { title: { display: true, text: '€/MWh' } } }
         }
     });
