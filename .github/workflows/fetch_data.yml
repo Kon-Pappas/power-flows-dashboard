@@ -2,8 +2,8 @@ name: Daily Power Flows Fetcher
 
 on:
   schedule:
-    # Τρέχει κάθε μέρα στις 07:00 UTC
-    - cron: '0 7 * * *'
+    # 04:00 UTC = 07:00 Ώρα Ελλάδος (Θερινή) / 06:00 (Χειμερινή)
+    - cron: '0 4 * * *'
   workflow_dispatch:
 
 jobs:
