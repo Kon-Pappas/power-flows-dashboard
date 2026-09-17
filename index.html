@@ -73,10 +73,12 @@
 
         <!-- VIEW 2: HOURLY FLOWS & MCP -->
         <div id="viewHourly" class="space-y-6 hidden">
+            <!-- Εδώ προστέθηκε το επεξηγηματικό κείμενο για τα πρόσημα -->
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Total Hourly Net Flows (ISP vs SCADA)</h2>
+                        <p class="text-xs text-slate-400" id="flowsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
                     </div>
                 </div>
                 <div class="relative h-[350px]">
