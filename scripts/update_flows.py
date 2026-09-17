@@ -151,13 +151,8 @@ def process_day(date_str):
     return daily_data
 
 if __name__ == "__main__":
-    # --- ΠΡΟΣΩΡΙΝΟ BLOCK ΓΙΑ ΙΣΤΟΡΙΚΟ (10 Ιουνίου 2026 - Σήμερα) ---
-    start_date = datetime(2026, 6, 10)
-    end_date = datetime.now()
-    delta = end_date - start_date
-    
-    # Φτιάχνει μια λίστα με όλες τις ημερομηνίες
-    dates_to_fetch = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(delta.days + 1)]
+    # --- ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 3 ημέρες) ---
+    dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
     
     json_path = "data/historical_flows.json"
     all_data = []
