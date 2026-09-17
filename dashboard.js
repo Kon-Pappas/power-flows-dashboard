@@ -54,6 +54,8 @@ function setLang(lang) {
     document.getElementById('totalsChartTitle').innerText = t.totalsChartTitle;
     document.getElementById('totalsChartSub').innerText = t.totalsChartSub;
     document.getElementById('flowsChartTitle').innerText = t.flowsChartTitle;
+    // Ενημέρωση και του 2ου subtitle
+    document.getElementById('flowsChartSub').innerText = t.totalsChartSub; 
     document.getElementById('mcpChartTitle').innerText = t.mcpChartTitle;
 
     if(lang === 'el') {
@@ -71,9 +73,7 @@ function updateUpdateTimes(latestDateStr) {
     if (!latestDateStr) return;
     let parts = latestDateStr.split('-');
     if (parts.length === 3) {
-        // Ενημέρωση στις 07:00 αντί για 08:00
         let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 07:00`;
-        
         let d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + 1);
         let day = String(d.getDate()).padStart(2, '0');
         let month = String(d.getMonth() + 1).padStart(2, '0');
@@ -162,15 +162,15 @@ function renderCharts() {
                 {
                     label: t.scheduled,
                     data: ispTotals,
-                    backgroundColor: 'rgba(56, 189, 248, 0.9)', // Light Blue (Sky) για ISP
-                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(6, 182, 212, 0.9)', // Cyan
+                    borderColor: '#06b6d4',
                     borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: t.actual,
                     data: scadaTotals,
-                    backgroundColor: 'rgba(249, 115, 22, 0.8)', // Orange για SCADA
+                    backgroundColor: 'rgba(249, 115, 22, 0.9)', // Orange
                     borderColor: '#f97316',
                     borderWidth: 1,
                     borderRadius: 4
@@ -192,42 +192,63 @@ function renderCharts() {
                 }
             },
             scales: {
+                x: { grid: { display: false } },
                 y: {
                     title: { display: true, text: 'MWh' },
-                    grid: { color: '#334155' }
-                },
-                x: { grid: { display: false } }
+                    grid: { 
+                        // Κάνει τη γραμμή του 0 έντονη (λευκή) και πιο παχιά
+                        color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : '#334155',
+                        lineWidth: (context) => context.tick.value === 0 ? 2 : 1
+                    }
+                }
             }
         }
     });
 
-    // --- CHART 2: HOURLY FLOWS ---
+    // --- CHART 2: HOURLY FLOWS (ΠΛΕΟΝ ΣΕ BARS, Cyan & Orange) ---
     const ctxFlows = document.getElementById('flowsChart').getContext('2d');
     flowsChartInstance = new Chart(ctxFlows, {
-        type: 'line',
+        type: 'bar', // Αλλαγή σε bar
         data: {
             labels: hours,
             datasets: [
                 {
                     label: currentLang === 'el' ? 'Πρόγραμμα ISP (MW)' : 'Scheduled ISP (MW)', 
                     data: ispHourly,
-                    borderColor: '#38bdf8', // Light Blue (Sky) για ISP
-                    borderDash: [5, 5],
-                    borderWidth: 2, fill: false, tension: 0.2
+                    backgroundColor: 'rgba(6, 182, 212, 0.9)', // Cyan
+                    borderColor: '#06b6d4', 
+                    borderWidth: 1, 
+                    borderRadius: 2
                 },
                 {
                     label: currentLang === 'el' ? 'Πραγματικό SCADA (MW)' : 'Actual SCADA (MW)', 
                     data: scadaHourly,
-                    borderColor: '#f97316', // Orange για SCADA
-                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
-                    borderWidth: 2, fill: true, tension: 0.2
+                    backgroundColor: 'rgba(249, 115, 22, 0.9)', // Orange
+                    borderColor: '#f97316', 
+                    borderWidth: 1, 
+                    borderRadius: 2
                 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { datalabels: { display: false } },
-            scales: { y: { title: { display: true, text: 'MW' } } }
+            plugins: { 
+                datalabels: { display: false },
+                tooltip: {
+                    callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toLocaleString('el-GR')} MW` }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: { 
+                    title: { display: true, text: 'MW' },
+                    grid: { 
+                        // Κάνει τη γραμμή του 0 έντονη (λευκή) και πιο παχιά
+                        color: (context) => context.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : '#334155',
+                        lineWidth: (context) => context.tick.value === 0 ? 2 : 1
+                    }
+                }
+            }
         }
     });
 
