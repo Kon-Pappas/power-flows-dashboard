@@ -71,15 +71,14 @@ function updateUpdateTimes(latestDateStr) {
     if (!latestDateStr) return;
     let parts = latestDateStr.split('-');
     if (parts.length === 3) {
-        // Η τελευταία ενημέρωση (για τα δεδομένα του date) έγινε στις 08:00
-        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 08:00`;
+        // Ενημέρωση στις 07:00 αντί για 08:00
+        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 07:00`;
         
-        // Η επόμενη ενημέρωση θα γίνει την επόμενη μέρα στις 08:00
         let d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + 1);
         let day = String(d.getDate()).padStart(2, '0');
         let month = String(d.getMonth() + 1).padStart(2, '0');
         let year = d.getFullYear();
-        let nextStr = `${day}/${month}/${year} 08:00`;
+        let nextStr = `${day}/${month}/${year} 07:00`;
 
         document.getElementById('lastUpdateVal').innerText = lastStr;
         document.getElementById('nextUpdateVal').innerText = nextStr;
@@ -134,7 +133,6 @@ function renderCharts() {
     if (!dayData) return;
 
     const countries = ["Albania", "Bulgaria", "Italy", "North Macedonia", "Turkey"];
-    // Αντλούμε τα Totals (Προσοχή: Η Python έχει ήδη κάνει την αναστροφή προσήμων)
     const ispTotals = countries.map(c => dayData.Totals.ISP[c] || 0);
     const scadaTotals = countries.map(c => dayData.Totals.SCADA[c] || 0);
 
@@ -164,16 +162,16 @@ function renderCharts() {
                 {
                     label: t.scheduled,
                     data: ispTotals,
-                    backgroundColor: 'rgba(244, 63, 94, 0.8)', // Rose (ISP Πρώτο)
-                    borderColor: '#f43f5e',
+                    backgroundColor: 'rgba(56, 189, 248, 0.9)', // Light Blue (Sky) για ISP
+                    borderColor: '#38bdf8',
                     borderWidth: 1,
                     borderRadius: 4
                 },
                 {
                     label: t.actual,
                     data: scadaTotals,
-                    backgroundColor: 'rgba(6, 182, 212, 0.8)', // Cyan (SCADA Δεύτερο)
-                    borderColor: '#06b6d4',
+                    backgroundColor: 'rgba(249, 115, 22, 0.8)', // Orange για SCADA
+                    borderColor: '#f97316',
                     borderWidth: 1,
                     borderRadius: 4
                 }
@@ -189,7 +187,7 @@ function renderCharts() {
                     color: '#f8fafc',
                     anchor: (context) => context.dataset.data[context.dataIndex] >= 0 ? 'end' : 'start',
                     align: (context) => context.dataset.data[context.dataIndex] >= 0 ? 'top' : 'bottom',
-                    formatter: (value) => Math.round(value).toLocaleString('el-GR'), // Διαχωριστικό χιλιάδων
+                    formatter: (value) => Math.round(value).toLocaleString('el-GR'),
                     font: { weight: 'bold', size: 11 }
                 }
             },
@@ -213,13 +211,15 @@ function renderCharts() {
                 {
                     label: currentLang === 'el' ? 'Πρόγραμμα ISP (MW)' : 'Scheduled ISP (MW)', 
                     data: ispHourly,
-                    borderColor: '#f43f5e', borderDash: [5, 5],
+                    borderColor: '#38bdf8', // Light Blue (Sky) για ISP
+                    borderDash: [5, 5],
                     borderWidth: 2, fill: false, tension: 0.2
                 },
                 {
                     label: currentLang === 'el' ? 'Πραγματικό SCADA (MW)' : 'Actual SCADA (MW)', 
                     data: scadaHourly,
-                    borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    borderColor: '#f97316', // Orange για SCADA
+                    backgroundColor: 'rgba(249, 115, 22, 0.1)',
                     borderWidth: 2, fill: true, tension: 0.2
                 }
             ]
