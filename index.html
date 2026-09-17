@@ -6,7 +6,6 @@
     <title id="pageTitle">Greek Power Flows (Imports - Exports) Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <!-- Plugin για να φαίνονται τα νούμερα πάνω από τις μπάρες -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between">
@@ -33,6 +32,7 @@
                     <p class="text-slate-400 text-sm mt-1" id="dataSourceText">Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)</p>
                     <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
                         <div><span id="lastUpdateLabel">Latest Available Data:</span> <strong id="lastUpdateVal" class="text-cyan-400">-</strong></div>
+                        <div><span id="nextUpdateLabel">Next Update:</span> <strong id="nextUpdateVal" class="text-emerald-400">-</strong></div>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
@@ -56,13 +56,13 @@
             <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
         </div>
 
-        <!-- VIEW 1: TOTALS PER COUNTRY (BAR CHART) -->
+        <!-- VIEW 1: TOTALS PER COUNTRY -->
         <div id="viewTotals" class="space-y-6 block">
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Interconnection Flows per Country (ISP vs SCADA)</h2>
-                        <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Imports. Positive values (+) = Exports.</p>
+                        <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
                     </div>
                 </div>
                 <div class="relative h-[500px]">
