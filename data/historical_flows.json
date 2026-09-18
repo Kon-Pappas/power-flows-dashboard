@@ -1,6 +1,6 @@
 [
   {
-    "Date": "2026-09-17",
+    "Date": "2026-09-18",
     "Totals": {
       "SCADA": {
         "Albania": 0,
@@ -8,6 +8,219 @@
         "Italy": 0,
         "North Macedonia": 0,
         "Turkey": 0
+      },
+      "ISP": {
+        "Albania": -1931.0,
+        "Bulgaria": -6302.4,
+        "Italy": -2216.8,
+        "North Macedonia": -2867.0,
+        "Turkey": 365.523
+      }
+    },
+    "Hourly": [
+      {
+        "Hour": "H01",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 339.5,
+        "MCP_GR": 208.02,
+        "MCP_BG": 208.02,
+        "MCP_IT": 198.24
+      },
+      {
+        "Hour": "H02",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 327.88,
+        "MCP_GR": 207.16,
+        "MCP_BG": 207.16,
+        "MCP_IT": 188.89
+      },
+      {
+        "Hour": "H03",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 168.77,
+        "MCP_GR": 207.5,
+        "MCP_BG": 207.5,
+        "MCP_IT": 95.6
+      },
+      {
+        "Hour": "H04",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 120.88,
+        "MCP_GR": 207.43,
+        "MCP_BG": 207.43,
+        "MCP_IT": 198.19
+      },
+      {
+        "Hour": "H05",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -66.9,
+        "MCP_GR": 207.36,
+        "MCP_BG": 207.36,
+        "MCP_IT": 196.94
+      },
+      {
+        "Hour": "H06",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -672.95,
+        "MCP_GR": 224.08,
+        "MCP_BG": 224.08,
+        "MCP_IT": 199.93
+      },
+      {
+        "Hour": "H07",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -557.75,
+        "MCP_GR": 242.45,
+        "MCP_BG": 242.45,
+        "MCP_IT": 229.36
+      },
+      {
+        "Hour": "H08",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -746.42,
+        "MCP_GR": 233.9,
+        "MCP_BG": 233.9,
+        "MCP_IT": 183.0
+      },
+      {
+        "Hour": "H09",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -1612.93,
+        "MCP_GR": 176.73,
+        "MCP_BG": 176.73,
+        "MCP_IT": 246.7
+      },
+      {
+        "Hour": "H10",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -1543.88,
+        "MCP_GR": 60.07,
+        "MCP_BG": 60.07,
+        "MCP_IT": 235.05
+      },
+      {
+        "Hour": "H11",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -1652.02,
+        "MCP_GR": 95.89,
+        "MCP_BG": 95.89,
+        "MCP_IT": 230.0
+      },
+      {
+        "Hour": "H12",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -2390.95,
+        "MCP_GR": 33.0,
+        "MCP_BG": 48.6,
+        "MCP_IT": 201.98
+      },
+      {
+        "Hour": "H13",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -2320.95,
+        "MCP_GR": 22.13,
+        "MCP_BG": 22.13,
+        "MCP_IT": 187.7
+      },
+      {
+        "Hour": "H14",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -2161.02,
+        "MCP_GR": 19.0,
+        "MCP_BG": 19.0,
+        "MCP_IT": 139.72
+      },
+      {
+        "Hour": "H15",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -2327.85,
+        "MCP_GR": 34.02,
+        "MCP_BG": 34.02,
+        "MCP_IT": 186.06
+      },
+      {
+        "Hour": "H16",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -1792.15,
+        "MCP_GR": 56.22,
+        "MCP_BG": 56.22,
+        "MCP_IT": 218.0
+      },
+      {
+        "Hour": "H17",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -1296.03,
+        "MCP_GR": 158.0,
+        "MCP_BG": 158.0,
+        "MCP_IT": 228.49
+      },
+      {
+        "Hour": "H18",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -198.92,
+        "MCP_GR": 235.55,
+        "MCP_BG": 235.55,
+        "MCP_IT": 235.55
+      },
+      {
+        "Hour": "H19",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 592.9,
+        "MCP_GR": 243.7,
+        "MCP_BG": 243.7,
+        "MCP_IT": 243.7
+      },
+      {
+        "Hour": "H20",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 113.65,
+        "MCP_GR": 253.7,
+        "MCP_BG": 253.7,
+        "MCP_IT": 262.64
+      },
+      {
+        "Hour": "H21",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 119.7,
+        "MCP_GR": 240.67,
+        "MCP_BG": 240.67,
+        "MCP_IT": 247.57
+      },
+      {
+        "Hour": "H22",
+        "SCADA_Net": 0.0,
+        "ISP_Net": 533.42,
+        "MCP_GR": 230.0,
+        "MCP_BG": 230.0,
+        "MCP_IT": 230.0
+      },
+      {
+        "Hour": "H23",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -247.27,
+        "MCP_GR": 231.16,
+        "MCP_BG": 231.16,
+        "MCP_IT": 231.15
+      },
+      {
+        "Hour": "H24",
+        "SCADA_Net": 0.0,
+        "ISP_Net": -31.28,
+        "MCP_GR": 225.94,
+        "MCP_BG": 225.94,
+        "MCP_IT": 207.68
+      }
+    ]
+  },
+  {
+    "Date": "2026-09-17",
+    "Totals": {
+      "SCADA": {
+        "Albania": -9727.0,
+        "Bulgaria": -516.0,
+        "Italy": -7929.0,
+        "North Macedonia": -6424.0,
+        "Turkey": -127.0
       },
       "ISP": {
         "Albania": -3599.0,
@@ -20,7 +233,7 @@
     "Hourly": [
       {
         "Hour": "H01",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -963.0,
         "ISP_Net": -820.58,
         "MCP_GR": 184.37,
         "MCP_BG": 184.37,
@@ -28,7 +241,7 @@
       },
       {
         "Hour": "H02",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -677.0,
         "ISP_Net": -899.4,
         "MCP_GR": 169.85,
         "MCP_BG": 169.85,
@@ -36,7 +249,7 @@
       },
       {
         "Hour": "H03",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -790.0,
         "ISP_Net": -979.0,
         "MCP_GR": 168.03,
         "MCP_BG": 168.03,
@@ -44,7 +257,7 @@
       },
       {
         "Hour": "H04",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -922.0,
         "ISP_Net": -1068.25,
         "MCP_GR": 168.29,
         "MCP_BG": 168.29,
@@ -52,7 +265,7 @@
       },
       {
         "Hour": "H05",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -1050.0,
         "ISP_Net": -1079.92,
         "MCP_GR": 168.6,
         "MCP_BG": 168.6,
@@ -60,7 +273,7 @@
       },
       {
         "Hour": "H06",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -1019.0,
         "ISP_Net": -962.0,
         "MCP_GR": 199.02,
         "MCP_BG": 199.02,
@@ -68,7 +281,7 @@
       },
       {
         "Hour": "H07",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -930.0,
         "ISP_Net": -927.72,
         "MCP_GR": 227.24,
         "MCP_BG": 227.24,
@@ -76,7 +289,7 @@
       },
       {
         "Hour": "H08",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -869.0,
         "ISP_Net": -1605.82,
         "MCP_GR": 212.33,
         "MCP_BG": 212.33,
@@ -84,7 +297,7 @@
       },
       {
         "Hour": "H09",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -1546.0,
         "ISP_Net": -2051.95,
         "MCP_GR": 58.0,
         "MCP_BG": 74.16,
@@ -92,7 +305,7 @@
       },
       {
         "Hour": "H10",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2093.0,
         "ISP_Net": -2416.0,
         "MCP_GR": 0.0,
         "MCP_BG": 81.38,
@@ -100,7 +313,7 @@
       },
       {
         "Hour": "H11",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2333.0,
         "ISP_Net": -2416.0,
         "MCP_GR": -0.0,
         "MCP_BG": 63.85,
@@ -108,7 +321,7 @@
       },
       {
         "Hour": "H12",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2185.0,
         "ISP_Net": -2516.0,
         "MCP_GR": 0.0,
         "MCP_BG": 52.33,
@@ -116,7 +329,7 @@
       },
       {
         "Hour": "H13",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2189.0,
         "ISP_Net": -2516.0,
         "MCP_GR": 0.0,
         "MCP_BG": 68.84,
@@ -124,7 +337,7 @@
       },
       {
         "Hour": "H14",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2187.0,
         "ISP_Net": -2516.0,
         "MCP_GR": 0.0,
         "MCP_BG": 59.35,
@@ -132,7 +345,7 @@
       },
       {
         "Hour": "H15",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2224.0,
         "ISP_Net": -2516.0,
         "MCP_GR": 0.0,
         "MCP_BG": 40.01,
@@ -140,7 +353,7 @@
       },
       {
         "Hour": "H16",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2285.0,
         "ISP_Net": -2392.8,
         "MCP_GR": 18.82,
         "MCP_BG": 42.77,
@@ -148,7 +361,7 @@
       },
       {
         "Hour": "H17",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -2243.0,
         "ISP_Net": -1525.78,
         "MCP_GR": 156.88,
         "MCP_BG": 156.88,
@@ -156,7 +369,7 @@
       },
       {
         "Hour": "H18",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": -1461.0,
         "ISP_Net": -37.53,
         "MCP_GR": 229.15,
         "MCP_BG": 229.15,
@@ -164,7 +377,7 @@
       },
       {
         "Hour": "H19",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 90.0,
         "ISP_Net": 587.2,
         "MCP_GR": 252.48,
         "MCP_BG": 252.48,
@@ -172,7 +385,7 @@
       },
       {
         "Hour": "H20",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 755.0,
         "ISP_Net": 556.9,
         "MCP_GR": 271.49,
         "MCP_BG": 271.49,
@@ -180,7 +393,7 @@
       },
       {
         "Hour": "H21",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 602.0,
         "ISP_Net": 479.0,
         "MCP_GR": 258.97,
         "MCP_BG": 256.57,
@@ -188,7 +401,7 @@
       },
       {
         "Hour": "H22",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 461.0,
         "ISP_Net": 665.62,
         "MCP_GR": 233.38,
         "MCP_BG": 170.87,
@@ -196,7 +409,7 @@
       },
       {
         "Hour": "H23",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 848.0,
         "ISP_Net": 485.72,
         "MCP_GR": 213.64,
         "MCP_BG": 213.64,
@@ -204,7 +417,7 @@
       },
       {
         "Hour": "H24",
-        "SCADA_Net": 0.0,
+        "SCADA_Net": 487.0,
         "ISP_Net": 485.82,
         "MCP_GR": 224.69,
         "MCP_BG": 224.69,
