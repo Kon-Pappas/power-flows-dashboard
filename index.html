@@ -36,12 +36,24 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm ml-auto">
+                    
+                    <!-- Daily Date Picker -->
+                    <div id="datePickerContainer" class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm ml-auto">
                         <label class="text-xs text-slate-300 font-medium" id="dateLabel">Date:</label>
                         <select id="dateSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-cyan-500 transition cursor-pointer">
                             <option>Loading...</option>
                         </select>
                     </div>
+
+                    <!-- Monthly Date Picker (Κρυφό στην αρχή) -->
+                    <div id="monthPickerContainer" class="hidden items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-emerald-600 shadow-sm ml-auto">
+                        <label class="text-xs text-emerald-400 font-medium" id="monthLabel">Month:</label>
+                        <select id="monthSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-emerald-500 transition cursor-pointer">
+                            <option>Loading...</option>
+                        </select>
+                    </div>
+
+                    <!-- Lang Switcher -->
                     <div class="flex gap-2 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm">
                         <button onclick="setLang('el')" id="btnGr" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">GR</button>
                         <button onclick="setLang('en')" id="btnEn" class="px-2 py-1 rounded bg-cyan-600 text-white transition">EN</button>
@@ -52,9 +64,10 @@
 
         <!-- TABS NAVIGATION -->
         <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
-            <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Total Daily Isp vs Scada</button>
+            <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Daily Isp vs Scada</button>
             <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
-            <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Financials & Arbitrage</button>
+            <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Daily Arbitrage</button>
+            <button id="tabBtnMTD" onclick="switchTab('mtd')" class="text-emerald-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap">MTD Position</button>
         </div>
 
         <!-- VIEW 1: TOTALS PER COUNTRY -->
@@ -62,7 +75,7 @@
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Interconnection Flows per Country (ISP vs SCADA)</h2>
+                        <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Flows (ISP vs SCADA)</h2>
                         <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
                     </div>
                 </div>
@@ -75,44 +88,29 @@
         <!-- VIEW 2: HOURLY FLOWS & MCP -->
         <div id="viewHourly" class="space-y-6 hidden">
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Total Hourly Net Flows (ISP vs SCADA)</h2>
-                        <p class="text-xs text-slate-400" id="flowsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
-                    </div>
-                </div>
-                <div class="relative h-[350px]">
-                    <canvas id="flowsChart"></canvas>
-                </div>
+                <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Hourly Net Flows</h2>
+                <div class="relative h-[350px] mt-4"><canvas id="flowsChart"></canvas></div>
             </div>
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="mcpChartTitle">Day-Ahead Market Clearing Prices</h2>
-                    </div>
-                </div>
-                <div class="relative h-[350px]">
-                    <canvas id="mcpChart"></canvas>
-                </div>
+                <h2 class="text-lg font-semibold text-slate-200" id="mcpChartTitle">Market Clearing Prices</h2>
+                <div class="relative h-[350px] mt-4"><canvas id="mcpChart"></canvas></div>
             </div>
         </div>
 
-        <!-- VIEW 3: FINANCIALS & ARBITRAGE -->
+        <!-- VIEW 3: DAILY ARBITRAGE -->
         <div id="viewArbitrage" class="space-y-6 hidden">
-            
-            <!-- Cash Flow & Volumes KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Net Cash Flow (€)</p>
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Daily Cash Flow</p>
                     <p class="text-2xl font-bold transition-colors" id="kpiCashFlowVal">-</p>
                 </div>
                 <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
-                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Total Exports</p>
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Exports (Income)</p>
                     <p class="text-xl font-bold text-rose-500" id="kpiExpVol">-</p>
                     <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
                 </div>
                 <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
-                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Total Imports</p>
+                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Imports (Cost)</p>
                     <p class="text-xl font-bold text-yellow-400" id="kpiImpVol">-</p>
                     <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="kpiImpPrice">-</p>
                 </div>
@@ -121,47 +119,91 @@
                     <p class="text-xl font-bold transition-colors" id="kpiStatusVal">-</p>
                 </div>
             </div>
-
-            <!-- Γράφημα: Stacked Bar & Line -->
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="arbitrageChartTitle">Hourly SCADA Flows & Applicable MCP</h2>
-                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click on a country below to isolate flows and view the clearing price used for financial calculations.</p>
+                        <h2 class="text-lg font-semibold text-slate-200" id="arbitrageChartTitle">Hourly SCADA & MCP</h2>
+                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click country to isolate.</p>
                     </div>
                 </div>
-                <div class="relative h-[350px]">
-                    <canvas id="arbitrageChart"></canvas>
-                </div>
+                <div class="relative h-[350px]"><canvas id="arbitrageChart"></canvas></div>
             </div>
-
-            <!-- Λίστα Χωρών (Interactive) -->
             <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
-                <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase tracking-wider text-center">
+                <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase text-center">
                     <div class="text-left pl-2" id="colCountry">Country</div>
-                    <div id="colNet">Net MWh</div>
+                    <div id="colNet">Abs. Net MWh</div>
                     <div id="colValue">Cash Flow (€)</div>
-                    <div id="colPrice">Dominant Price (€/MWh)</div>
+                    <div id="colPrice">Dominant €/MWh</div>
                 </div>
-                <div id="arbitrageListContainer" class="flex flex-col">
-                    <!-- Javascript injected rows -->
+                <div id="arbitrageListContainer" class="flex flex-col"></div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: MTD CUMULATIVE -->
+        <div id="viewMTD" class="space-y-6 hidden">
+            <!-- MTD KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
+                    <p class="text-2xl font-bold transition-colors" id="mtdCashFlowVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelVolume">MTD Net Volume</p>
+                    <p class="text-xl font-bold transition-colors text-white" id="mtdVolumeVal">-</p>
+                    <p class="text-xs text-slate-500 mt-1" id="mtdVolumeSub">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelAvgPrice">MTD Avg. Target Price</p>
+                    <p class="text-xl font-bold text-cyan-400" id="mtdAvgPriceVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
+                    <div class="flex flex-col gap-1 text-sm font-semibold">
+                        <div class="text-emerald-400 bg-emerald-400/10 rounded py-0.5" id="mtdBestDay">-</div>
+                        <div class="text-rose-400 bg-rose-500/10 rounded py-0.5" id="mtdWorstDay">-</div>
+                    </div>
                 </div>
             </div>
             
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitle">Cumulative Financial & Physical Position</h2>
+                        <p class="text-xs text-slate-400" id="mtdChartSub">Building the monthly balance day by day.</p>
+                    </div>
+                </div>
+                <div class="relative h-[450px]">
+                    <canvas id="mtdChart"></canvas>
+                </div>
+            </div>
         </div>
 
     </div>
 
     <script>
         function switchTab(tabId) {
-            document.getElementById('viewTotals').classList.add('hidden');
-            document.getElementById('viewHourly').classList.add('hidden');
-            document.getElementById('viewArbitrage').classList.add('hidden');
+            // Hide all views
+            ['viewTotals', 'viewHourly', 'viewArbitrage', 'viewMTD'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            // Reset Tab Styles
+            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => {
+                document.getElementById(id).className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
+            });
+            document.getElementById('tabBtnMTD').className = "text-slate-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap";
+
+            // Toggles for Date vs Month Picker
+            if (tabId === 'mtd') {
+                document.getElementById('datePickerContainer').classList.add('hidden');
+                document.getElementById('monthPickerContainer').classList.remove('hidden');
+                document.getElementById('monthPickerContainer').classList.add('flex');
+            } else {
+                document.getElementById('monthPickerContainer').classList.add('hidden');
+                document.getElementById('monthPickerContainer').classList.remove('flex');
+                document.getElementById('datePickerContainer').classList.remove('hidden');
+            }
             
-            document.getElementById('tabBtnTotals').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
-            document.getElementById('tabBtnHourly').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
-            document.getElementById('tabBtnArbitrage').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
-            
+            // Activate Selection
             if (tabId === 'totals') {
                 document.getElementById('viewTotals').classList.remove('hidden');
                 document.getElementById('tabBtnTotals').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
@@ -171,7 +213,12 @@
             } else if (tabId === 'arbitrage') {
                 document.getElementById('viewArbitrage').classList.remove('hidden');
                 document.getElementById('tabBtnArbitrage').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'mtd') {
+                document.getElementById('viewMTD').classList.remove('hidden');
+                document.getElementById('tabBtnMTD').className = "text-emerald-400 font-bold border-b-2 border-emerald-400 pb-2 px-2 transition whitespace-nowrap";
             }
+
+            renderCharts(); // Re-render based on active tab pickers
         }
     </script>
     <script src="dashboard.js" defer></script>
