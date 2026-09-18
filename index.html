@@ -54,6 +54,8 @@
         <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
             <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Total Daily Isp vs Scada</button>
             <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
+            <!-- ΝΕΟ TAB -->
+            <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Financials & Arbitrage</button>
         </div>
 
         <!-- VIEW 1: TOTALS PER COUNTRY -->
@@ -73,7 +75,6 @@
 
         <!-- VIEW 2: HOURLY FLOWS & MCP -->
         <div id="viewHourly" class="space-y-6 hidden">
-            <!-- Εδώ προστέθηκε το επεξηγηματικό κείμενο για τα πρόσημα -->
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
@@ -85,7 +86,6 @@
                     <canvas id="flowsChart"></canvas>
                 </div>
             </div>
-
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
@@ -98,14 +98,69 @@
             </div>
         </div>
 
+        <!-- VIEW 3: FINANCIALS & ARBITRAGE (NEO) -->
+        <div id="viewArbitrage" class="space-y-6 hidden">
+            
+            <!-- KPIs (Σύνολα Ημέρας) -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Daily Status</p>
+                    <p class="text-xl font-bold transition-colors" id="kpiStatusVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelMwh">Total Net Volume</p>
+                    <p class="text-xl font-bold transition-colors" id="kpiMwhVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelEur">Total Value (€)</p>
+                    <p class="text-xl font-bold transition-colors" id="kpiEurVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelAvg">Avg Price (€/MWh)</p>
+                    <p class="text-xl font-bold transition-colors" id="kpiAvgVal">-</p>
+                </div>
+            </div>
+
+            <!-- Γράφημα: Stacked Bar & Line -->
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200" id="arbitrageChartTitle">Hourly SCADA Flows & Applicable MCP</h2>
+                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click on a country below to isolate flows and view the clearing price used for arbitrage.</p>
+                    </div>
+                </div>
+                <div class="relative h-[350px]">
+                    <canvas id="arbitrageChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Λίστα Χωρών (Interactive) -->
+            <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase tracking-wider text-center">
+                    <div class="text-left pl-2" id="colCountry">Country</div>
+                    <div id="colNet">Net MWh</div>
+                    <div id="colValue">Value (€)</div>
+                    <div id="colPrice">Avg €/MWh</div>
+                </div>
+                <!-- Εδώ θα μπούνε τα rows δυναμικά από τη JS -->
+                <div id="arbitrageListContainer" class="flex flex-col">
+                    <!-- Javascript injected rows -->
+                </div>
+            </div>
+            
+        </div>
+
     </div>
 
     <script>
         function switchTab(tabId) {
             document.getElementById('viewTotals').classList.add('hidden');
             document.getElementById('viewHourly').classList.add('hidden');
+            document.getElementById('viewArbitrage').classList.add('hidden');
+            
             document.getElementById('tabBtnTotals').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
             document.getElementById('tabBtnHourly').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
+            document.getElementById('tabBtnArbitrage').className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
             
             if (tabId === 'totals') {
                 document.getElementById('viewTotals').classList.remove('hidden');
@@ -113,6 +168,9 @@
             } else if (tabId === 'hourly') {
                 document.getElementById('viewHourly').classList.remove('hidden');
                 document.getElementById('tabBtnHourly').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'arbitrage') {
+                document.getElementById('viewArbitrage').classList.remove('hidden');
+                document.getElementById('tabBtnArbitrage').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
             }
         }
     </script>
