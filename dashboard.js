@@ -5,7 +5,7 @@ let totalsChartInstance = null;
 let flowsChartInstance = null;
 let mcpChartInstance = null;
 let arbitrageChartInstance = null;
-let mtdChartInstance = null; // Νέο γράφημα MTD
+let mtdChartInstance = null;
 
 let activeCountry = null;
 let globalArbitrageData = {}; 
@@ -23,7 +23,6 @@ const i18n = {
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
         
-        // Tab 1 & 2
         totalsChartTitle: "Net Flows (ISP vs SCADA)",
         totalsChartSub: "Negative values (-) = Exports. Positive values (+) = Imports.",
         scheduled: "Scheduled (ISP)",
@@ -31,7 +30,6 @@ const i18n = {
         flowsChartTitle: "Total Hourly Net Flows",
         mcpChartTitle: "Day-Ahead Market Clearing Prices",
         
-        // Tab 3
         kpiLabelCashFlow: "Daily Cash Flow",
         kpiLabelExp: "Exports (Income)",
         kpiLabelImp: "Imports (Cost)",
@@ -47,13 +45,11 @@ const i18n = {
 
         // Tab 4 (MTD)
         mtdLabelCashFlow: "MTD Cash Flow",
-        mtdLabelVolume: "MTD Net Volume",
-        mtdLabelAvgPrice: "MTD Avg. Price",
+        mtdLabelExp: "MTD Total Exports (Income)",
+        mtdLabelImp: "MTD Total Imports (Cost)",
         mtdLabelExtremes: "Best / Worst Day",
         mtdChartTitle: "Cumulative Financial & Physical Position",
-        mtdChartSub: "Building the monthly balance day by day.",
-        volExport: "Net Exporter (Total)",
-        volImport: "Net Importer (Total)"
+        mtdChartSub: "Line indicates Cash Flow. Bars indicate total physical volume (GWh)."
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -89,13 +85,11 @@ const i18n = {
 
         // Tab 4
         mtdLabelCashFlow: "Σωρευτικό Ταμείο Μηνός",
-        mtdLabelVolume: "Συνολικός Όγκος Μηνός",
-        mtdLabelAvgPrice: "Μέση Σταθμική Τιμή",
+        mtdLabelExp: "Συνολικές Εξαγωγές (Έσοδο)",
+        mtdLabelImp: "Συνολικές Εισαγωγές (Κόστος)",
         mtdLabelExtremes: "Καλύτερη / Χειρότερη Μέρα",
         mtdChartTitle: "Σωρευτική Οικονομική & Φυσική Θέση",
-        mtdChartSub: "Ημερήσια απεικόνιση της εξέλιξης του μήνα.",
-        volExport: "Καθαρός Εξαγωγέας Μηνός",
-        volImport: "Καθαρός Εισαγωγέας Μηνός"
+        mtdChartSub: "Η Γραμμή δείχνει το Ταμείο. Οι Μπάρες δείχνουν τον φυσικό όγκο σε GWh."
     }
 };
 
@@ -105,7 +99,6 @@ function setLang(lang) {
     currentLang = lang;
     const t = i18n[lang];
     
-    // Header & Tabs
     document.getElementById('pageTitle').innerText = t.title;
     document.getElementById('mainTitle').innerText = t.title;
     document.getElementById('dataSourceText').innerText = t.source;
@@ -118,13 +111,11 @@ function setLang(lang) {
     document.getElementById('tabBtnArbitrage').innerText = t.tabArbitrage;
     document.getElementById('tabBtnMTD').innerText = t.tabMTD;
     
-    // Tab 1 & 2
     document.getElementById('totalsChartTitle').innerText = t.totalsChartTitle;
     document.getElementById('totalsChartSub').innerText = t.totalsChartSub;
     document.getElementById('flowsChartTitle').innerText = t.flowsChartTitle;
     document.getElementById('mcpChartTitle').innerText = t.mcpChartTitle;
 
-    // Tab 3
     document.getElementById('kpiLabelCashFlow').innerText = t.kpiLabelCashFlow;
     document.getElementById('kpiLabelExp').innerText = t.kpiLabelExp;
     document.getElementById('kpiLabelImp').innerText = t.kpiLabelImp;
@@ -138,8 +129,8 @@ function setLang(lang) {
 
     // Tab 4
     document.getElementById('mtdLabelCashFlow').innerText = t.mtdLabelCashFlow;
-    document.getElementById('mtdLabelVolume').innerText = t.mtdLabelVolume;
-    document.getElementById('mtdLabelAvgPrice').innerText = t.mtdLabelAvgPrice;
+    document.getElementById('mtdLabelExp').innerText = t.mtdLabelExp;
+    document.getElementById('mtdLabelImp').innerText = t.mtdLabelImp;
     document.getElementById('mtdLabelExtremes').innerText = t.mtdLabelExtremes;
     document.getElementById('mtdChartTitle').innerText = t.mtdChartTitle;
     document.getElementById('mtdChartSub').innerText = t.mtdChartSub;
@@ -182,11 +173,9 @@ async function fetchLocalData() {
         
         setTimeout(() => { progressBar.style.width = '90%'; progressPercentage.innerText = '90%'; }, 400);
 
-        // Daily Options
         const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
         document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
         
-        // Monthly Options (Extract YYYY-MM)
         const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
         document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
 
@@ -205,7 +194,6 @@ async function fetchLocalData() {
     }
 }
 
-// Υπολογισμός Net Ημέρας (Επαναχρησιμοποιήσιμο)
 function calculateDayNet(dayData) {
     const mcpGR = dayData.Hourly.map(h => h.MCP_GR);
     const mcpBG = dayData.Hourly.map(h => h.MCP_BG);
@@ -288,7 +276,6 @@ function updateArbitrageTab() {
     const data = globalArbitrageData;
     if (!data) return;
 
-    // 1. KPIs
     const cfSign = data.netCashFlow > 0 ? "+" : "";
     const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-rose-500";
     document.getElementById('kpiCashFlowVal').innerText = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
@@ -302,7 +289,6 @@ function updateArbitrageTab() {
     document.getElementById('kpiStatusVal').innerText = isImp ? t.importer : t.exporter;
     document.getElementById('kpiStatusVal').className = `text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
 
-    // 2. LIST
     const listContainer = document.getElementById('arbitrageListContainer');
     listContainer.innerHTML = ''; 
     const names = { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" };
@@ -326,7 +312,6 @@ function updateArbitrageTab() {
         `);
     });
 
-    // 3. CHART
     if (arbitrageChartInstance) arbitrageChartInstance.destroy();
     const ctxArb = document.getElementById('arbitrageChart').getContext('2d');
     let datasets = [];
@@ -355,52 +340,55 @@ function updateArbitrageTab() {
 
 function renderMTDTab(selectedMonth) {
     const t = i18n[currentLang];
-    // Filter data for the month and sort ascending (Day 1 -> Day 31)
     const monthData = rawData.filter(r => r.Date.startsWith(selectedMonth)).sort((a,b) => a.Date.localeCompare(b.Date));
     if(monthData.length === 0) return;
 
     let cumEur = 0;
-    let cumVol = 0;
+    let cumGwh = 0; // Cum. Absolute GWh
     let totalExpEur = 0, totalImpEur = 0, totalExpVol = 0, totalImpVol = 0;
     let bestDay = { date: '', val: -Infinity };
     let worstDay = { date: '', val: Infinity };
 
     let labels = [];
     let dataEur = [];
-    let dataVol = [];
+    let dataGwh = []; // Will store absolute physical volume in GWh per day (cumulative)
 
     monthData.forEach(day => {
         const d = calculateDayNet(day);
         
         cumEur += d.netCashFlow;
-        cumVol += d.netVol;
         
+        // Για το γράφημα, θέλουμε να βλέπουμε πόσο ρεύμα διακινήθηκε (Absolute Volume MWh / 1000)
+        let dailyAbsVolumeMwh = d.expVol + d.impVol; 
+        cumGwh += (dailyAbsVolumeMwh / 1000); // MWh to GWh
+
         totalExpEur += d.expEur; totalImpEur += d.impEur;
         totalExpVol += d.expVol; totalImpVol += d.impVol;
 
         labels.push(day.Date.substring(8, 10)); // Keep only DD
         dataEur.push(cumEur);
-        dataVol.push(cumVol);
+        dataGwh.push(cumGwh);
 
         if (d.netCashFlow > bestDay.val) { bestDay.val = d.netCashFlow; bestDay.date = day.Date; }
         if (d.netCashFlow < worstDay.val) { worstDay.val = d.netCashFlow; worstDay.date = day.Date; }
     });
 
-    // 1. UPDATE KPIs
+    // 1. UPDATE KPIs (Split Exports & Imports logic)
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-rose-500";
     document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
     document.getElementById('mtdCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
 
-    const volColor = cumVol >= 0 ? "text-yellow-400" : "text-rose-500";
-    document.getElementById('mtdVolumeVal').innerText = Math.abs(cumVol).toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
-    document.getElementById('mtdVolumeVal').className = `text-2xl font-bold ${volColor}`;
-    document.getElementById('mtdVolumeSub').innerText = cumVol >= 0 ? t.volImport : t.volExport;
+    let expGwh = totalExpVol / 1000;
+    let impGwh = totalImpVol / 1000;
+    let expAvg = totalExpVol > 0 ? (totalExpEur / totalExpVol) : 0;
+    let impAvg = totalImpVol > 0 ? (totalImpEur / totalImpVol) : 0;
 
-    const totalMoney = totalExpEur + totalImpEur;
-    const totalVolume = totalExpVol + totalImpVol;
-    const avgPrice = totalVolume > 0 ? (totalMoney / totalVolume) : 0;
-    document.getElementById('mtdAvgPriceVal').innerText = avgPrice.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+    document.getElementById('mtdExpVol').innerText = expGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
+    document.getElementById('mtdExpPrice').innerText = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+
+    document.getElementById('mtdImpVol').innerText = impGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
+    document.getElementById('mtdImpPrice').innerText = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
 
     const formatDay = (d) => `${d.substring(8,10)}/${d.substring(5,7)}`;
     document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (+${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
@@ -428,20 +416,36 @@ function renderMTDTab(selectedMonth) {
                     borderWidth: 2, tension: 0.3
                 },
                 {
-                    type: 'line',
-                    label: 'Cum. Net Volume (MWh)',
-                    data: dataVol,
+                    type: 'bar', // Αχνές Μπάρες για τον Όγκο!
+                    label: 'Cum. Absolute Volume (GWh)',
+                    data: dataGwh,
                     yAxisID: 'yMwh',
-                    borderColor: '#cbd5e1', // Slate-300
-                    borderDash: [5, 5],
-                    borderWidth: 2, fill: false, tension: 0.3
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)', // Πολύ αχνό Slate
+                    borderColor: 'rgba(148, 163, 184, 0.4)',
+                    borderWidth: 1,
+                    borderRadius: 4
                 }
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { datalabels: { display: false } },
+            plugins: { 
+                datalabels: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            let val = context.raw;
+                            if (label.includes('Cash Flow')) {
+                                return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
+                            } else {
+                                return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:1})} GWh`;
+                            }
+                        }
+                    }
+                }
+            },
             scales: {
                 x: { grid: { display: false } },
                 yEur: { 
@@ -451,7 +455,7 @@ function renderMTDTab(selectedMonth) {
                 },
                 yMwh: { 
                     type: 'linear', position: 'right',
-                    title: { display: true, text: 'Volume (MWh)' },
+                    title: { display: true, text: 'Volume (GWh)' },
                     grid: { display: false }
                 }
             }
@@ -464,7 +468,6 @@ function renderCharts() {
     Chart.defaults.color = '#94a3b8';
     Chart.defaults.borderColor = '#334155';
 
-    // 1. Daily Data (Tabs 1, 2, 3)
     const selectedDate = document.getElementById('dateSelect').value;
     const dayData = rawData.find(row => row.Date === selectedDate);
     
@@ -527,7 +530,6 @@ function renderCharts() {
         });
     }
 
-    // 2. Monthly Data (Tab 4)
     const selectedMonth = document.getElementById('monthSelect').value;
     if (selectedMonth) {
         renderMTDTab(selectedMonth);
