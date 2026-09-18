@@ -54,7 +54,6 @@
         <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
             <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Total Daily Isp vs Scada</button>
             <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
-            <!-- ΝΕΟ TAB -->
             <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Financials & Arbitrage</button>
         </div>
 
@@ -98,26 +97,28 @@
             </div>
         </div>
 
-        <!-- VIEW 3: FINANCIALS & ARBITRAGE (NEO) -->
+        <!-- VIEW 3: FINANCIALS & ARBITRAGE -->
         <div id="viewArbitrage" class="space-y-6 hidden">
             
-            <!-- KPIs (Σύνολα Ημέρας) -->
+            <!-- Cash Flow & Volumes KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Daily Status</p>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Net Cash Flow (€)</p>
+                    <p class="text-2xl font-bold transition-colors" id="kpiCashFlowVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Total Exports</p>
+                    <p class="text-xl font-bold text-rose-500" id="kpiExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Total Imports</p>
+                    <p class="text-xl font-bold text-yellow-400" id="kpiImpVol">-</p>
+                    <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="kpiImpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Physical Balance</p>
                     <p class="text-xl font-bold transition-colors" id="kpiStatusVal">-</p>
-                </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelMwh">Total Net Volume</p>
-                    <p class="text-xl font-bold transition-colors" id="kpiMwhVal">-</p>
-                </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelEur">Total Value (€)</p>
-                    <p class="text-xl font-bold transition-colors" id="kpiEurVal">-</p>
-                </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelAvg">Avg Price (€/MWh)</p>
-                    <p class="text-xl font-bold transition-colors" id="kpiAvgVal">-</p>
                 </div>
             </div>
 
@@ -126,7 +127,7 @@
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h2 class="text-lg font-semibold text-slate-200" id="arbitrageChartTitle">Hourly SCADA Flows & Applicable MCP</h2>
-                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click on a country below to isolate flows and view the clearing price used for arbitrage.</p>
+                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click on a country below to isolate flows and view the clearing price used for financial calculations.</p>
                     </div>
                 </div>
                 <div class="relative h-[350px]">
@@ -139,10 +140,9 @@
                 <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase tracking-wider text-center">
                     <div class="text-left pl-2" id="colCountry">Country</div>
                     <div id="colNet">Net MWh</div>
-                    <div id="colValue">Value (€)</div>
-                    <div id="colPrice">Avg €/MWh</div>
+                    <div id="colValue">Cash Flow (€)</div>
+                    <div id="colPrice">Dominant Price (€/MWh)</div>
                 </div>
-                <!-- Εδώ θα μπούνε τα rows δυναμικά από τη JS -->
                 <div id="arbitrageListContainer" class="flex flex-col">
                     <!-- Javascript injected rows -->
                 </div>
