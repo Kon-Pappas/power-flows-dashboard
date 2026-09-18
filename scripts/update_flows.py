@@ -16,7 +16,6 @@ import io
 
 ENTSOE_TOKEN = os.environ.get("ENTSOE_TOKEN")
 
-# Το σωστό κλειδί για τη ζώνη της Νότιας Ιταλίας (IT-South / SUD)
 ENTSOE_DOMAINS = {
     "GR": "10YGR-HTSO-----Y",
     "BG": "10YCA-BULGARIA-R",
@@ -83,24 +82,52 @@ def extract_last_col_val(df, keyword, col_index):
     except: pass
     return 0.0
 
+# ΝΕΑ ΣΥΝΑΡΤΗΣΗ: Τραβάει και τις 24 ώρες για μια συγκεκριμένη γραμμή
+def extract_hourly_vals(df, keyword, col_index):
+    try:
+        row = df[df[col_index].astype(str).str.contains(keyword, case=False, na=False)]
+        if not row.empty:
+            # Οι ώρες 1-24 βρίσκονται συνήθως στις στήλες 2 έως 25 (index)
+            return np.nan_to_num(row.iloc[0, 2:26].values.astype(float))
+    except: pass
+    return np.zeros(24)
+
 def process_day(date_str):
     print(f"Επεξεργασία: {date_str}")
     
     scada_net = {"Albania": 0, "Bulgaria": 0, "Italy": 0, "North Macedonia": 0, "Turkey": 0}
     scada_hourly_net = [0.0] * 24
+    
+    # Πίνακες για τις ωριαίες ροές ανά χώρα
+    scada_al_h = np.zeros(24)
+    scada_bg_h = np.zeros(24)
+    scada_it_h = np.zeros(24)
+    scada_mk_h = np.zeros(24)
+    scada_tr_h = np.zeros(24)
+    
     scada_file = fetch_admie_excel(date_str, "SystemRealizationSCADA")
     if scada_file:
         df_scada = pd.read_excel(scada_file, header=None)
+        
+        # Συνολικά (Ημερήσια)
         scada_net["Albania"] = extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΑΛΒΑΝΙΑ_EXP", 1)
         scada_net["Bulgaria"] = extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΒΟΥΛΓΑΡΙΑ_EXP", 1)
         scada_net["Italy"] = extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΙΤΑΛΙΑ_EXP", 1)
         scada_net["North Macedonia"] = extract_last_col_val(df_scada, "FYROM_IMP", 1) - extract_last_col_val(df_scada, "FYROM_EXP", 1)
         scada_net["Turkey"] = extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_IMP", 1) - extract_last_col_val(df_scada, "ΤΟΥΡΚΙΑ_EXP", 1)
         
+        # Ωριαία Net (Συνολικά)
         net_row = df_scada[df_scada[1] == 'EXPORTS-IMPORTS']
         if not net_row.empty: 
             vals_24 = np.nan_to_num(net_row.iloc[0, 2:26].values.astype(float))
             scada_hourly_net = (vals_24 * -1).round(2).tolist()
+            
+        # Ωριαία Net ανά Χώρα (IMPORTS - EXPORTS)
+        scada_al_h = extract_hourly_vals(df_scada, "ΑΛΒΑΝΙΑ_IMP", 1) - extract_hourly_vals(df_scada, "ΑΛΒΑΝΙΑ_EXP", 1)
+        scada_bg_h = extract_hourly_vals(df_scada, "ΒΟΥΛΓΑΡΙΑ_IMP", 1) - extract_hourly_vals(df_scada, "ΒΟΥΛΓΑΡΙΑ_EXP", 1)
+        scada_it_h = extract_hourly_vals(df_scada, "ΙΤΑΛΙΑ_IMP", 1) - extract_hourly_vals(df_scada, "ΙΤΑΛΙΑ_EXP", 1)
+        scada_mk_h = extract_hourly_vals(df_scada, "FYROM_IMP", 1) - extract_hourly_vals(df_scada, "FYROM_EXP", 1)
+        scada_tr_h = extract_hourly_vals(df_scada, "ΤΟΥΡΚΙΑ_IMP", 1) - extract_hourly_vals(df_scada, "ΤΟΥΡΚΙΑ_EXP", 1)
 
     isp_net = {"Albania": 0, "Bulgaria": 0, "Italy": 0, "North Macedonia": 0, "Turkey": 0}
     isp_hourly_net = [0.0] * 24
@@ -138,14 +165,24 @@ def process_day(date_str):
             "ISP_Net": isp_hourly_net[hour],
             "MCP_GR": mcp_gr[hour],
             "MCP_BG": mcp_bg[hour],
-            "MCP_IT": mcp_it[hour]
+            "MCP_IT": mcp_it[hour],
+            # Προσθέτουμε τα νέα δεδομένα στο JSON
+            "SCADA_AL": float(round(scada_al_h[hour], 2)),
+            "SCADA_BG": float(round(scada_bg_h[hour], 2)),
+            "SCADA_IT": float(round(scada_it_h[hour], 2)),
+            "SCADA_MK": float(round(scada_mk_h[hour], 2)),
+            "SCADA_TR": float(round(scada_tr_h[hour], 2))
         })
         
     return daily_data
 
 if __name__ == "__main__":
-    # --- ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 3 ημέρες) ---
-    dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
+    # --- ΙΣΤΟΡΙΚΟ (10 Ιουνίου 2026 - Σήμερα) ---
+    start_date = datetime(2026, 6, 10)
+    end_date = datetime.now()
+    delta = end_date - start_date
+    
+    dates_to_fetch = [(start_date + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(delta.days + 1)]
     
     json_path = "data/historical_flows.json"
     all_data = []
