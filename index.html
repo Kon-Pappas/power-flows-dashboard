@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Greek Power Flows (Imports - Exports) Analytics</title>
+    <title id="pageTitle">Greek Power Flows Analytics</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
@@ -45,7 +45,7 @@
                         </select>
                     </div>
 
-                    <!-- Monthly Date Picker (Κρυφό στην αρχή) -->
+                    <!-- Monthly Date Picker -->
                     <div id="monthPickerContainer" class="hidden items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-emerald-600 shadow-sm ml-auto">
                         <label class="text-xs text-emerald-400 font-medium" id="monthLabel">Month:</label>
                         <select id="monthSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-emerald-500 transition cursor-pointer">
@@ -79,9 +79,7 @@
                         <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
                     </div>
                 </div>
-                <div class="relative h-[500px]">
-                    <canvas id="totalsChart"></canvas>
-                </div>
+                <div class="relative h-[500px]"><canvas id="totalsChart"></canvas></div>
             </div>
         </div>
 
@@ -147,14 +145,17 @@
                     <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
                     <p class="text-2xl font-bold transition-colors" id="mtdCashFlowVal">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelVolume">MTD Net Volume</p>
-                    <p class="text-xl font-bold transition-colors text-white" id="mtdVolumeVal">-</p>
-                    <p class="text-xs text-slate-500 mt-1" id="mtdVolumeSub">-</p>
+                <!-- Exports / Income -->
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
+                    <p class="text-xl font-bold text-rose-500" id="mtdExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelAvgPrice">MTD Avg. Target Price</p>
-                    <p class="text-xl font-bold text-cyan-400" id="mtdAvgPriceVal">-</p>
+                <!-- Imports / Cost -->
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
+                    <p class="text-xl font-bold text-yellow-400" id="mtdImpVol">-</p>
+                    <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="mtdImpPrice">-</p>
                 </div>
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
@@ -182,17 +183,10 @@
 
     <script>
         function switchTab(tabId) {
-            // Hide all views
-            ['viewTotals', 'viewHourly', 'viewArbitrage', 'viewMTD'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
-            });
-            // Reset Tab Styles
-            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => {
-                document.getElementById(id).className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap";
-            });
+            ['viewTotals', 'viewHourly', 'viewArbitrage', 'viewMTD'].forEach(id => { document.getElementById(id).classList.add('hidden'); });
+            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => { document.getElementById(id).className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap"; });
             document.getElementById('tabBtnMTD').className = "text-slate-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap";
 
-            // Toggles for Date vs Month Picker
             if (tabId === 'mtd') {
                 document.getElementById('datePickerContainer').classList.add('hidden');
                 document.getElementById('monthPickerContainer').classList.remove('hidden');
@@ -203,7 +197,6 @@
                 document.getElementById('datePickerContainer').classList.remove('hidden');
             }
             
-            // Activate Selection
             if (tabId === 'totals') {
                 document.getElementById('viewTotals').classList.remove('hidden');
                 document.getElementById('tabBtnTotals').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
@@ -218,7 +211,7 @@
                 document.getElementById('tabBtnMTD').className = "text-emerald-400 font-bold border-b-2 border-emerald-400 pb-2 px-2 transition whitespace-nowrap";
             }
 
-            renderCharts(); // Re-render based on active tab pickers
+            renderCharts(); 
         }
     </script>
     <script src="dashboard.js" defer></script>
