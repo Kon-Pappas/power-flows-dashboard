@@ -49,7 +49,7 @@ const i18n = {
         mtdLabelImp: "MTD Total Imports (Cost)",
         mtdLabelExtremes: "Best / Worst Day",
         mtdChartTitle: "Cumulative Financial & Physical Position",
-        mtdChartSub: "Line indicates Cash Flow. Bars indicate total physical volume (GWh)."
+        mtdChartSub: "Line indicates Cash Flow. Bars indicate Net Physical Volume (GWh)."
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -89,7 +89,7 @@ const i18n = {
         mtdLabelImp: "Συνολικές Εισαγωγές (Κόστος)",
         mtdLabelExtremes: "Καλύτερη / Χειρότερη Μέρα",
         mtdChartTitle: "Σωρευτική Οικονομική & Φυσική Θέση",
-        mtdChartSub: "Η Γραμμή δείχνει το Ταμείο. Οι Μπάρες δείχνουν τον φυσικό όγκο σε GWh."
+        mtdChartSub: "Η Γραμμή δείχνει το Ταμείο. Οι Μπάρες δείχνουν τον Καθαρό Φυσικό Όγκο σε GWh."
     }
 };
 
@@ -233,7 +233,7 @@ function calculateDayNet(dayData) {
 
     return {
         netCashFlow: expEur - impEur,
-        netVol: impVol - expVol, 
+        netVol: impVol - expVol, // Positive = Net Import, Negative = Net Export
         expEur, impEur, expVol, impVol,
         hourlyFlows: flows, hourlyPrices: prices
     };
@@ -344,36 +344,34 @@ function renderMTDTab(selectedMonth) {
     if(monthData.length === 0) return;
 
     let cumEur = 0;
-    let cumGwh = 0; // Cum. Absolute GWh
+    let cumNetGwh = 0; // Cumulative NET Volume in GWh
     let totalExpEur = 0, totalImpEur = 0, totalExpVol = 0, totalImpVol = 0;
     let bestDay = { date: '', val: -Infinity };
     let worstDay = { date: '', val: Infinity };
 
     let labels = [];
     let dataEur = [];
-    let dataGwh = []; // Will store absolute physical volume in GWh per day (cumulative)
+    let dataNetGwh = []; 
 
     monthData.forEach(day => {
         const d = calculateDayNet(day);
         
         cumEur += d.netCashFlow;
         
-        // Για το γράφημα, θέλουμε να βλέπουμε πόσο ρεύμα διακινήθηκε (Absolute Volume MWh / 1000)
-        let dailyAbsVolumeMwh = d.expVol + d.impVol; 
-        cumGwh += (dailyAbsVolumeMwh / 1000); // MWh to GWh
+        // Υπολογισμός του καθαρού όγκου (Imports - Exports) και μετατροπή σε GWh
+        cumNetGwh += (d.netVol / 1000); 
 
         totalExpEur += d.expEur; totalImpEur += d.impEur;
         totalExpVol += d.expVol; totalImpVol += d.impVol;
 
-        labels.push(day.Date.substring(8, 10)); // Keep only DD
+        labels.push(day.Date.substring(8, 10)); 
         dataEur.push(cumEur);
-        dataGwh.push(cumGwh);
+        dataNetGwh.push(cumNetGwh);
 
         if (d.netCashFlow > bestDay.val) { bestDay.val = d.netCashFlow; bestDay.date = day.Date; }
         if (d.netCashFlow < worstDay.val) { worstDay.val = d.netCashFlow; worstDay.date = day.Date; }
     });
 
-    // 1. UPDATE KPIs (Split Exports & Imports logic)
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-rose-500";
     document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
@@ -386,7 +384,6 @@ function renderMTDTab(selectedMonth) {
 
     document.getElementById('mtdExpVol').innerText = expGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
     document.getElementById('mtdExpPrice').innerText = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
-
     document.getElementById('mtdImpVol').innerText = impGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
     document.getElementById('mtdImpPrice').innerText = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
 
@@ -394,10 +391,9 @@ function renderMTDTab(selectedMonth) {
     document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (+${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
     document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
 
-    // 2. MTD CHART
     if (mtdChartInstance) mtdChartInstance.destroy();
     const ctxMTD = document.getElementById('mtdChart').getContext('2d');
-    
+
     mtdChartInstance = new Chart(ctxMTD, {
         data: {
             labels: labels,
@@ -409,19 +405,20 @@ function renderMTDTab(selectedMonth) {
                     yAxisID: 'yEur',
                     fill: {
                         target: 'origin',
-                        above: 'rgba(16, 185, 129, 0.2)', // Emerald (Profit)
-                        below: 'rgba(244, 63, 94, 0.2)'   // Rose (Loss)
+                        above: 'rgba(16, 185, 129, 0.2)', 
+                        below: 'rgba(244, 63, 94, 0.2)'   
                     },
                     segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
                     borderWidth: 2, tension: 0.3
                 },
                 {
-                    type: 'bar', // Αχνές Μπάρες για τον Όγκο!
-                    label: 'Cum. Absolute Volume (GWh)',
-                    data: dataGwh,
+                    type: 'bar',
+                    label: 'Cum. Net Volume (GWh)',
+                    data: dataNetGwh,
                     yAxisID: 'yMwh',
-                    backgroundColor: 'rgba(148, 163, 184, 0.2)', // Πολύ αχνό Slate
-                    borderColor: 'rgba(148, 163, 184, 0.4)',
+                    // Δυναμικά χρώματα ENEX (Αχνά): Κίτρινο αν είναι Εισαγωγή, Κόκκινο αν είναι Εξαγωγή
+                    backgroundColor: context => context.raw >= 0 ? 'rgba(250, 204, 21, 0.2)' : 'rgba(244, 63, 94, 0.2)', 
+                    borderColor: context => context.raw >= 0 ? 'rgba(250, 204, 21, 0.4)' : 'rgba(244, 63, 94, 0.4)',
                     borderWidth: 1,
                     borderRadius: 4
                 }
@@ -455,7 +452,8 @@ function renderMTDTab(selectedMonth) {
                 },
                 yMwh: { 
                     type: 'linear', position: 'right',
-                    title: { display: true, text: 'Volume (GWh)' },
+                    title: { display: true, text: 'Net Volume (GWh)' },
+                    // Αφαιρέσαμε τα min/max. Πλέον ο άξονας πάει πάνω/κάτω ελεύθερα ανάλογα με τον καθαρό όγκο!
                     grid: { display: false }
                 }
             }
