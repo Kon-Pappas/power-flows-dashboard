@@ -6,9 +6,8 @@ let flowsChartInstance = null;
 let mcpChartInstance = null;
 let arbitrageChartInstance = null;
 
-// Global State for the 3rd Tab interactions
 let activeCountry = null;
-let globalArbitrageData = {}; // Stores calculated values for the interactive view
+let globalArbitrageData = {}; 
 
 const i18n = {
     en: {
@@ -28,18 +27,18 @@ const i18n = {
         mcpChartTitle: "Day-Ahead Market Clearing Prices",
         
         // Tab 3
-        kpiLabelStatus: "Daily Status",
-        kpiLabelMwh: "Total Net Volume",
-        kpiLabelEur: "Total Value (€)",
-        kpiLabelAvg: "Avg Price (€/MWh)",
-        exporter: "EXPORTER",
-        importer: "IMPORTER",
+        kpiLabelCashFlow: "Net Cash Flow (€)",
+        kpiLabelExp: "Total Exports (Income)",
+        kpiLabelImp: "Total Imports (Cost)",
+        kpiLabelStatus: "Physical Balance",
+        exporter: "NET EXPORTER",
+        importer: "NET IMPORTER",
         arbitrageChartTitle: "Hourly SCADA Flows & Applicable MCP",
         arbitrageChartSub: "Click on a country below to isolate flows and view the clearing price used for financial calculations.",
         colCountry: "Country",
-        colNet: "Net MWh",
-        colValue: "Value (€)",
-        colPrice: "Avg €/MWh"
+        colNet: "Absolute Net MWh",
+        colValue: "Cash Flow (€)",
+        colPrice: "Dominant €/MWh"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -58,27 +57,27 @@ const i18n = {
         mcpChartTitle: "Τιμές Εκκαθάρισης Αγοράς Επόμενης Ημέρας",
 
         // Tab 3
-        kpiLabelStatus: "Ημερησιο Καθεστως",
-        kpiLabelMwh: "Συνολικος Ογκος",
-        kpiLabelEur: "Αξια Ροων (€)",
-        kpiLabelAvg: "Μεση Τιμη (€/MWh)",
-        exporter: "ΕΞΑΓΩΓΙΚΗ",
-        importer: "ΕΙΣΑΓΩΓΙΚΗ",
+        kpiLabelCashFlow: "Καθαρό Ταμείο (€)",
+        kpiLabelExp: "Συνολικές Εξαγωγές (Έσοδο)",
+        kpiLabelImp: "Συνολικές Εισαγωγές (Κόστος)",
+        kpiLabelStatus: "Φυσικό Ισοζύγιο",
+        exporter: "ΚΑΘΑΡΟΣ ΕΞΑΓΩΓΕΑΣ",
+        importer: "ΚΑΘΑΡΟΣ ΕΙΣΑΓΩΓΕΑΣ",
         arbitrageChartTitle: "Ωριαίες Ροές SCADA & Εφαρμοστέα MCP",
         arbitrageChartSub: "Επιλέξτε χώρα από τη λίστα για απομόνωση των ροών και εμφάνιση της τιμής εκκαθάρισης.",
         colCountry: "Χωρα",
-        colNet: "Καθαρες MWh",
-        colValue: "Αξια (€)",
-        colPrice: "Μεση €/MWh"
+        colNet: "Απολυτες MWh",
+        colValue: "Ταμειο (€)",
+        colPrice: "Κυρια Τιμη (€/MWh)"
     }
 };
 
 const countryColors = {
-    AL: 'rgba(59, 130, 246, 0.8)', // Blue
-    BG: 'rgba(16, 185, 129, 0.8)', // Emerald
-    IT: 'rgba(168, 85, 247, 0.8)', // Purple
-    MK: 'rgba(99, 102, 241, 0.8)', // Indigo
-    TR: 'rgba(20, 184, 166, 0.8)'  // Teal
+    AL: 'rgba(59, 130, 246, 0.8)', 
+    BG: 'rgba(16, 185, 129, 0.8)', 
+    IT: 'rgba(168, 85, 247, 0.8)', 
+    MK: 'rgba(99, 102, 241, 0.8)', 
+    TR: 'rgba(20, 184, 166, 0.8)'  
 };
 
 function setLang(lang) {
@@ -102,11 +101,10 @@ function setLang(lang) {
     document.getElementById('flowsChartSub').innerText = t.totalsChartSub; 
     document.getElementById('mcpChartTitle').innerText = t.mcpChartTitle;
 
-    // Tab 3
+    document.getElementById('kpiLabelCashFlow').innerText = t.kpiLabelCashFlow;
+    document.getElementById('kpiLabelExp').innerText = t.kpiLabelExp;
+    document.getElementById('kpiLabelImp').innerText = t.kpiLabelImp;
     document.getElementById('kpiLabelStatus').innerText = t.kpiLabelStatus;
-    document.getElementById('kpiLabelMwh').innerText = t.kpiLabelMwh;
-    document.getElementById('kpiLabelEur').innerText = t.kpiLabelEur;
-    document.getElementById('kpiLabelAvg').innerText = t.kpiLabelAvg;
     document.getElementById('arbitrageChartTitle').innerText = t.arbitrageChartTitle;
     document.getElementById('arbitrageChartSub').innerText = t.arbitrageChartSub;
     document.getElementById('colCountry').innerText = t.colCountry;
@@ -141,11 +139,6 @@ function updateUpdateTimes(latestDateStr) {
     }
 }
 
-// Utility: Δίνει χρώμα ανάλογα με το πρόσημο (Red = Exporter/-, Yellow = Importer/+)
-function getStatusColor(val) {
-    return val >= 0 ? "text-yellow-400" : "text-rose-500";
-}
-
 async function fetchLocalData() {
     const overlay = document.getElementById('loading-overlay');
     const progressBar = document.getElementById('loading-progress-bar');
@@ -175,7 +168,6 @@ async function fetchLocalData() {
         setTimeout(() => {
             overlay.classList.add('opacity-0');
             setTimeout(() => overlay.style.display = 'none', 500);
-            
             Chart.register(ChartDataLabels);
             setLang('en');
         }, 500);
@@ -191,7 +183,6 @@ function processArbitrageData(dayData) {
     const mcpBG = dayData.Hourly.map(h => h.MCP_BG);
     const mcpIT = dayData.Hourly.map(h => h.MCP_IT);
 
-    // Ωριαίες Ροές
     const flows = {
         AL: dayData.Hourly.map(h => h.SCADA_AL || 0),
         BG: dayData.Hourly.map(h => h.SCADA_BG || 0),
@@ -200,59 +191,71 @@ function processArbitrageData(dayData) {
         TR: dayData.Hourly.map(h => h.SCADA_TR || 0)
     };
 
-    // Ωριαίες Τιμές (Κανόνες Euphemia & Non-Euphemia)
     const prices = {
         AL: mcpGR,
-        BG: mcpGR.map((gr, i) => (gr + mcpBG[i]) / 2), // Euphemia Avg
-        IT: mcpGR.map((gr, i) => (gr + mcpIT[i]) / 2), // Euphemia Avg
+        BG: mcpGR.map((gr, i) => (gr + mcpBG[i]) / 2), 
+        IT: mcpGR.map((gr, i) => (gr + mcpIT[i]) / 2), 
         MK: mcpGR,
         TR: mcpGR
     };
 
+    let expVol = 0, expEur = 0;
+    let impVol = 0, impEur = 0;
     let summary = {};
-    let totalMwh = 0;
-    let totalEur = 0;
 
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
-        let sumMwh = 0;
-        let sumEur = 0;
-        
+        let cExpVol = 0, cExpEur = 0;
+        let cImpVol = 0, cImpEur = 0;
+
         flows[c].forEach((mwh, i) => {
-            sumMwh += mwh;
-            sumEur += (mwh * prices[c][i]);
+            let price = prices[c][i];
+            if (mwh < 0) {
+                // Εξαγωγή = Έσοδο (Απόλυτη τιμή MWh)
+                let vol = Math.abs(mwh);
+                cExpVol += vol;
+                cExpEur += (vol * price);
+            } else if (mwh > 0) {
+                // Εισαγωγή = Κόστος
+                cImpVol += mwh;
+                cImpEur += (mwh * price);
+            }
         });
 
-        totalMwh += sumMwh;
-        totalEur += sumEur;
+        expVol += cExpVol;
+        expEur += cExpEur;
+        impVol += cImpVol;
+        impEur += cImpEur;
 
         summary[c] = {
-            mwh: sumMwh,
-            eur: sumEur,
-            avg: sumMwh !== 0 ? (sumEur / sumMwh) : 0,
-            hourlyFlows: flows[c],
+            expVol: cExpVol,
+            expEur: cExpEur,
+            impVol: cImpVol,
+            impEur: cImpEur,
+            netCashFlow: cExpEur - cImpEur, 
+            netVol: cImpVol - cExpVol, // Positive = Net Importer, Negative = Net Exporter
+            hourlyFlows: flows[c], 
             hourlyPrices: prices[c]
         };
     });
 
     globalArbitrageData = {
         hours: hours,
-        flows: flows,
-        prices: prices,
         summary: summary,
-        totalMwh: totalMwh,
-        totalEur: totalEur,
-        totalAvg: totalMwh !== 0 ? (totalEur / totalMwh) : 0
+        expVol: expVol,
+        expEur: expEur,
+        expAvg: expVol > 0 ? (expEur / expVol) : 0,
+        impVol: impVol,
+        impEur: impEur,
+        impAvg: impVol > 0 ? (impEur / impVol) : 0,
+        netCashFlow: expEur - impEur,
+        netVol: impVol - expVol
     };
 }
 
-// Όταν κλικάρει ο χρήστης σε μια χώρα
 function toggleCountrySelection(countryCode) {
-    if (activeCountry === countryCode) {
-        activeCountry = null; // Αποεπιλογή (Δείχνει όλα)
-    } else {
-        activeCountry = countryCode; // Επιλογή χώρας
-    }
-    updateArbitrageTab(); // Ζωγραφίζει ξανά τη λίστα και το γράφημα
+    if (activeCountry === countryCode) activeCountry = null; 
+    else activeCountry = countryCode; 
+    updateArbitrageTab(); 
 }
 
 function updateArbitrageTab() {
@@ -260,36 +263,42 @@ function updateArbitrageTab() {
     const data = globalArbitrageData;
     if (!data) return;
 
-    // --- 1. UPDATE KPIs (Top) ---
-    const isImporter = data.totalMwh >= 0;
-    const statusText = isImporter ? t.importer : t.exporter;
-    const kpiColor = getStatusColor(data.totalMwh);
+    // --- 1. UPDATE KPIs (Cash Flow Logic) ---
+    const cashFlowSign = data.netCashFlow > 0 ? "+" : "";
+    const cashFlowColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-rose-500";
+    document.getElementById('kpiCashFlowVal').innerText = `${cashFlowSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
+    document.getElementById('kpiCashFlowVal').className = `text-2xl font-bold ${cashFlowColor}`;
 
-    document.getElementById('kpiStatusVal').innerText = statusText;
-    document.getElementById('kpiStatusVal').className = `text-xl font-bold ${kpiColor}`;
+    document.getElementById('kpiExpVol').innerText = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
+    document.getElementById('kpiExpPrice').innerText = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
 
-    document.getElementById('kpiMwhVal').innerText = data.totalMwh.toLocaleString('el-GR', {maximumFractionDigits:0});
-    document.getElementById('kpiMwhVal').className = `text-xl font-bold ${kpiColor}`;
+    document.getElementById('kpiImpVol').innerText = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
+    document.getElementById('kpiImpPrice').innerText = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
 
-    document.getElementById('kpiEurVal').innerText = data.totalEur.toLocaleString('el-GR', {maximumFractionDigits:0}) + " €";
-    document.getElementById('kpiEurVal').className = `text-xl font-bold ${kpiColor}`;
+    const isImporter = data.netVol >= 0;
+    document.getElementById('kpiStatusVal').innerText = isImporter ? t.importer : t.exporter;
+    document.getElementById('kpiStatusVal').className = `text-xl font-bold ${isImporter ? 'text-yellow-400' : 'text-rose-500'}`;
 
-    document.getElementById('kpiAvgVal').innerText = data.totalAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
-    document.getElementById('kpiAvgVal').className = `text-xl font-bold ${kpiColor}`;
-
-    // --- 2. UPDATE LIST (Bottom) ---
+    // --- 2. UPDATE LIST ---
     const listContainer = document.getElementById('arbitrageListContainer');
-    listContainer.innerHTML = ''; // Καθαρισμός
+    listContainer.innerHTML = ''; 
 
     const names = { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" };
 
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         const rowData = data.summary[c];
-        const rowColor = getStatusColor(rowData.mwh);
+        const isNetImp = rowData.netVol >= 0;
+        const dominantColor = isNetImp ? "text-yellow-400" : "text-rose-500";
         
-        // Opacity logic: Αν έχει επιλεγεί άλλη χώρα, το κάνουμε 30%. Αλλιώς 100%.
         const opacityClass = (activeCountry && activeCountry !== c) ? "opacity-30" : "opacity-100";
         const bgHoverClass = (activeCountry === c) ? "bg-slate-700/80" : "hover:bg-slate-700/50";
+
+        // Βρίσκουμε τη Μέση Τιμή της ΚΥΡΙΑΣ κατεύθυνσης της χώρας
+        const dominantAvg = isNetImp ? 
+            (rowData.impVol > 0 ? rowData.impEur / rowData.impVol : 0) : 
+            (rowData.expVol > 0 ? rowData.expEur / rowData.expVol : 0);
+            
+        const cashFlowFormatted = rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
 
         const rowHTML = `
             <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacityClass} ${bgHoverClass} text-center font-semibold text-sm">
@@ -297,43 +306,38 @@ function updateArbitrageTab() {
                     <span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>
                     ${names[c]}
                 </div>
-                <div class="${rowColor}">${rowData.mwh.toLocaleString('el-GR', {maximumFractionDigits:0})}</div>
-                <div class="${rowColor}">${rowData.eur.toLocaleString('el-GR', {maximumFractionDigits:0})} €</div>
-                <div class="${rowColor}">${rowData.avg.toLocaleString('el-GR', {maximumFractionDigits:2})}</div>
+                <div class="${dominantColor}">${Math.abs(rowData.netVol).toLocaleString('el-GR', {maximumFractionDigits:0})}</div>
+                <div class="${dominantColor}">${cashFlowFormatted} €</div>
+                <div class="${dominantColor}">${dominantAvg.toLocaleString('el-GR', {maximumFractionDigits:2})}</div>
             </div>
         `;
         listContainer.insertAdjacentHTML('beforeend', rowHTML);
     });
 
-    // --- 3. UPDATE CHART (Middle) ---
+    // --- 3. UPDATE CHART ---
     if (arbitrageChartInstance) arbitrageChartInstance.destroy();
 
     const ctxArb = document.getElementById('arbitrageChart').getContext('2d');
-    
     let datasets = [];
 
-    // Αν ΕΧΕΙ επιλεγεί χώρα -> 1 Μπάρα + 1 Γραμμή Τιμής
     if (activeCountry) {
         datasets.push({
             type: 'bar',
             label: `${names[activeCountry]} Flow (MW)`,
             data: data.summary[activeCountry].hourlyFlows,
             backgroundColor: countryColors[activeCountry],
-            yAxisID: 'y' // Πάει στον αριστερό άξονα
+            yAxisID: 'y'
         });
-        
         datasets.push({
             type: 'line',
             label: `${names[activeCountry]} Applied MCP (€/MWh)`,
             data: data.summary[activeCountry].hourlyPrices,
-            borderColor: '#f8fafc', // Λευκό για να ξεχωρίζει
+            borderColor: '#f8fafc',
             borderWidth: 3,
             tension: 0.2,
-            yAxisID: 'y1' // Πάει στον δεξί άξονα (Τιμές)
+            yAxisID: 'y1'
         });
-    } 
-    // Αν ΔΕΝ έχει επιλεγεί χώρα -> Stacked Bars όλων των χωρών
-    else {
+    } else {
         ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
             datasets.push({
                 type: 'bar',
@@ -376,7 +380,6 @@ function updateArbitrageTab() {
                         lineWidth: (context) => context.tick.value === 0 ? 2 : 1
                     }
                 },
-                // Ο δεξιός άξονας εμφανίζεται ΜΟΝΟ όταν υπάρχει επιλεγμένη χώρα (άρα υπάρχει γραμμή τιμής)
                 y1: {
                     type: 'linear', display: activeCountry !== null, position: 'right',
                     title: { display: true, text: 'Price (€/MWh)' },
@@ -389,17 +392,14 @@ function updateArbitrageTab() {
 
 function renderCharts() {
     if (rawData.length === 0) return;
-    
     const selectedDate = document.getElementById('dateSelect').value;
     const dayData = rawData.find(row => row.Date === selectedDate);
     if (!dayData) return;
 
-    // Επεξεργασία για το Tab 3 (και reset selection)
     activeCountry = null;
     processArbitrageData(dayData);
     updateArbitrageTab();
 
-    // --- Δεδομένα για Tabs 1 & 2 ---
     const countries = ["Albania", "Bulgaria", "Italy", "North Macedonia", "Turkey"];
     const ispTotals = countries.map(c => dayData.Totals.ISP[c] || 0);
     const scadaTotals = countries.map(c => dayData.Totals.SCADA[c] || 0);
@@ -420,7 +420,6 @@ function renderCharts() {
 
     const t = i18n[currentLang];
 
-    // --- CHART 1: TOTALS BAR CHART ---
     const ctxTotals = document.getElementById('totalsChart').getContext('2d');
     totalsChartInstance = new Chart(ctxTotals, {
         type: 'bar',
@@ -466,7 +465,6 @@ function renderCharts() {
         }
     });
 
-    // --- CHART 2: HOURLY FLOWS ---
     const ctxFlows = document.getElementById('flowsChart').getContext('2d');
     flowsChartInstance = new Chart(ctxFlows, {
         type: 'bar',
@@ -504,7 +502,6 @@ function renderCharts() {
         }
     });
 
-    // --- CHART 3: MCPs ---
     const ctxMCP = document.getElementById('mcpChart').getContext('2d');
     mcpChartInstance = new Chart(ctxMCP, {
         type: 'line',
