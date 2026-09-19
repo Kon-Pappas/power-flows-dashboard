@@ -5,8 +5,8 @@ let totalsChartInstance = null;
 let flowsChartInstance = null;
 let mcpChartInstance = null;
 let arbitrageChartInstance = null;
-let mtdCashFlowChartInstance = null; // Χωριστό γράφημα για €
-let mtdVolumeChartInstance = null;   // Χωριστό γράφημα για GWh
+let mtdCashFlowChartInstance = null; 
+let mtdVolumeChartInstance = null;   
 
 let activeCountry = null;
 let globalArbitrageData = {}; 
@@ -23,6 +23,7 @@ const i18n = {
         tabHourly: "Hourly Profiles",
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
+        btnMethodology: "Methodology & Assumptions",
         
         totalsChartTitle: "Net Flows (ISP vs SCADA)",
         totalsChartSub: "Negative values (-) = Exports. Positive values (+) = Imports.",
@@ -44,13 +45,23 @@ const i18n = {
         colValue: "Cash Flow (€)",
         colPrice: "Dominant €/MWh",
 
-        // Tab 4 (MTD)
         mtdLabelCashFlow: "MTD Cash Flow",
         mtdLabelExp: "MTD Total Exports (Income)",
         mtdLabelImp: "MTD Total Imports (Cost)",
         mtdLabelExtremes: "Best / Worst Day",
         mtdChartTitleCash: "Cumulative Financial Position (€)",
-        mtdChartTitleVol: "Cumulative Physical Volume (GWh) - Gross & Net"
+        mtdChartTitleVol: "Cumulative Physical Volume (GWh) - Gross & Net",
+
+        // Modal EN
+        modalTitle: "Methodology & Core Assumptions",
+        modalIntro: "This Dashboard serves as an independent tool for monitoring and analyzing physical and financial power flows across the Greek interconnections.",
+        modalDataTitle: "Data Sources:",
+        modalDataText: "Physical flow data is fetched daily from IPTO's (ADMIE) official SCADA & ISP reports. Day-Ahead Market Clearing Prices (MCPs) are retrieved via the ENTSO-E Transparency Platform API.",
+        modalPricingTitle: "Pricing Logic & Arbitrage:",
+        modalPricingText: "For non-EUPHEMIA borders (Albania, North Macedonia, Turkey), the financial value is calculated using solely the Greek MCP. For EUPHEMIA-coupled borders (Italy, Bulgaria), the value is calculated using the average of the two domestic MCPs, reflecting the baseline methodology for congestion income.",
+        modalSignTitle: "Sign Convention:",
+        modalSignText: "Following ENEX standards, Red denotes Exports and Yellow denotes Imports. In financial calculations (Cash Flow), Exporting energy generates positive income (+), while Importing energy represents a cost (-).",
+        modalCloseBtn: "Close"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -63,6 +74,7 @@ const i18n = {
         tabHourly: "Ωριαία Προφίλ",
         tabArbitrage: "Ημερήσιο Arbitrage",
         tabMTD: "Σωρευτική Θέση",
+        btnMethodology: "Μεθοδολογία & Παραδοχές",
         
         totalsChartTitle: "Καθαρές Ροές (ISP vs SCADA)",
         totalsChartSub: "Αρνητικές τιμές (-) = Εξαγωγές. Θετικές τιμές (+) = Εισαγωγές.",
@@ -84,13 +96,23 @@ const i18n = {
         colValue: "Ταμειο (€)",
         colPrice: "Κυρια Τιμη (€/MWh)",
 
-        // Tab 4
         mtdLabelCashFlow: "Σωρευτικό Ταμείο Μηνός",
         mtdLabelExp: "Συνολικές Εξαγωγές (Έσοδο)",
         mtdLabelImp: "Συνολικές Εισαγωγές (Κόστος)",
         mtdLabelExtremes: "Καλύτερη / Χειρότερη Μέρα",
         mtdChartTitleCash: "Σωρευτική Οικονομική Θέση (€)",
-        mtdChartTitleVol: "Σωρευτικός Φυσικός Όγκος (GWh) - Ακαθάριστος & Καθαρός"
+        mtdChartTitleVol: "Σωρευτικός Φυσικός Όγκος (GWh) - Ακαθάριστος & Καθαρός",
+
+        // Modal EL
+        modalTitle: "Μεθοδολογία & Παραδοχές",
+        modalIntro: "Αυτό το Dashboard αποτελεί ένα ανεξάρτητο εργαλείο παρακολούθησης και ανάλυσης των φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις.",
+        modalDataTitle: "Πηγές Δεδομένων:",
+        modalDataText: "Τα δεδομένα φυσικών ροών αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ. Οι Τιμές Εκκαθάρισης (MCPs) αντλούνται μέσω του API της πλατφόρμας ENTSO-E.",
+        modalPricingTitle: "Λογική Τιμολόγησης & Arbitrage:",
+        modalPricingText: "Για τις μη-EUPHEMIA διασυνδέσεις (Αλβανία, Β. Μακεδονία, Τουρκία), η οικονομική αξία υπολογίζεται αποκλειστικά βάσει της Ελληνικής MCP. Για τις συζευγμένες διασυνδέσεις (Ιταλία, Βουλγαρία), χρησιμοποιείται ο μέσος όρος των δύο MCP, αντανακλώντας τη βασική μεθοδολογία υπολογισμού εσόδων συμφόρησης.",
+        modalSignTitle: "Σύμβαση Προσήμων:",
+        modalSignText: "Ακολουθώντας τα πρότυπα του ΕΝΕΧ, το Κόκκινο υποδηλώνει Εξαγωγές και το Κίτρινο Εισαγωγές. Στους οικονομικούς υπολογισμούς (Cash Flow), οι Εξαγωγές αποτελούν Έσοδο (+), ενώ οι Εισαγωγές αποτελούν Κόστος (-).",
+        modalCloseBtn: "Κλείσιμο"
     }
 };
 
@@ -107,6 +129,8 @@ function setLang(lang) {
     document.getElementById('nextUpdateLabel').innerText = t.nextUpdate;
     document.getElementById('dateLabel').innerText = t.dateLabel;
     document.getElementById('monthLabel').innerText = t.monthLabel;
+    document.getElementById('btnMethodology').innerText = t.btnMethodology;
+    
     document.getElementById('tabBtnTotals').innerText = t.tabTotals;
     document.getElementById('tabBtnHourly').innerText = t.tabHourly;
     document.getElementById('tabBtnArbitrage').innerText = t.tabArbitrage;
@@ -128,13 +152,23 @@ function setLang(lang) {
     document.getElementById('colValue').innerText = t.colValue;
     document.getElementById('colPrice').innerText = t.colPrice;
 
-    // Tab 4
     document.getElementById('mtdLabelCashFlow').innerText = t.mtdLabelCashFlow;
     document.getElementById('mtdLabelExp').innerText = t.mtdLabelExp;
     document.getElementById('mtdLabelImp').innerText = t.mtdLabelImp;
     document.getElementById('mtdLabelExtremes').innerText = t.mtdLabelExtremes;
     document.getElementById('mtdChartTitleCash').innerText = t.mtdChartTitleCash;
     document.getElementById('mtdChartTitleVol').innerText = t.mtdChartTitleVol;
+
+    // Modal translations
+    document.getElementById('modalTitle').innerText = t.modalTitle;
+    document.getElementById('modalIntro').innerText = t.modalIntro;
+    document.getElementById('modalDataTitle').innerText = t.modalDataTitle;
+    document.getElementById('modalDataText').innerText = t.modalDataText;
+    document.getElementById('modalPricingTitle').innerText = t.modalPricingTitle;
+    document.getElementById('modalPricingText').innerText = t.modalPricingText;
+    document.getElementById('modalSignTitle').innerText = t.modalSignTitle;
+    document.getElementById('modalSignText').innerText = t.modalSignText;
+    document.getElementById('modalCloseBtn').innerText = t.modalCloseBtn;
 
     if(lang === 'el') {
         document.getElementById('btnGr').className = "px-2 py-1 rounded bg-cyan-600 text-white transition";
@@ -345,10 +379,8 @@ function renderMTDTab(selectedMonth) {
     if(monthData.length === 0) return;
 
     let cumEur = 0;
-    
-    // Ξεχωριστοί αθροιστές για τις μπάρες καθρέφτη
-    let cumImpGwh = 0; // Θετικό
-    let cumExpGwh = 0; // Αρνητικό
+    let cumImpGwh = 0; 
+    let cumExpGwh = 0; 
 
     let totalExpEur = 0, totalImpEur = 0, totalExpVol = 0, totalImpVol = 0;
     let bestDay = { date: '', val: -Infinity };
@@ -364,10 +396,8 @@ function renderMTDTab(selectedMonth) {
         const d = calculateDayNet(day);
         
         cumEur += d.netCashFlow;
-        
-        // Χτίζουμε τα Volumes του "Καθρέφτη"
-        cumImpGwh += (d.impVol / 1000);  // Αθροίζει προς τα πάνω
-        cumExpGwh -= (d.expVol / 1000);  // Αθροίζει προς τα κάτω
+        cumImpGwh += (d.impVol / 1000);  
+        cumExpGwh -= (d.expVol / 1000);  
         
         totalExpEur += d.expEur; totalImpEur += d.impEur;
         totalExpVol += d.expVol; totalImpVol += d.impVol;
@@ -376,13 +406,12 @@ function renderMTDTab(selectedMonth) {
         dataEur.push(cumEur);
         dataCumImp.push(cumImpGwh);
         dataCumExp.push(cumExpGwh);
-        dataCumNet.push(cumImpGwh + cumExpGwh); // Η διαφορά (Net)
+        dataCumNet.push(cumImpGwh + cumExpGwh); 
 
         if (d.netCashFlow > bestDay.val) { bestDay.val = d.netCashFlow; bestDay.date = day.Date; }
         if (d.netCashFlow < worstDay.val) { worstDay.val = d.netCashFlow; worstDay.date = day.Date; }
     });
 
-    // 1. UPDATE KPIs (Αμετάβλητα)
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-rose-500";
     document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
@@ -403,7 +432,6 @@ function renderMTDTab(selectedMonth) {
     document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
 
 
-    // 2. CHART 1: CASH FLOW
     if (mtdCashFlowChartInstance) mtdCashFlowChartInstance.destroy();
     const ctxCash = document.getElementById('mtdChartCashFlow').getContext('2d');
     mtdCashFlowChartInstance = new Chart(ctxCash, {
@@ -429,7 +457,6 @@ function renderMTDTab(selectedMonth) {
         }
     });
 
-    // 3. CHART 2: VOLUME (Ο ΚΑΘΡΕΦΤΗΣ)
     if (mtdVolumeChartInstance) mtdVolumeChartInstance.destroy();
     const ctxVol = document.getElementById('mtdChartVolume').getContext('2d');
     mtdVolumeChartInstance = new Chart(ctxVol, {
@@ -440,7 +467,7 @@ function renderMTDTab(selectedMonth) {
                     type: 'line',
                     label: 'Net MWh',
                     data: dataCumNet,
-                    borderColor: '#ffffff', // Έντονη Λευκή γραμμή για το Net
+                    borderColor: '#ffffff', 
                     borderWidth: 3,
                     tension: 0.3,
                     pointRadius: 2
@@ -449,14 +476,14 @@ function renderMTDTab(selectedMonth) {
                     type: 'bar',
                     label: 'Imports (GWh)',
                     data: dataCumImp,
-                    backgroundColor: 'rgba(250, 204, 21, 0.7)', // Κίτρινο
+                    backgroundColor: 'rgba(250, 204, 21, 0.7)', 
                     stacked: true
                 },
                 {
                     type: 'bar',
                     label: 'Exports (GWh)',
                     data: dataCumExp,
-                    backgroundColor: 'rgba(244, 63, 94, 0.7)', // Κόκκινο
+                    backgroundColor: 'rgba(244, 63, 94, 0.7)', 
                     stacked: true
                 }
             ]
@@ -470,23 +497,18 @@ function renderMTDTab(selectedMonth) {
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
-                            let val = Math.abs(context.raw); // Στο Tooltip τα δείχνουμε όλα ως θετικά GWh
+                            let val = Math.abs(context.raw); 
                             return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:1})} GWh`;
                         }
                     }
                 }
             },
             scales: {
-                x: { 
-                    stacked: true, 
-                    grid: { display: false } 
-                },
+                x: { stacked: true, grid: { display: false } },
                 y: { 
                     stacked: true, 
                     grid: { color: ctx => ctx.tick.value===0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value===0 ? 2 : 1 },
-                    ticks: {
-                        callback: function(value) { return Math.abs(value); } // Οι αριθμοί στον άξονα δείχνουν θετικοί
-                    }
+                    ticks: { callback: function(value) { return Math.abs(value); } }
                 }
             }
         }
