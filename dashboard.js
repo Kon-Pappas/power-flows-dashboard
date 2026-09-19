@@ -5,7 +5,8 @@ let totalsChartInstance = null;
 let flowsChartInstance = null;
 let mcpChartInstance = null;
 let arbitrageChartInstance = null;
-let mtdChartInstance = null;
+let mtdCashFlowChartInstance = null; // Χωριστό γράφημα για €
+let mtdVolumeChartInstance = null;   // Χωριστό γράφημα για GWh
 
 let activeCountry = null;
 let globalArbitrageData = {}; 
@@ -48,8 +49,8 @@ const i18n = {
         mtdLabelExp: "MTD Total Exports (Income)",
         mtdLabelImp: "MTD Total Imports (Cost)",
         mtdLabelExtremes: "Best / Worst Day",
-        mtdChartTitle: "Cumulative Financial & Physical Position",
-        mtdChartSub: "Line indicates Cash Flow. Bars indicate Net Physical Volume (GWh)."
+        mtdChartTitleCash: "Cumulative Financial Position (€)",
+        mtdChartTitleVol: "Cumulative Physical Volume (GWh) - Gross & Net"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -88,8 +89,8 @@ const i18n = {
         mtdLabelExp: "Συνολικές Εξαγωγές (Έσοδο)",
         mtdLabelImp: "Συνολικές Εισαγωγές (Κόστος)",
         mtdLabelExtremes: "Καλύτερη / Χειρότερη Μέρα",
-        mtdChartTitle: "Σωρευτική Οικονομική & Φυσική Θέση",
-        mtdChartSub: "Η Γραμμή δείχνει το Ταμείο. Οι Μπάρες δείχνουν τον Καθαρό Φυσικό Όγκο σε GWh."
+        mtdChartTitleCash: "Σωρευτική Οικονομική Θέση (€)",
+        mtdChartTitleVol: "Σωρευτικός Φυσικός Όγκος (GWh) - Ακαθάριστος & Καθαρός"
     }
 };
 
@@ -132,8 +133,8 @@ function setLang(lang) {
     document.getElementById('mtdLabelExp').innerText = t.mtdLabelExp;
     document.getElementById('mtdLabelImp').innerText = t.mtdLabelImp;
     document.getElementById('mtdLabelExtremes').innerText = t.mtdLabelExtremes;
-    document.getElementById('mtdChartTitle').innerText = t.mtdChartTitle;
-    document.getElementById('mtdChartSub').innerText = t.mtdChartSub;
+    document.getElementById('mtdChartTitleCash').innerText = t.mtdChartTitleCash;
+    document.getElementById('mtdChartTitleVol').innerText = t.mtdChartTitleVol;
 
     if(lang === 'el') {
         document.getElementById('btnGr').className = "px-2 py-1 rounded bg-cyan-600 text-white transition";
@@ -233,7 +234,7 @@ function calculateDayNet(dayData) {
 
     return {
         netCashFlow: expEur - impEur,
-        netVol: impVol - expVol, // Positive = Net Import, Negative = Net Export
+        netVol: impVol - expVol, 
         expEur, impEur, expVol, impVol,
         hourlyFlows: flows, hourlyPrices: prices
     };
@@ -344,34 +345,44 @@ function renderMTDTab(selectedMonth) {
     if(monthData.length === 0) return;
 
     let cumEur = 0;
-    let cumNetGwh = 0; // Cumulative NET Volume in GWh
+    
+    // Ξεχωριστοί αθροιστές για τις μπάρες καθρέφτη
+    let cumImpGwh = 0; // Θετικό
+    let cumExpGwh = 0; // Αρνητικό
+
     let totalExpEur = 0, totalImpEur = 0, totalExpVol = 0, totalImpVol = 0;
     let bestDay = { date: '', val: -Infinity };
     let worstDay = { date: '', val: Infinity };
 
     let labels = [];
     let dataEur = [];
-    let dataNetGwh = []; 
+    let dataCumImp = []; 
+    let dataCumExp = []; 
+    let dataCumNet = [];
 
     monthData.forEach(day => {
         const d = calculateDayNet(day);
         
         cumEur += d.netCashFlow;
         
-        // Υπολογισμός του καθαρού όγκου (Imports - Exports) και μετατροπή σε GWh
-        cumNetGwh += (d.netVol / 1000); 
-
+        // Χτίζουμε τα Volumes του "Καθρέφτη"
+        cumImpGwh += (d.impVol / 1000);  // Αθροίζει προς τα πάνω
+        cumExpGwh -= (d.expVol / 1000);  // Αθροίζει προς τα κάτω
+        
         totalExpEur += d.expEur; totalImpEur += d.impEur;
         totalExpVol += d.expVol; totalImpVol += d.impVol;
 
         labels.push(day.Date.substring(8, 10)); 
         dataEur.push(cumEur);
-        dataNetGwh.push(cumNetGwh);
+        dataCumImp.push(cumImpGwh);
+        dataCumExp.push(cumExpGwh);
+        dataCumNet.push(cumImpGwh + cumExpGwh); // Η διαφορά (Net)
 
         if (d.netCashFlow > bestDay.val) { bestDay.val = d.netCashFlow; bestDay.date = day.Date; }
         if (d.netCashFlow < worstDay.val) { worstDay.val = d.netCashFlow; worstDay.date = day.Date; }
     });
 
+    // 1. UPDATE KPIs (Αμετάβλητα)
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-rose-500";
     document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
@@ -391,36 +402,62 @@ function renderMTDTab(selectedMonth) {
     document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (+${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
     document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
 
-    if (mtdChartInstance) mtdChartInstance.destroy();
-    const ctxMTD = document.getElementById('mtdChart').getContext('2d');
 
-    mtdChartInstance = new Chart(ctxMTD, {
+    // 2. CHART 1: CASH FLOW
+    if (mtdCashFlowChartInstance) mtdCashFlowChartInstance.destroy();
+    const ctxCash = document.getElementById('mtdChartCashFlow').getContext('2d');
+    mtdCashFlowChartInstance = new Chart(ctxCash, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Cum. Cash Flow (€)',
+                data: dataEur,
+                fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.2)', below: 'rgba(244, 63, 94, 0.2)' },
+                segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
+                borderWidth: 2, tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { datalabels: { display: false } },
+            scales: {
+                x: { grid: { display: false } },
+                y: { grid: { color: ctx => ctx.tick.value===0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value===0 ? 2 : 1 } }
+            }
+        }
+    });
+
+    // 3. CHART 2: VOLUME (Ο ΚΑΘΡΕΦΤΗΣ)
+    if (mtdVolumeChartInstance) mtdVolumeChartInstance.destroy();
+    const ctxVol = document.getElementById('mtdChartVolume').getContext('2d');
+    mtdVolumeChartInstance = new Chart(ctxVol, {
         data: {
             labels: labels,
             datasets: [
                 {
                     type: 'line',
-                    label: 'Cum. Cash Flow (€)',
-                    data: dataEur,
-                    yAxisID: 'yEur',
-                    fill: {
-                        target: 'origin',
-                        above: 'rgba(16, 185, 129, 0.2)', 
-                        below: 'rgba(244, 63, 94, 0.2)'   
-                    },
-                    segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f43f5e' },
-                    borderWidth: 2, tension: 0.3
+                    label: 'Net MWh',
+                    data: dataCumNet,
+                    borderColor: '#ffffff', // Έντονη Λευκή γραμμή για το Net
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 2
                 },
                 {
                     type: 'bar',
-                    label: 'Cum. Net Volume (GWh)',
-                    data: dataNetGwh,
-                    yAxisID: 'yMwh',
-                    // Δυναμικά χρώματα ENEX (Αχνά): Κίτρινο αν είναι Εισαγωγή, Κόκκινο αν είναι Εξαγωγή
-                    backgroundColor: context => context.raw >= 0 ? 'rgba(250, 204, 21, 0.2)' : 'rgba(244, 63, 94, 0.2)', 
-                    borderColor: context => context.raw >= 0 ? 'rgba(250, 204, 21, 0.4)' : 'rgba(244, 63, 94, 0.4)',
-                    borderWidth: 1,
-                    borderRadius: 4
+                    label: 'Imports (GWh)',
+                    data: dataCumImp,
+                    backgroundColor: 'rgba(250, 204, 21, 0.7)', // Κίτρινο
+                    stacked: true
+                },
+                {
+                    type: 'bar',
+                    label: 'Exports (GWh)',
+                    data: dataCumExp,
+                    backgroundColor: 'rgba(244, 63, 94, 0.7)', // Κόκκινο
+                    stacked: true
                 }
             ]
         },
@@ -433,28 +470,23 @@ function renderMTDTab(selectedMonth) {
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
-                            let val = context.raw;
-                            if (label.includes('Cash Flow')) {
-                                return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
-                            } else {
-                                return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:1})} GWh`;
-                            }
+                            let val = Math.abs(context.raw); // Στο Tooltip τα δείχνουμε όλα ως θετικά GWh
+                            return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:1})} GWh`;
                         }
                     }
                 }
             },
             scales: {
-                x: { grid: { display: false } },
-                yEur: { 
-                    type: 'linear', position: 'left',
-                    title: { display: true, text: 'Cash Flow (€)' },
-                    grid: { color: ctx => ctx.tick.value===0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value===0 ? 2 : 1 }
+                x: { 
+                    stacked: true, 
+                    grid: { display: false } 
                 },
-                yMwh: { 
-                    type: 'linear', position: 'right',
-                    title: { display: true, text: 'Net Volume (GWh)' },
-                    // Αφαιρέσαμε τα min/max. Πλέον ο άξονας πάει πάνω/κάτω ελεύθερα ανάλογα με τον καθαρό όγκο!
-                    grid: { display: false }
+                y: { 
+                    stacked: true, 
+                    grid: { color: ctx => ctx.tick.value===0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value===0 ? 2 : 1 },
+                    ticks: {
+                        callback: function(value) { return Math.abs(value); } // Οι αριθμοί στον άξονα δείχνουν θετικοί
+                    }
                 }
             }
         }
