@@ -312,8 +312,8 @@ function updateArbitrageTab() {
     if (!data) return;
 
     const cfSign = data.netCashFlow > 0 ? "+" : "";
-    // ΑΛΛΑΓΗ 1: orange-500 για αρνητικό Cash Flow αντί για rose-500
-    const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-orange-500";
+    // ΑΛΛΑΓΗ 1: fuchsia-500 για αρνητικό Cash Flow 
+    const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
     document.getElementById('kpiCashFlowVal').innerText = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
     document.getElementById('kpiCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
     
@@ -416,8 +416,8 @@ function renderMTDTab(selectedMonth) {
     });
 
     const cfSign = cumEur > 0 ? "+" : "";
-    // ΑΛΛΑΓΗ 2: orange-500 για αρνητικό MTD Cash Flow
-    const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-orange-500";
+    // ΑΛΛΑΓΗ 2: fuchsia-500 για αρνητικό MTD Cash Flow
+    const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-fuchsia-500";
     document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
     document.getElementById('mtdCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
 
@@ -433,7 +433,6 @@ function renderMTDTab(selectedMonth) {
 
     const formatDay = (d) => `${d.substring(8,10)}/${d.substring(5,7)}`;
     document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (+${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
-    // Αφήνουμε το rose-400 για την Worst Day (μικρό κείμενο) για να μη χτυπάει πολύ, ήδη διορθώσαμε το μεγάλο KPI
     document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
 
     if (mtdCashFlowChartInstance) mtdCashFlowChartInstance.destroy();
@@ -445,9 +444,9 @@ function renderMTDTab(selectedMonth) {
             datasets: [{
                 label: 'Cum. Cash Flow (€)',
                 data: dataEur,
-                // ΑΛΛΑΓΗ 3: Πορτοκαλί fill και γραμμή κάτω από το μηδέν (rgba(249, 115, 22, 0.2) και #f97316)
-                fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.2)', below: 'rgba(249, 115, 22, 0.2)' },
-                segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#f97316' },
+                // ΑΛΛΑΓΗ 3: Μωβ (fuchsia) fill και γραμμή κάτω από το μηδέν (rgba(217, 70, 239, 0.2) και #d946ef)
+                fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.2)', below: 'rgba(217, 70, 239, 0.2)' },
+                segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#d946ef' },
                 borderWidth: 2, tension: 0.3
             }]
         },
