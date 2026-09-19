@@ -139,19 +139,17 @@
 
         <!-- VIEW 4: MTD CUMULATIVE -->
         <div id="viewMTD" class="space-y-6 hidden">
-            <!-- MTD KPIs -->
+            <!-- MTD KPIs (Untouched) -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
                     <p class="text-2xl font-bold transition-colors" id="mtdCashFlowVal">-</p>
                 </div>
-                <!-- Exports / Income -->
                 <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
                     <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
                     <p class="text-xl font-bold text-rose-500" id="mtdExpVol">-</p>
                     <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
                 </div>
-                <!-- Imports / Cost -->
                 <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
                     <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
                     <p class="text-xl font-bold text-yellow-400" id="mtdImpVol">-</p>
@@ -166,15 +164,30 @@
                 </div>
             </div>
             
-            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitle">Cumulative Financial & Physical Position</h2>
-                        <p class="text-xs text-slate-400" id="mtdChartSub">Building the monthly balance day by day.</p>
+            <!-- Decoupled Charts Area -->
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Cash Flow Chart -->
+                <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitleCash">Cumulative Financial Position (€)</h2>
+                        </div>
+                    </div>
+                    <div class="relative h-[250px] md:h-[300px]">
+                        <canvas id="mtdChartCashFlow"></canvas>
                     </div>
                 </div>
-                <div class="relative h-[450px]">
-                    <canvas id="mtdChart"></canvas>
+
+                <!-- Volume Chart -->
+                <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitleVol">Cumulative Physical Volume (GWh)</h2>
+                        </div>
+                    </div>
+                    <div class="relative h-[250px] md:h-[300px]">
+                        <canvas id="mtdChartVolume"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
