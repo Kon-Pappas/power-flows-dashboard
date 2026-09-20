@@ -135,7 +135,7 @@ def fetch_entsoe_mcp(domain, target_date_str, token):
 if __name__ == "__main__":
     print("Εκκίνηση διαδικασίας: Λήψη τιμών MCP από ENTSO-E...")
     
-    entsoe_token = os.environ.get('ENTSOE_API_TOKEN')
+    entsoe_token = os.environ.get('ENTSOE_TOKEN')
     
     if not entsoe_token:
         print("ΣΦΑΛΜΑ: Δεν βρέθηκε το ENTSOE_API_TOKEN στα environment variables.")
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         }
 
         # Αποθήκευση στο αρχείο market_prices.json
-        with open('market_prices.json', 'w', encoding='utf-8') as f:
+        with open('data/market_prices.json', 'w', encoding='utf-8') as f:
             json.dump(mcp_data, f, ensure_ascii=False, indent=2)
         
         print(f"Επιτυχία: Οι τιμές MCP για {target_date_str} αποθηκεύτηκαν στο 'market_prices.json'.")
