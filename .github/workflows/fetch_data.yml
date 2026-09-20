@@ -36,5 +36,4 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Fetcher"
           git add data/historical_flows.json
-          git add data/market_prices.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update power flows and market prices" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update power flows data" && git push)
