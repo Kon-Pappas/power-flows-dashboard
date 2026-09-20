@@ -22,7 +22,6 @@ import io
 
 ENTSOE_TOKEN = os.environ.get("ENTSOE_TOKEN")
 
-# Η ΝΕΑ "ΑΤΡΩΤΗ" ΣΥΝΑΡΤΗΣΗ ΤΟΥ ENTSO-E
 def fetch_entsoe_mcp(domain, target_date_str, token):
     if not token: 
         return [0.0] * 24
@@ -120,7 +119,6 @@ def fetch_entsoe_mcp(domain, target_date_str, token):
     except: 
         return [0.0] * 24
 
-# ΟΙ ΣΥΝΑΡΤΗΣΕΙΣ ΤΟΥ ΑΔΜΗΕ (Όπως τις είχες, απείραχτες)
 def fetch_admie_excel(date_str, category):
     url = f"https://www.admie.gr/getOperationMarketFile?dateStart={date_str}&dateEnd={date_str}&FileCategory={category}"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -202,7 +200,6 @@ def process_day(date_str):
             vals_96 = np.nan_to_num(cbs_row.iloc[0, 1:97].values.astype(float))
             isp_hourly_net = (vals_96.reshape(24, 4).mean(axis=1) * -1).round(2).tolist()
 
-    # Κλήσεις στη νέα συνάρτηση του ENTSO-E
     mcp_gr = fetch_entsoe_mcp('10YGR-HTSO-----Y', date_str, ENTSOE_TOKEN)
     mcp_bg = fetch_entsoe_mcp('10YCA-BULGARIA-R', date_str, ENTSOE_TOKEN)
     mcp_it = fetch_entsoe_mcp('10YIT-GRTN-----B', date_str, ENTSOE_TOKEN)
@@ -234,29 +231,35 @@ def process_day(date_str):
     return daily_data
 
 if __name__ == "__main__":
-    # --- ΦΑΣΗ 1: THE GREAT BACKFILL (Από 10/06/2026 έως Σήμερα) ---
-    start_date = datetime(2026, 6, 10)
-    end_date = datetime.now()
-    
-    dates_to_fetch = []
-    current_date = start_date
-    while current_date <= end_date:
-        dates_to_fetch.append(current_date.strftime("%Y-%m-%d"))
-        current_date += timedelta(days=1)
+    # --- ΦΑΣΗ 2: THE 5-DAY HEALER (Καθημερινή Λειτουργία) ---
+    # Δημιουργεί λίστα με τις ημερομηνίες από (Σήμερα - 5 μέρες) μέχρι Σήμερα
+    dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(5, -1, -1)]
     
     json_path = "data/historical_flows.json"
-    
-    # Ξεκινάμε με ένα εντελώς καθαρό αρχείο δεδομένων
     all_data = []
+    
+    # Διαβάζουμε το υπάρχον αρχείο (αυτό που μόλις γεμίσαμε στο backfill)
+    if os.path.exists(json_path) and os.path.getsize(json_path) > 0:
+        import json
+        with open(json_path, 'r', encoding='utf-8') as f:
+            all_data = json.load(f)
             
     for d in dates_to_fetch:
         new_day = process_day(d)
+        
+        # Σβήνουμε την παλιά εγγραφή (αν υπάρχει) για να αποφύγουμε τα διπλότυπα
+        all_data = [x for x in all_data if x.get("Date") != d]
+        
+        # Προσθέτουμε την "φρέσκια/διορθωμένη" ημέρα
         all_data.append(new_day)
-        # Μικρή καθυστέρηση για να μην φάμε ban (2 δευτερόλεπτα)
+        
+        # Μικρή καθυστέρηση για το API
         time.sleep(2)
         
+    # Ταξινομούμε φθίνουσα (οι πιο πρόσφατες μέρες πάνω)
     all_data.sort(key=lambda x: x["Date"], reverse=True)
     
+    # Αποθηκεύουμε πίσω στο αρχείο
     with open(json_path, 'w', encoding='utf-8') as f:
         import json
         json.dump(all_data, f, indent=2)
