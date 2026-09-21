@@ -5,6 +5,15 @@ on:
     # 04:00 UTC = 07:00 Ώρα Ελλάδος (Θερινή) / 06:00 (Χειμερινή)
     - cron: '0 4 * * *'
   workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Start Date (π.χ. 2026-06-10)'
+        required: false
+        type: string
+      end_date:
+        description: 'End Date (π.χ. 2026-06-20)'
+        required: false
+        type: string
 
 jobs:
   update-data:
@@ -29,6 +38,8 @@ jobs:
       - name: Run Python script
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
+          START_DATE: ${{ inputs.start_date }}
+          END_DATE: ${{ inputs.end_date }}
         run: python scripts/update_flows.py
 
       - name: Commit and push changes
