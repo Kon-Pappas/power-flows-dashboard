@@ -233,9 +233,24 @@ def process_day(date_str):
     return daily_data
 
 if __name__ == "__main__":
-    # --- ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 3 ημέρες) ---
-    dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
     
+    # Διαβάζουμε τις πιθανές παραμέτρους από το GitHub Action
+    start_env = os.environ.get("START_DATE")
+    end_env = os.environ.get("END_DATE")
+    
+    if start_env and end_env:
+        # ΧΕΙΡΟΚΙΝΗΤΗ ΕΚΤΕΛΕΣΗ (Ιστορικά Δεδομένα)
+        start_dt = datetime.strptime(start_env, "%Y-%m-%d")
+        end_dt = datetime.strptime(end_env, "%Y-%m-%d")
+        delta = end_dt - start_dt
+        # Φτιάχνουμε τη λίστα με όλες τις ενδιάμεσες ημέρες
+        dates_to_fetch = [(start_dt + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(delta.days + 1)]
+        print(f"--- Χειροκίνητη εκτέλεση για {len(dates_to_fetch)} ημέρες: από {start_env} έως {end_env} ---")
+    else:
+        # ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 3 ημέρες)
+        dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
+        print("--- Κανονική εκτέλεση (3 τελευταίες ημέρες) ---")
+        
     json_path = "data/historical_flows.json"
     all_data = []
     
@@ -246,6 +261,7 @@ if __name__ == "__main__":
             
     for d in dates_to_fetch:
         new_day = process_day(d)
+        # Αφαιρούμε την παλιά εγγραφή (αν υπάρχει) για να μπει η διορθωμένη
         all_data = [x for x in all_data if x.get("Date") != d]
         all_data.append(new_day)
         
