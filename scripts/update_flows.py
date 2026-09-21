@@ -38,25 +38,81 @@ def fetch_entsoe_mcp(date_str, country_code):
     if not ENTSOE_TOKEN: return [0.0] * 24
     domain = ENTSOE_DOMAINS[country_code]
     periodStart, periodEnd = get_entsoe_period(date_str)
+    
+    # Το απόλυτο σημείο μηδέν σε UTC για τον υπολογισμό των index
+    target_start_utc = datetime.strptime(periodStart, "%Y%m%d%H00")
+    
     url = f"https://web-api.tp.entsoe.eu/api?securityToken={ENTSOE_TOKEN}&documentType=A44&in_Domain={domain}&out_Domain={domain}&periodStart={periodStart}&periodEnd={periodEnd}"
     try:
         res = requests.get(url, timeout=15)
         if "<Reason>" in res.text or res.status_code != 200: return [0.0] * 24
+        
         root = ET.fromstring(res.text)
         ns = {'ns': root.tag.split('}')[0].strip('{')}
-        prices_96 = [0.0] * 96
+        
+        # Πίνακας με 96 άδεια slots
+        quarters = [None] * 96
+        
         for ts in root.findall('ns:TimeSeries', ns):
+            # ΦΙΛΤΡΟ 1: Μόνο Day-Ahead (Αποφυγή Intraday σκουπιδιών)
+            business_type = ts.find('ns:businessType', ns)
+            if business_type is not None and business_type.text != "A62":
+                continue
+                
+            # ΦΙΛΤΡΟ 2: Μόνο Ευρώ (Λύνει το θέμα διπλού νομίσματος της Βουλγαρίας)
+            currency = ts.find('ns:currency_Unit.name', ns)
+            if currency is not None and currency.text != "EUR":
+                continue
+
             period = ts.find('ns:Period', ns)
-            if period is not None:
-                resolution = period.find('ns:resolution', ns).text
-                for point in period.findall('ns:Point', ns):
-                    pos = int(point.find('ns:position', ns).text) - 1
-                    price = float(point.find('ns:price.amount', ns).text)
-                    if resolution == "PT15M" and 0 <= pos < 96: prices_96[pos] = price
-                    elif resolution == "PT60M" and 0 <= pos < 24:
-                        for i in range(4): prices_96[pos*4 + i] = price
-        return np.array(prices_96).reshape(24, 4).mean(axis=1).round(2).tolist()
-    except: return [0.0] * 24
+            if period is None: continue
+            
+            # Εύρεση absolute χρόνου για το συγκεκριμένο TimeSeries block
+            period_start_str = period.find('ns:timeInterval/ns:start', ns).text.replace('Z', '')
+            if len(period_start_str) == 16:
+                period_start_utc = datetime.strptime(period_start_str, "%Y-%m-%dT%H:%M")
+            else:
+                period_start_utc = datetime.strptime(period_start_str[:19], "%Y-%m-%dT%H:%M:%S")
+                
+            resolution = period.find('ns:resolution', ns).text
+            
+            for point in period.findall('ns:Point', ns):
+                pos = int(point.find('ns:position', ns).text)
+                price = float(point.find('ns:price.amount', ns).text)
+                
+                # ΦΙΛΤΡΟ 3 & 4: Υπολογισμός index με βάση τον απόλυτο χρόνο
+                if resolution == "PT15M":
+                    point_time = period_start_utc + timedelta(minutes=15 * (pos - 1))
+                    diff_minutes = int((point_time - target_start_utc).total_seconds() // 60)
+                    idx = diff_minutes // 15
+                    if 0 <= idx < 96:
+                        quarters[idx] = price
+                        
+                elif resolution == "PT60M":
+                    point_time = period_start_utc + timedelta(hours=(pos - 1))
+                    diff_hours = int((point_time - target_start_utc).total_seconds() // 3600)
+                    if 0 <= diff_hours < 24:
+                        start_idx = diff_hours * 4
+                        for i in range(4):
+                            # Εγγραφή ΜΟΝΟ αν το slot είναι άδειο (το PT15M έχει προτεραιότητα)
+                            if quarters[start_idx + i] is None:
+                                quarters[start_idx + i] = price
+
+        # Εξαγωγή 24 καθαρών ωριαίων τιμών
+        hourly_prices = []
+        for h in range(24):
+            q_slice = quarters[h*4 : h*4+4]
+            valid_qs = [q for q in q_slice if q is not None]
+            
+            if len(valid_qs) > 0:
+                hourly_prices.append(round(sum(valid_qs) / len(valid_qs), 2))
+            else:
+                hourly_prices.append(0.0)
+                
+        return hourly_prices
+        
+    except Exception as e:
+        return [0.0] * 24
 
 def fetch_admie_excel(date_str, category):
     url = f"https://www.admie.gr/getOperationMarketFile?dateStart={date_str}&dateEnd={date_str}&FileCategory={category}"
