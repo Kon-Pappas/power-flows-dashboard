@@ -2,8 +2,8 @@ name: Daily Power Flows Fetcher
 
 on:
   schedule:
-    # 04:00 UTC = 07:00 Ώρα Ελλάδος (Θερινή) / 06:00 (Χειμερινή)
-    - cron: '0 4 * * *'
+    # 04:17 UTC = 07:17 Ώρα Ελλάδος (Θερινή) - Μακριά από το παγκόσμιο "μποτιλιάρισμα"
+    - cron: '17 4 * * *'
   workflow_dispatch:
     inputs:
       start_date:
