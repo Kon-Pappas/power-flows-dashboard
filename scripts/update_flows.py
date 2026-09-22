@@ -247,8 +247,8 @@ if __name__ == "__main__":
         dates_to_fetch = [(start_dt + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(delta.days + 1)]
         print(f"--- Χειροκίνητη εκτέλεση για {len(dates_to_fetch)} ημέρες: από {start_env} έως {end_env} ---")
     else:
-        # ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 3 ημέρες)
-        dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(2, -1, -1)]
+        # ΚΑΝΟΝΙΚΗ ΚΑΘΗΜΕΡΙΝΗ ΛΕΙΤΟΥΡΓΙΑ (Τελευταίες 5 ημέρες)
+        dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(4, -1, -1)]
         print("--- Κανονική εκτέλεση (3 τελευταίες ημέρες) ---")
         
     json_path = "data/historical_flows.json"
