@@ -41,9 +41,9 @@ const i18n = {
         arbitrageChartTitle: "Hourly SCADA & MCP",
         arbitrageChartSub: "Click on a country below to isolate flows and view the clearing price.",
         colCountry: "Country",
-        colNet: "Abs. Net MWh",
+        colNet: "Imp / Exp (MWh)",
         colValue: "Cash Flow (€)",
-        colPrice: "Dominant €/MWh",
+        colPrice: "€/MWh",
 
         mtdLabelCashFlow: "MTD Cash Flow",
         mtdLabelExp: "MTD Total Exports (Income)",
@@ -92,9 +92,9 @@ const i18n = {
         arbitrageChartTitle: "Ωριαίο SCADA & MCP",
         arbitrageChartSub: "Κλικ σε χώρα για απομόνωση και προβολή της εφαρμοζόμενης τιμής.",
         colCountry: "Χωρα",
-        colNet: "Απολυτες MWh",
+        colNet: "Εισαγωγές / Εξαγωγές (MWh)",
         colValue: "Ταμειο (€)",
-        colPrice: "Κυρια Τιμη (€/MWh)",
+        colPrice: "€/MWh",
 
         mtdLabelCashFlow: "Σωρευτικό Ταμείο Μηνός",
         mtdLabelExp: "Συνολικές Εξαγωγές (Έσοδο)",
@@ -333,19 +333,44 @@ function updateArbitrageTab() {
     
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         const rowData = data.summary[c];
-        const isNetImp = rowData.netVol >= 0;
-        const domColor = isNetImp ? "text-yellow-400" : "text-rose-500";
         const opacity = (activeCountry && activeCountry !== c) ? "opacity-30" : "opacity-100";
         const bgHover = (activeCountry === c) ? "bg-slate-700/80" : "hover:bg-slate-700/50";
-        const domAvg = isNetImp ? (rowData.impVol > 0 ? rowData.impEur/rowData.impVol : 0) : (rowData.expVol > 0 ? rowData.expEur/rowData.expVol : 0);
+        
+        // Υπολογισμός Μέσων Τιμών για Εισαγωγές (Imp) και Εξαγωγές (Exp)
+        const impAvg = rowData.impVol > 0 ? (rowData.impEur / rowData.impVol) : 0;
+        const expAvg = rowData.expVol > 0 ? (rowData.expEur / rowData.expVol) : 0;
+        
+        // Μορφοποίηση νούμερων
+        const impVolFmt = rowData.impVol.toLocaleString('el-GR', {maximumFractionDigits:0});
+        const expVolFmt = rowData.expVol.toLocaleString('el-GR', {maximumFractionDigits:0});
+        const impAvgFmt = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
+        const expAvgFmt = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
+        
+        // Ταμείο (Παραμένει net cash flow στο κέντρο)
         const cfFmt = rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
+        const cfColor = rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
 
         listContainer.insertAdjacentHTML('beforeend', `
-            <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm">
-                <div class="text-left pl-2 text-slate-300 flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>${names[c]}</div>
-                <div class="${domColor}">${Math.abs(rowData.netVol).toLocaleString('el-GR', {maximumFractionDigits:0})}</div>
-                <div class="${domColor}">${cfFmt} €</div>
-                <div class="${domColor}">${domAvg.toLocaleString('el-GR', {maximumFractionDigits:2})}</div>
+            <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm items-center">
+                <div class="text-left pl-2 text-slate-300 flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>${names[c]}
+                </div>
+                
+                <!-- ΝΕΟ: 2 γραμμές MWh (Imports / Exports) -->
+                <div class="flex flex-col gap-1">
+                    <div class="text-yellow-400" title="Imports">↓ ${impVolFmt}</div>
+                    <div class="text-rose-500" title="Exports">↑ ${expVolFmt}</div>
+                </div>
+                
+                <div class="${cfColor}">
+                    ${cfFmt} €
+                </div>
+                
+                <!-- ΝΕΟ: 2 γραμμές €/MWh (Imports / Exports) -->
+                <div class="flex flex-col gap-1">
+                    <div class="text-yellow-400">${impAvgFmt}</div>
+                    <div class="text-rose-500">${expAvgFmt}</div>
+                </div>
             </div>
         `);
     });
