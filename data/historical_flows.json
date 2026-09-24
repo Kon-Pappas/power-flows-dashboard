@@ -30556,7 +30556,7 @@
         "SCADA_Net": -1362.0,
         "ISP_Net": -1298.45,
         "MCP_GR": 46.67,
-        "MCP_BG": null,
+        "MCP_BG": 42.50,
         "MCP_IT": 139.29,
         "SCADA_AL": -503.0,
         "SCADA_BG": -128.0,
