@@ -11,6 +11,56 @@ let mtdVolumeChartInstance = null;
 let activeCountry = null;
 let globalArbitrageData = {}; 
 
+// ---- Έλεγχος πληρότητας δεδομένων ------------------------------------
+// Μια ημέρα είναι "πλήρης" όταν έχει SCADA και αξιόπιστες τιμές MCP.
+// Ημέρες που δεν είναι πλήρεις δεν μπαίνουν στα σωρευτικά (MTD) ούτε στο Best/Worst.
+const MAX_ZERO_PRICE_HOURS = 12;
+
+function priceSeriesOk(arr) {
+    if (!arr || arr.length !== 24) return false;
+    if (arr.some(v => v === null || v === undefined || Number.isNaN(v))) return false;
+    return arr.filter(v => v === 0).length <= MAX_ZERO_PRICE_HOURS;
+}
+
+function hasScada(day) {
+    if (day.Flags && typeof day.Flags.scada === 'boolean') return day.Flags.scada;
+    // παλιά δεδομένα χωρίς Flags: όλο μηδέν = δεν υπάρχει SCADA
+    return day.Hourly.some(h => (h.SCADA_Net || 0) !== 0);
+}
+
+function hasPrices(day) {
+    const H = day.Hourly;
+    const col = k => H.map(h => h[k]);
+    if (!priceSeriesOk(col('MCP_GR'))) return false;
+    const usesBG = H.some(h => (h.SCADA_BG || 0) !== 0);
+    const usesIT = H.some(h => (h.SCADA_IT || 0) !== 0);
+    if (usesBG && !priceSeriesOk(col('MCP_BG'))) return false;
+    if (usesIT && !priceSeriesOk(col('MCP_IT'))) return false;
+    return true;
+}
+
+function dayComplete(day) { return hasScada(day) && hasPrices(day); }
+
+function updateDataNotice(dayData, excludedDates) {
+    const t = i18n[currentLang];
+    let el = document.getElementById('dataNotice');
+    if (!el) {
+        el = document.createElement('p');
+        el.id = 'dataNotice';
+        el.className = 'text-amber-400 text-xs mt-2';
+        const ref = document.getElementById('dataSourceText');
+        if (ref) ref.insertAdjacentElement('afterend', el);
+    }
+    const parts = [];
+    if (dayData && !dayComplete(dayData)) parts.push(t.noticeDay);
+    if (excludedDates.length > 0) {
+        const list = excludedDates.map(d => d.substring(8, 10) + '/' + d.substring(5, 7)).join(', ');
+        parts.push(t.noticeExcluded.replace('{n}', excludedDates.length) + ' (' + list + ')');
+    }
+    el.innerText = parts.join('  •  ');
+    el.style.display = parts.length ? 'block' : 'none';
+}
+
 const i18n = {
     en: {
         title: "Greek Power Flows Analytics",
@@ -61,7 +111,10 @@ const i18n = {
         modalPricingText: "For non-EUPHEMIA borders (Albania, North Macedonia, Turkey), the financial value is calculated using solely the Greek MCP. For EUPHEMIA-coupled borders (Italy, Bulgaria), the value is calculated using the average of the two domestic MCPs, reflecting the baseline methodology for congestion income.",
         modalSignTitle: "Sign Convention:",
         modalSignText: "Following ENEX standards, Red denotes Exports and Yellow denotes Imports. In financial calculations (Cash Flow), Exporting energy generates positive income (+), while Importing energy represents a cost (-).",
-        modalCloseBtn: "Close"
+        modalCloseBtn: "Close",
+        noticeDay: "⚠ Incomplete data for this date (missing SCADA or prices). Cash flow is not shown.",
+        noticeExcluded: "⚠ {n} day(s) excluded from MTD (incomplete data)",
+        notAvailable: "n/a"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -112,7 +165,10 @@ const i18n = {
         modalPricingText: "Για τις μη-EUPHEMIA διασυνδέσεις (Αλβανία, Β. Μακεδονία, Τουρκία), η οικονομική αξία υπολογίζεται αποκλειστικά βάσει της Ελληνικής MCP. Για τις συζευγμένες διασυνδέσεις (Ιταλία, Βουλγαρία), χρησιμοποιείται ο μέσος όρος των δύο MCP, αντανακλώντας τη βασική μεθοδολογία υπολογισμού εσόδων συμφόρησης.",
         modalSignTitle: "Σύμβαση Προσήμων:",
         modalSignText: "Ακολουθώντας τα πρότυπα του ΕΝΕΧ, το Κόκκινο υποδηλώνει Εξαγωγές και το Κίτρινο Εισαγωγές. Στους οικονομικούς υπολογισμούς (Cash Flow), οι Εξαγωγές αποτελούν Έσοδο (+), ενώ οι Εισαγωγές αποτελούν Κόστος (-).",
-        modalCloseBtn: "Κλείσιμο"
+        modalCloseBtn: "Κλείσιμο",
+        noticeDay: "⚠ Ελλιπή δεδομένα για αυτή την ημερομηνία (λείπει SCADA ή τιμές). Το ταμείο δεν εμφανίζεται.",
+        noticeExcluded: "⚠ {n} ημέρα(ες) εξαιρούνται από το MTD (ελλιπή δεδομένα)",
+        notAvailable: "μ/δ"
     }
 };
 
@@ -209,12 +265,16 @@ async function fetchLocalData() {
         setTimeout(() => { progressBar.style.width = '90%'; progressPercentage.innerText = '90%'; }, 400);
 
         const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
-        document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+        const byDate = {};
+        rawData.forEach(r => { byDate[r.Date] = r; });
+        document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
+        const latestComplete = dates.find(d => dayComplete(byDate[d])) || dates[0];
+        if (latestComplete) document.getElementById('dateSelect').value = latestComplete;
         
         const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
         document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
 
-        if (dates.length > 0) updateUpdateTimes(dates[0]);
+        if (dates.length > 0) updateUpdateTimes(latestComplete);
 
         progressBar.style.width = '100%'; 
         progressPercentage.innerText = '100%';
@@ -276,6 +336,7 @@ function calculateDayNet(dayData) {
 
 function processArbitrageData(dayData) {
     const d = calculateDayNet(dayData);
+    const complete = dayComplete(dayData);
     let summary = {};
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         let cExpVol = 0, cExpEur = 0, cImpVol = 0, cImpEur = 0;
@@ -292,6 +353,8 @@ function processArbitrageData(dayData) {
     });
 
     globalArbitrageData = {
+        complete: complete,
+        hasScada: hasScada(dayData),
         hours: dayData.Hourly.map(h => h.Hour),
         summary: summary,
         expVol: d.expVol, expEur: d.expEur, expAvg: d.expVol > 0 ? (d.expEur/d.expVol) : 0,
@@ -314,23 +377,34 @@ function updateArbitrageTab() {
     const cfSign = data.netCashFlow > 0 ? "+" : "";
     // ΑΛΛΑΓΗ 1: fuchsia-500 για αρνητικό Cash Flow 
     const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
-    document.getElementById('kpiCashFlowVal').innerText = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
-    document.getElementById('kpiCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
-    
-    document.getElementById('kpiExpVol').innerText = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
-    document.getElementById('kpiExpPrice').innerText = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
-    document.getElementById('kpiImpVol').innerText = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
-    document.getElementById('kpiImpPrice').innerText = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+    if (data.complete) {
+        document.getElementById('kpiCashFlowVal').innerText = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
+        document.getElementById('kpiCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
+        document.getElementById('kpiExpVol').innerText = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
+        document.getElementById('kpiExpPrice').innerText = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+        document.getElementById('kpiImpVol').innerText = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
+        document.getElementById('kpiImpPrice').innerText = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+    } else {
+        document.getElementById('kpiCashFlowVal').innerText = t.notAvailable;
+        document.getElementById('kpiCashFlowVal').className = 'text-2xl font-bold text-slate-500';
+        ['kpiExpVol','kpiExpPrice','kpiImpVol','kpiImpPrice'].forEach(id => { document.getElementById(id).innerText = t.notAvailable; });
+    }
 
     const isImp = data.netVol >= 0;
     // Εδώ αφήνουμε το κόκκινο (rose-500) γιατί αφορά το Φυσικό Ισοζύγιο (Net Exporter = Εξαγωγές = Κόκκινο)
-    document.getElementById('kpiStatusVal').innerText = isImp ? t.importer : t.exporter;
-    document.getElementById('kpiStatusVal').className = `text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
+    if (data.complete || data.hasScada) {
+        document.getElementById('kpiStatusVal').innerText = isImp ? t.importer : t.exporter;
+        document.getElementById('kpiStatusVal').className = `text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
+    } else {
+        document.getElementById('kpiStatusVal').innerText = t.notAvailable;
+        document.getElementById('kpiStatusVal').className = 'text-xl font-bold text-slate-500';
+    }
 
     const listContainer = document.getElementById('arbitrageListContainer');
     listContainer.innerHTML = ''; 
     const names = { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" };
     
+    const na0 = v => (data.hasScada ? v : '-');
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         const rowData = data.summary[c];
         const opacity = (activeCountry && activeCountry !== c) ? "opacity-30" : "opacity-100";
@@ -341,14 +415,15 @@ function updateArbitrageTab() {
         const expAvg = rowData.expVol > 0 ? (rowData.expEur / rowData.expVol) : 0;
         
         // Μορφοποίηση νούμερων
-        const impVolFmt = rowData.impVol.toLocaleString('el-GR', {maximumFractionDigits:0});
-        const expVolFmt = rowData.expVol.toLocaleString('el-GR', {maximumFractionDigits:0});
-        const impAvgFmt = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
-        const expAvgFmt = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
+        const impVolFmt = na0(rowData.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}));
+        const expVolFmt = na0(rowData.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}));
+        const impAvgFmt = !data.complete ? '-' : impAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
+        const expAvgFmt = !data.complete ? '-' : expAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
         
         // Ταμείο (Παραμένει net cash flow στο κέντρο)
-        const cfFmt = rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
-        const cfColor = rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
+        const na = !data.complete;
+        const cfFmt = na ? t.notAvailable : rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
+        const cfColor = na ? "text-slate-500" : (rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500");
 
         listContainer.insertAdjacentHTML('beforeend', `
             <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm items-center">
@@ -403,8 +478,13 @@ function updateArbitrageTab() {
 
 function renderMTDTab(selectedMonth) {
     const t = i18n[currentLang];
-    const monthData = rawData.filter(r => r.Date.startsWith(selectedMonth)).sort((a,b) => a.Date.localeCompare(b.Date));
-    if(monthData.length === 0) return;
+    const allMonthData = rawData.filter(r => r.Date.startsWith(selectedMonth)).sort((a,b) => a.Date.localeCompare(b.Date));
+    const monthData = allMonthData.filter(dayComplete);
+    const excludedDates = allMonthData.filter(r => !dayComplete(r)).map(r => r.Date);
+    if(monthData.length === 0) {
+        ['mtdCashFlowVal','mtdExpVol','mtdExpPrice','mtdImpVol','mtdImpPrice','mtdBestDay','mtdWorstDay'].forEach(id => { document.getElementById(id).innerText = '-'; });
+        return excludedDates;
+    }
 
     let cumEur = 0;
     let cumImpGwh = 0; 
@@ -457,7 +537,8 @@ function renderMTDTab(selectedMonth) {
     document.getElementById('mtdImpPrice').innerText = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
 
     const formatDay = (d) => `${d.substring(8,10)}/${d.substring(5,7)}`;
-    document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (+${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
+    const bestSign = bestDay.val > 0 ? '+' : '';
+    document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (${bestSign}${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
     document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
 
     if (mtdCashFlowChartInstance) mtdCashFlowChartInstance.destroy();
@@ -494,7 +575,7 @@ function renderMTDTab(selectedMonth) {
             datasets: [
                 {
                     type: 'line',
-                    label: 'Net MWh',
+                    label: 'Net GWh',
                     data: dataCumNet,
                     borderColor: '#ffffff', 
                     borderWidth: 3,
@@ -542,6 +623,7 @@ function renderMTDTab(selectedMonth) {
             }
         }
     });
+    return excludedDates;
 }
 
 function renderCharts() {
@@ -612,9 +694,11 @@ function renderCharts() {
     }
 
     const selectedMonth = document.getElementById('monthSelect').value;
+    let excludedDates = [];
     if (selectedMonth) {
-        renderMTDTab(selectedMonth);
+        excludedDates = renderMTDTab(selectedMonth) || [];
     }
+    updateDataNotice(dayData, excludedDates);
 }
 
 document.addEventListener('DOMContentLoaded', fetchLocalData);
