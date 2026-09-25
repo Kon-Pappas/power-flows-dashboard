@@ -226,6 +226,36 @@ def extract_last_col_val(df, keyword, col_index):
         return None
 
 
+ISP_CBS_SECTION = "Total Market CBS (+XBID)"
+ISP_CBS_SECTION_END_LABELS = ["Net Border Deviations", "Total Market Schedules"]
+
+
+def extract_isp_country_totals(df):
+    """Οι χώρες εμφανίζονται 3 φορές στο αρχείο ISP (Auction CBS, Total Market CBS +XBID,
+    Net Border Deviations) με το ΙΔΙΟ όνομα. Θέλουμε μόνο το 'Total Market CBS (+XBID)',
+    που είναι το τελικό πρόγραμμα (περιλαμβάνει και τις προσαρμογές ενδοημερήσιας αγοράς).
+    Η πρώτη εμφάνιση (Auction CBS) είναι μόνο η ημερήσια δημοπρασία, ΠΡΙΝ το XBID, και
+    διαφέρει από το τελικό όταν υπήρξε ενδοημερήσιο trading σε μια χώρα εκείνη τη μέρα."""
+    headers = df.index[df[0].astype(str) == ISP_CBS_SECTION].tolist()
+    if not headers:
+        return None, "δεν βρέθηκε η ενότητα 'Total Market CBS (+XBID)'"
+    start = headers[0] + 1
+    end_candidates = df.index[(df.index > headers[0]) & (df[0].astype(str).isin(ISP_CBS_SECTION_END_LABELS))]
+    end = min(end_candidates.min(), start + 10) if len(end_candidates) else start + 10
+    window = df.iloc[start:end]
+
+    totals = {}
+    for name, _, _, kw in COUNTRY_MAP:
+        match = window[window[0].astype(str).str.contains(kw, case=False, na=False)]
+        if match.empty:
+            return None, f"δεν βρέθηκε η {name} μέσα στην ενότητα 'Total Market CBS (+XBID)'"
+        vals = match.iloc[0].dropna().values
+        if len(vals) == 0:
+            return None, f"η γραμμή της {name} είναι κενή"
+        totals[name] = float(vals[-1]) * -1
+    return totals, None
+
+
 def extract_hourly_vals(df, keyword, col_index):
     """24 ωριαίες τιμές μιας γραμμής. None αν δεν βρεθεί η γραμμή."""
     try:
@@ -345,9 +375,14 @@ def process_day(date_str):
         sheets = read_excel_safe(isp_file, "ISP")
         df = pick_sheet(sheets, 0, "Net CBS Schedules", "ISP")
         if df is not None:
-            for name, _, _, kw in COUNTRY_MAP:
-                v = extract_last_col_val(df, kw, 0)
-                isp_totals[name] = None if v is None else v * -1
+            totals, err = extract_isp_country_totals(df)
+            if totals is not None:
+                isp_totals = totals
+            else:
+                log(f"   ! ISP: {err} — καταφεύγω στην παλιά μέθοδο (λιγότερο ακριβής όταν υπήρξε ενδοημερήσιο trading)")
+                for name, _, _, kw in COUNTRY_MAP:
+                    v = extract_last_col_val(df, kw, 0)
+                    isp_totals[name] = None if v is None else v * -1
             try:
                 cbs_row = df[df[0] == 'Net CBS Schedules']
                 if not cbs_row.empty:
