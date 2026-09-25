@@ -9,6 +9,8 @@ let mtdCashFlowChartInstance = null;
 let mtdVolumeChartInstance = null;   
 
 let activeCountry = null;
+let transitNettingOn = false;
+let currentDayData = null;
 let globalArbitrageData = {}; 
 
 // ---- Έλεγχος πληρότητας δεδομένων ------------------------------------
@@ -114,7 +116,12 @@ const i18n = {
         modalCloseBtn: "Close",
         noticeDay: "⚠ Incomplete data for this date (missing SCADA or prices). Cash flow is not shown.",
         noticeExcluded: "⚠ {n} day(s) excluded from MTD (incomplete data)",
-        notAvailable: "n/a"
+        notAvailable: "n/a",
+        transitToggleLabel: "Remove BG↔IT transit",
+        transitToggleTooltip: "When Greece simultaneously imports from one country and exports to the other, that shared energy is priced once, in the dominant direction, instead of twice. Import/export MWh figures never change — only the cash flow does.",
+        transitInfoActive: "⇄ Transit removed in {n} hour(s) today",
+        transitInfoNone: "No BG↔IT transit hours today — figures unchanged",
+        transitBadgeTitle: "Transit-adjusted this day"
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -168,7 +175,12 @@ const i18n = {
         modalCloseBtn: "Κλείσιμο",
         noticeDay: "⚠ Ελλιπή δεδομένα για αυτή την ημερομηνία (λείπει SCADA ή τιμές). Το ταμείο δεν εμφανίζεται.",
         noticeExcluded: "⚠ {n} ημέρα(ες) εξαιρούνται από το MTD (ελλιπή δεδομένα)",
-        notAvailable: "μ/δ"
+        notAvailable: "μ/δ",
+        transitToggleLabel: "Αφαίρεση transit ΒΓ↔ΙΤ",
+        transitToggleTooltip: "Όταν η Ελλάδα εισάγει ταυτόχρονα από τη μία χώρα και εξάγει προς την άλλη, η κοινή ενέργεια τιμολογείται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Τα MWh εισαγωγών/εξαγωγών δεν αλλάζουν ποτέ, μόνο το ταμείο.",
+        transitInfoActive: "⇄ Αφαιρέθηκε transit σε {n} ώρα(ες) σήμερα",
+        transitInfoNone: "Καμία ώρα transit ΒΓ↔ΙΤ σήμερα — τα νούμερα δεν αλλάζουν",
+        transitBadgeTitle: "Προσαρμοσμένη ημέρα (transit)"
     }
 };
 
@@ -207,6 +219,8 @@ function setLang(lang) {
     document.getElementById('colNet').innerText = t.colNet;
     document.getElementById('colValue').innerText = t.colValue;
     document.getElementById('colPrice').innerText = t.colPrice;
+    document.getElementById('transitToggleLabel').innerText = t.transitToggleLabel;
+    document.getElementById('transitToggleTooltip').title = t.transitToggleTooltip;
 
     document.getElementById('mtdLabelCashFlow').innerText = t.mtdLabelCashFlow;
     document.getElementById('mtdLabelExp').innerText = t.mtdLabelExp;
@@ -289,11 +303,18 @@ async function fetchLocalData() {
     }
 }
 
-function calculateDayNet(dayData) {
+// ---- Οικονομικά ανά ώρα, με προαιρετική αφαίρεση transit Βουλγαρίας↔Ιταλίας --------
+// Όταν η Ελλάδα εισάγει ταυτόχρονα από τη μία χώρα ΚΑΙ εξάγει προς την άλλη, μέρος της
+// ενέργειας απλώς διέρχεται (transit) και σήμερα τιμολογείται ΔΙΠΛΑ (μία φορά ως εισαγωγή
+// Ιταλίας, μία ως εξαγωγή Βουλγαρίας). Με το transitNetting=true, τις ώρες αυτές η κοινή
+// ενέργεια τιμολογείται ΜΙΑ φορά, στην κατεύθυνση που υπερισχύει σε όγκο, με τη δική της
+// τιμή (μέσος όρος MCP GR + της χώρας που υπερισχύει). Τα MWh εισαγωγών/εξαγωγών που
+// βλέπει ο χρήστης ΔΕΝ αλλάζουν ποτέ· αλλάζει μόνο το ταμείο.
+function computeHourlyEconomics(dayData, transitNetting) {
     const mcpGR = dayData.Hourly.map(h => h.MCP_GR);
     const mcpBG = dayData.Hourly.map(h => h.MCP_BG);
     const mcpIT = dayData.Hourly.map(h => h.MCP_IT);
-    
+
     const flows = {
         AL: dayData.Hourly.map(h => h.SCADA_AL || 0),
         BG: dayData.Hourly.map(h => h.SCADA_BG || 0),
@@ -303,63 +324,80 @@ function calculateDayNet(dayData) {
     };
     const prices = {
         AL: mcpGR,
-        BG: mcpGR.map((gr, i) => (gr + mcpBG[i]) / 2), 
-        IT: mcpGR.map((gr, i) => (gr + mcpIT[i]) / 2), 
+        BG: mcpGR.map((gr, i) => (gr + mcpBG[i]) / 2),
+        IT: mcpGR.map((gr, i) => (gr + mcpIT[i]) / 2),
         MK: mcpGR,
         TR: mcpGR
     };
 
-    let expEur = 0, impEur = 0;
-    let expVol = 0, impVol = 0;
+    const n = flows.AL.length;
+    const amount = { AL: [], BG: [], IT: [], MK: [], TR: [] };
+    const transitHours = [];
 
-    ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
-        flows[c].forEach((mwh, i) => {
-            let price = prices[c][i];
-            if (mwh < 0) {
-                let vol = Math.abs(mwh);
-                expVol += vol;
-                expEur += (vol * price);
-            } else if (mwh > 0) {
-                impVol += mwh;
-                impEur += (mwh * price);
-            }
-        });
-    });
+    for (let i = 0; i < n; i++) {
+        const bg = flows.BG[i], it = flows.IT[i];
+        let bgAmt = Math.abs(bg) * prices.BG[i];
+        let itAmt = Math.abs(it) * prices.IT[i];
+        let isTransit = false;
 
-    return {
-        netCashFlow: expEur - impEur,
-        netVol: impVol - expVol, 
-        expEur, impEur, expVol, impVol,
-        hourlyFlows: flows, hourlyPrices: prices
-    };
+        if (transitNetting && bg !== 0 && it !== 0 && Math.sign(bg) !== Math.sign(it)) {
+            isTransit = true;
+            const netVol = Math.abs(bg + it);
+            if (Math.abs(it) >= Math.abs(bg)) { itAmt = netVol * prices.IT[i]; bgAmt = 0; }
+            else { bgAmt = netVol * prices.BG[i]; itAmt = 0; }
+        }
+
+        amount.AL.push(Math.abs(flows.AL[i]) * prices.AL[i]);
+        amount.BG.push(bgAmt);
+        amount.IT.push(itAmt);
+        amount.MK.push(Math.abs(flows.MK[i]) * prices.MK[i]);
+        amount.TR.push(Math.abs(flows.TR[i]) * prices.TR[i]);
+        transitHours.push(isTransit);
+    }
+    return { flows, prices, amount, transitHours };
 }
 
-function processArbitrageData(dayData) {
-    const d = calculateDayNet(dayData);
+function aggregateEconomics(flows, amount) {
+    let expEur = 0, impEur = 0, expVol = 0, impVol = 0;
+    Object.keys(flows).forEach(c => {
+        flows[c].forEach((mwh, i) => {
+            if (mwh < 0) { expVol += Math.abs(mwh); expEur += amount[c][i]; }
+            else if (mwh > 0) { impVol += mwh; impEur += amount[c][i]; }
+        });
+    });
+    return { netCashFlow: expEur - impEur, netVol: impVol - expVol, expEur, impEur, expVol, impVol };
+}
+
+// Το MTD tab χρησιμοποιεί ΠΑΝΤΑ τη συνηθισμένη μέθοδο (χωρίς transit netting),
+// ανεξάρτητα από το toggle του 3ου tab — το toggle αφορά αποκλειστικά το Daily Arbitrage.
+function calculateDayNet(dayData, transitNetting) {
+    const { flows, prices, amount } = computeHourlyEconomics(dayData, !!transitNetting);
+    const overall = aggregateEconomics(flows, amount);
+    return { ...overall, hourlyFlows: flows, hourlyPrices: prices };
+}
+
+function processArbitrageData(dayData, transitNetting) {
+    const { flows, prices, amount, transitHours } = computeHourlyEconomics(dayData, !!transitNetting);
+    const overall = aggregateEconomics(flows, amount);
     const complete = dayComplete(dayData);
+
     let summary = {};
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
-        let cExpVol = 0, cExpEur = 0, cImpVol = 0, cImpEur = 0;
-        d.hourlyFlows[c].forEach((mwh, i) => {
-            let price = d.hourlyPrices[c][i];
-            if (mwh < 0) { let v = Math.abs(mwh); cExpVol += v; cExpEur += (v*price); }
-            else if (mwh > 0) { cImpVol += mwh; cImpEur += (mwh*price); }
-        });
-        summary[c] = {
-            expVol: cExpVol, expEur: cExpEur, impVol: cImpVol, impEur: cImpEur,
-            netCashFlow: cExpEur - cImpEur, netVol: cImpVol - cExpVol,
-            hourlyFlows: d.hourlyFlows[c], hourlyPrices: d.hourlyPrices[c]
-        };
+        const single = aggregateEconomics({ [c]: flows[c] }, { [c]: amount[c] });
+        summary[c] = { ...single, hourlyFlows: flows[c], hourlyPrices: prices[c] };
     });
 
     globalArbitrageData = {
         complete: complete,
         hasScada: hasScada(dayData),
+        transitNetting: !!transitNetting,
+        transitHours: transitHours,
+        transitHourCount: transitHours.filter(Boolean).length,
         hours: dayData.Hourly.map(h => h.Hour),
         summary: summary,
-        expVol: d.expVol, expEur: d.expEur, expAvg: d.expVol > 0 ? (d.expEur/d.expVol) : 0,
-        impVol: d.impVol, impEur: d.impEur, impAvg: d.impVol > 0 ? (d.impEur/d.impVol) : 0,
-        netCashFlow: d.netCashFlow, netVol: d.netVol
+        expVol: overall.expVol, expEur: overall.expEur, expAvg: overall.expVol > 0 ? (overall.expEur/overall.expVol) : 0,
+        impVol: overall.impVol, impEur: overall.impEur, impAvg: overall.impVol > 0 ? (overall.impEur/overall.impVol) : 0,
+        netCashFlow: overall.netCashFlow, netVol: overall.netVol
     };
 }
 
@@ -369,10 +407,31 @@ function toggleCountrySelection(countryCode) {
     updateArbitrageTab(); 
 }
 
+function toggleTransitNetting() {
+    transitNettingOn = document.getElementById('transitNettingToggle').checked;
+    if (currentDayData) {
+        processArbitrageData(currentDayData, transitNettingOn);
+        updateArbitrageTab();
+    }
+}
+
 function updateArbitrageTab() {
     const t = i18n[currentLang];
     const data = globalArbitrageData;
     if (!data) return;
+
+    const toggleEl = document.getElementById('transitNettingToggle');
+    if (toggleEl) toggleEl.checked = !!data.transitNetting;
+    const infoEl = document.getElementById('transitInfoLine');
+    if (infoEl) {
+        if (data.transitNetting && data.transitHourCount > 0) {
+            infoEl.innerText = t.transitInfoActive.replace('{n}', data.transitHourCount);
+        } else if (data.transitNetting) {
+            infoEl.innerText = t.transitInfoNone;
+        } else {
+            infoEl.innerText = '';
+        }
+    }
 
     const cfSign = data.netCashFlow > 0 ? "+" : "";
     // ΑΛΛΑΓΗ 1: fuchsia-500 για αρνητικό Cash Flow 
@@ -425,10 +484,13 @@ function updateArbitrageTab() {
         const cfFmt = na ? t.notAvailable : rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
         const cfColor = na ? "text-slate-500" : (rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500");
 
+        const transitBadge = (data.transitNetting && data.transitHourCount > 0 && (c === 'BG' || c === 'IT'))
+            ? `<span class="text-cyan-400 text-xs" title="${t.transitBadgeTitle}">⇄</span>` : '';
+
         listContainer.insertAdjacentHTML('beforeend', `
             <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm items-center">
                 <div class="text-left pl-2 text-slate-300 flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>${names[c]}
+                    <span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>${names[c]} ${transitBadge}
                 </div>
                 
                 <!-- ΝΕΟ: 2 γραμμές MWh (Imports / Exports) -->
@@ -636,7 +698,8 @@ function renderCharts() {
     
     if (dayData) {
         activeCountry = null;
-        processArbitrageData(dayData);
+        currentDayData = dayData;
+        processArbitrageData(dayData, transitNettingOn);
         updateArbitrageTab();
 
         const countries = ["Albania", "Bulgaria", "Italy", "North Macedonia", "Turkey"];
