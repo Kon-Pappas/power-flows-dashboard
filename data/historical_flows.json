@@ -18694,7 +18694,7 @@
       },
       "ISP": {
         "Albania": -4798.0,
-        "Bulgaria": -26090.8,
+        "Bulgaria": -26423.8,
         "Italy": -0.0,
         "North Macedonia": -11245.0,
         "Turkey": -419.36
@@ -18720,7 +18720,7 @@
         "ISP_Net": -2248.0,
         "MCP_GR": 137.97,
         "MCP_BG": 163.83,
-        "MCP_IT": 180.02,
+        "MCP_IT": 182.53,
         "SCADA_AL": -588.0,
         "SCADA_BG": -607.0,
         "SCADA_IT": 0.0,
@@ -18733,7 +18733,7 @@
         "ISP_Net": -2169.0,
         "MCP_GR": 134.01,
         "MCP_BG": 156.37,
-        "MCP_IT": 163.49,
+        "MCP_IT": 165.12,
         "SCADA_AL": -585.0,
         "SCADA_BG": -591.0,
         "SCADA_IT": 0.0,
@@ -18756,7 +18756,7 @@
       {
         "Hour": "H05",
         "SCADA_Net": -1918.0,
-        "ISP_Net": -2070.02,
+        "ISP_Net": -2070.03,
         "MCP_GR": 154.56,
         "MCP_BG": 160.95,
         "MCP_IT": 164.79,
@@ -18770,7 +18770,7 @@
         "Hour": "H06",
         "SCADA_Net": -1924.0,
         "ISP_Net": -2178.32,
-        "MCP_GR": 156.7,
+        "MCP_GR": 154.78,
         "MCP_BG": 176.22,
         "MCP_IT": 185.81,
         "SCADA_AL": -543.0,
@@ -18809,7 +18809,7 @@
         "Hour": "H09",
         "SCADA_Net": -1718.0,
         "ISP_Net": -2179.84,
-        "MCP_GR": 26.67,
+        "MCP_GR": 20.0,
         "MCP_BG": 57.69,
         "MCP_IT": 167.53,
         "SCADA_AL": -685.0,
@@ -18835,7 +18835,7 @@
         "Hour": "H11",
         "SCADA_Net": -1983.0,
         "ISP_Net": -2330.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 66.2,
         "MCP_IT": 193.52,
         "SCADA_AL": -761.0,
@@ -18848,7 +18848,7 @@
         "Hour": "H12",
         "SCADA_Net": -1989.0,
         "ISP_Net": -2250.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 99.45,
         "MCP_IT": 163.81,
         "SCADA_AL": -784.0,
@@ -18861,7 +18861,7 @@
         "Hour": "H13",
         "SCADA_Net": -1870.0,
         "ISP_Net": -2348.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 94.16,
         "MCP_IT": 148.23,
         "SCADA_AL": -706.0,
@@ -18874,7 +18874,7 @@
         "Hour": "H14",
         "SCADA_Net": -1903.0,
         "ISP_Net": -2352.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 83.27,
         "MCP_IT": 147.61,
         "SCADA_AL": -691.0,
@@ -18887,7 +18887,7 @@
         "Hour": "H15",
         "SCADA_Net": -1894.0,
         "ISP_Net": -2354.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 86.28,
         "MCP_IT": 159.7,
         "SCADA_AL": -723.0,
@@ -18900,7 +18900,7 @@
         "Hour": "H16",
         "SCADA_Net": -1842.0,
         "ISP_Net": -2358.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 81.94,
         "MCP_IT": 208.25,
         "SCADA_AL": -750.0,
@@ -18913,9 +18913,9 @@
         "Hour": "H17",
         "SCADA_Net": -1890.0,
         "ISP_Net": -2424.25,
-        "MCP_GR": 63.94,
-        "MCP_BG": 68.94,
-        "MCP_IT": 203.32,
+        "MCP_GR": 47.95,
+        "MCP_BG": 68.16,
+        "MCP_IT": 201.76,
         "SCADA_AL": -780.0,
         "SCADA_BG": -156.0,
         "SCADA_IT": 0.0,
@@ -18965,8 +18965,8 @@
         "Hour": "H21",
         "SCADA_Net": -917.0,
         "ISP_Net": -1431.8,
-        "MCP_GR": 148.5,
-        "MCP_BG": 148.5,
+        "MCP_GR": 148.63,
+        "MCP_BG": 148.63,
         "MCP_IT": 267.33,
         "SCADA_AL": -383.0,
         "SCADA_BG": -151.0,
@@ -18977,7 +18977,7 @@
       {
         "Hour": "H22",
         "SCADA_Net": -1067.0,
-        "ISP_Net": -1799.48,
+        "ISP_Net": -1799.47,
         "MCP_GR": 149.11,
         "MCP_BG": 149.11,
         "MCP_IT": 265.89,
@@ -18990,7 +18990,7 @@
       {
         "Hour": "H23",
         "SCADA_Net": -1439.0,
-        "ISP_Net": -2030.98,
+        "ISP_Net": -2030.97,
         "MCP_GR": 131.75,
         "MCP_BG": 131.75,
         "MCP_IT": 210.19,
@@ -19013,7 +19013,14 @@
         "SCADA_MK": -601.0,
         "SCADA_TR": -141.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-30",
@@ -19027,7 +19034,7 @@
       },
       "ISP": {
         "Albania": -4593.0,
-        "Bulgaria": -21980.1,
+        "Bulgaria": -22941.7,
         "Italy": -0.0,
         "North Macedonia": -9090.0,
         "Turkey": -498.0
@@ -19038,7 +19045,7 @@
         "Hour": "H01",
         "SCADA_Net": -1371.0,
         "ISP_Net": -2234.0,
-        "MCP_GR": 142.17,
+        "MCP_GR": 142.48,
         "MCP_BG": 149.75,
         "MCP_IT": 188.12,
         "SCADA_AL": -552.0,
@@ -19053,7 +19060,7 @@
         "ISP_Net": -2253.0,
         "MCP_GR": 137.1,
         "MCP_BG": 142.38,
-        "MCP_IT": 178.67,
+        "MCP_IT": 178.25,
         "SCADA_AL": -655.0,
         "SCADA_BG": -525.0,
         "SCADA_IT": 0.0,
@@ -19089,7 +19096,7 @@
       {
         "Hour": "H05",
         "SCADA_Net": -1832.0,
-        "ISP_Net": -1886.82,
+        "ISP_Net": -1886.83,
         "MCP_GR": 133.65,
         "MCP_BG": 133.65,
         "MCP_IT": 155.5,
@@ -19105,7 +19112,7 @@
         "ISP_Net": -1826.7,
         "MCP_GR": 145.75,
         "MCP_BG": 145.75,
-        "MCP_IT": 158.17,
+        "MCP_IT": 159.38,
         "SCADA_AL": -523.0,
         "SCADA_BG": -452.0,
         "SCADA_IT": 0.0,
@@ -19131,7 +19138,7 @@
         "ISP_Net": -1722.72,
         "MCP_GR": 140.37,
         "MCP_BG": 150.44,
-        "MCP_IT": 196.07,
+        "MCP_IT": 196.05,
         "SCADA_AL": -553.0,
         "SCADA_BG": -311.0,
         "SCADA_IT": 0.0,
@@ -19155,7 +19162,7 @@
         "Hour": "H10",
         "SCADA_Net": -1503.0,
         "ISP_Net": -2080.78,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 60.0,
         "MCP_IT": 198.95,
         "SCADA_AL": -768.0,
@@ -19168,7 +19175,7 @@
         "Hour": "H11",
         "SCADA_Net": -1661.0,
         "ISP_Net": -2146.0,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 67.75,
         "MCP_IT": 181.75,
         "SCADA_AL": -772.0,
@@ -19181,7 +19188,7 @@
         "Hour": "H12",
         "SCADA_Net": -1650.0,
         "ISP_Net": -2037.3,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 34.68,
         "MCP_IT": 167.58,
         "SCADA_AL": -731.0,
@@ -19194,7 +19201,7 @@
         "Hour": "H13",
         "SCADA_Net": -1535.0,
         "ISP_Net": -2118.25,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 12.13,
         "MCP_IT": 159.96,
         "SCADA_AL": -577.0,
@@ -19206,8 +19213,8 @@
       {
         "Hour": "H14",
         "SCADA_Net": -1574.0,
-        "ISP_Net": -2153.52,
-        "MCP_GR": 0.0,
+        "ISP_Net": -2153.53,
+        "MCP_GR": -0.01,
         "MCP_BG": 20.9,
         "MCP_IT": 155.91,
         "SCADA_AL": -484.0,
@@ -19220,7 +19227,7 @@
         "Hour": "H15",
         "SCADA_Net": -1629.0,
         "ISP_Net": -2154.93,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 35.65,
         "MCP_IT": 166.48,
         "SCADA_AL": -538.0,
@@ -19233,7 +19240,7 @@
         "Hour": "H16",
         "SCADA_Net": -1432.0,
         "ISP_Net": -2157.75,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 45.63,
         "MCP_IT": 156.7,
         "SCADA_AL": -583.0,
@@ -19245,8 +19252,8 @@
       {
         "Hour": "H17",
         "SCADA_Net": -1449.0,
-        "ISP_Net": -2162.98,
-        "MCP_GR": 38.74,
+        "ISP_Net": -2162.97,
+        "MCP_GR": 29.05,
         "MCP_BG": 109.77,
         "MCP_IT": 150.1,
         "SCADA_AL": -670.0,
@@ -19258,7 +19265,7 @@
       {
         "Hour": "H18",
         "SCADA_Net": -1671.0,
-        "ISP_Net": -1884.48,
+        "ISP_Net": -1884.47,
         "MCP_GR": 141.03,
         "MCP_BG": 142.56,
         "MCP_IT": 151.28,
@@ -19311,8 +19318,8 @@
         "Hour": "H22",
         "SCADA_Net": -871.0,
         "ISP_Net": -1547.68,
-        "MCP_GR": 145.86,
-        "MCP_BG": 145.86,
+        "MCP_GR": 144.62,
+        "MCP_BG": 144.62,
         "MCP_IT": 246.17,
         "SCADA_AL": -328.0,
         "SCADA_BG": -175.0,
@@ -19324,8 +19331,8 @@
         "Hour": "H23",
         "SCADA_Net": -1242.0,
         "ISP_Net": -1849.67,
-        "MCP_GR": 137.54,
-        "MCP_BG": 137.54,
+        "MCP_GR": 140.47,
+        "MCP_BG": 140.47,
         "MCP_IT": 218.51,
         "SCADA_AL": -419.0,
         "SCADA_BG": -287.0,
@@ -19346,7 +19353,14 @@
         "SCADA_MK": -568.0,
         "SCADA_TR": -143.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-29",
@@ -19360,7 +19374,7 @@
       },
       "ISP": {
         "Albania": -3990.0,
-        "Bulgaria": -10730.6,
+        "Bulgaria": -10966.8,
         "Italy": -0.0,
         "North Macedonia": -8731.0,
         "Turkey": -327.0
@@ -19386,7 +19400,7 @@
         "ISP_Net": -944.48,
         "MCP_GR": 149.92,
         "MCP_BG": 149.92,
-        "MCP_IT": 178.33,
+        "MCP_IT": 180.0,
         "SCADA_AL": -316.0,
         "SCADA_BG": -275.0,
         "SCADA_IT": 0.0,
@@ -19409,7 +19423,7 @@
       {
         "Hour": "H04",
         "SCADA_Net": -870.0,
-        "ISP_Net": -1090.32,
+        "ISP_Net": -1090.33,
         "MCP_GR": 135.0,
         "MCP_BG": 135.0,
         "MCP_IT": 161.51,
@@ -19438,7 +19452,7 @@
         "ISP_Net": -1127.22,
         "MCP_GR": 156.33,
         "MCP_BG": 156.33,
-        "MCP_IT": 164.15,
+        "MCP_IT": 164.36,
         "SCADA_AL": -346.0,
         "SCADA_BG": -249.0,
         "SCADA_IT": 0.0,
@@ -19488,7 +19502,7 @@
         "Hour": "H10",
         "SCADA_Net": -994.0,
         "ISP_Net": -1968.55,
-        "MCP_GR": 3.67,
+        "MCP_GR": 2.75,
         "MCP_BG": 12.34,
         "MCP_IT": 157.5,
         "SCADA_AL": -582.0,
@@ -19503,7 +19517,7 @@
         "ISP_Net": -1984.0,
         "MCP_GR": 0.0,
         "MCP_BG": 23.22,
-        "MCP_IT": 151.0,
+        "MCP_IT": 148.5,
         "SCADA_AL": -692.0,
         "SCADA_BG": -33.0,
         "SCADA_IT": 0.0,
@@ -19529,7 +19543,7 @@
         "ISP_Net": -1980.0,
         "MCP_GR": 0.0,
         "MCP_BG": 11.7,
-        "MCP_IT": 143.38,
+        "MCP_IT": 143.71,
         "SCADA_AL": -447.0,
         "SCADA_BG": -167.0,
         "SCADA_IT": 0.0,
@@ -19553,7 +19567,7 @@
         "Hour": "H15",
         "SCADA_Net": -1307.0,
         "ISP_Net": -1965.0,
-        "MCP_GR": -0.01,
+        "MCP_GR": -0.0,
         "MCP_BG": 21.14,
         "MCP_IT": 150.1,
         "SCADA_AL": -341.0,
@@ -19566,7 +19580,7 @@
         "Hour": "H16",
         "SCADA_Net": -1597.0,
         "ISP_Net": -1968.0,
-        "MCP_GR": 0.01,
+        "MCP_GR": 0.0,
         "MCP_BG": 39.95,
         "MCP_IT": 160.0,
         "SCADA_AL": -406.0,
@@ -19579,7 +19593,7 @@
         "Hour": "H17",
         "SCADA_Net": -1676.0,
         "ISP_Net": -1660.4,
-        "MCP_GR": 65.75,
+        "MCP_GR": 49.31,
         "MCP_BG": 61.88,
         "MCP_IT": 190.03,
         "SCADA_AL": -556.0,
@@ -19631,9 +19645,9 @@
         "Hour": "H21",
         "SCADA_Net": -463.0,
         "ISP_Net": -879.0,
-        "MCP_GR": 138.79,
-        "MCP_BG": 138.79,
-        "MCP_IT": 236.71,
+        "MCP_GR": 139.94,
+        "MCP_BG": 139.94,
+        "MCP_IT": 232.78,
         "SCADA_AL": -363.0,
         "SCADA_BG": 139.0,
         "SCADA_IT": 0.0,
@@ -19679,7 +19693,14 @@
         "SCADA_MK": -422.0,
         "SCADA_TR": 3.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-28",
@@ -19693,7 +19714,7 @@
       },
       "ISP": {
         "Albania": -1950.0,
-        "Bulgaria": 3768.2,
+        "Bulgaria": 2854.9,
         "Italy": -0.0,
         "North Macedonia": -2697.0,
         "Turkey": -462.0
@@ -19719,7 +19740,7 @@
         "ISP_Net": 2.05,
         "MCP_GR": 152.72,
         "MCP_BG": 152.72,
-        "MCP_IT": 162.69,
+        "MCP_IT": 165.77,
         "SCADA_AL": -100.0,
         "SCADA_BG": 226.0,
         "SCADA_IT": -1.0,
@@ -19742,7 +19763,7 @@
       {
         "Hour": "H04",
         "SCADA_Net": 320.0,
-        "ISP_Net": -125.82,
+        "ISP_Net": -125.83,
         "MCP_GR": 136.82,
         "MCP_BG": 136.82,
         "MCP_IT": 168.66,
@@ -19758,7 +19779,7 @@
         "ISP_Net": 16.27,
         "MCP_GR": 142.48,
         "MCP_BG": 142.48,
-        "MCP_IT": 167.3,
+        "MCP_IT": 166.72,
         "SCADA_AL": -203.0,
         "SCADA_BG": 227.0,
         "SCADA_IT": 0.0,
@@ -19784,7 +19805,7 @@
         "ISP_Net": -298.4,
         "MCP_GR": 170.92,
         "MCP_BG": 170.92,
-        "MCP_IT": 188.21,
+        "MCP_IT": 195.22,
         "SCADA_AL": -212.0,
         "SCADA_BG": 226.0,
         "SCADA_IT": 0.0,
@@ -19797,7 +19818,7 @@
         "ISP_Net": -574.3,
         "MCP_GR": 107.0,
         "MCP_BG": 107.0,
-        "MCP_IT": 197.81,
+        "MCP_IT": 200.02,
         "SCADA_AL": -291.0,
         "SCADA_BG": 229.0,
         "SCADA_IT": 0.0,
@@ -19859,7 +19880,7 @@
       {
         "Hour": "H13",
         "SCADA_Net": -759.0,
-        "ISP_Net": -1366.32,
+        "ISP_Net": -1366.33,
         "MCP_GR": 9.06,
         "MCP_BG": 9.06,
         "MCP_IT": 145.1,
@@ -19873,8 +19894,8 @@
         "Hour": "H14",
         "SCADA_Net": -859.0,
         "ISP_Net": -1416.58,
-        "MCP_GR": 8.54,
-        "MCP_BG": 8.54,
+        "MCP_GR": 8.49,
+        "MCP_BG": 8.49,
         "MCP_IT": 145.1,
         "SCADA_AL": -241.0,
         "SCADA_BG": -196.0,
@@ -19911,7 +19932,7 @@
       {
         "Hour": "H17",
         "SCADA_Net": -725.0,
-        "ISP_Net": -524.28,
+        "ISP_Net": -524.27,
         "MCP_GR": 68.57,
         "MCP_BG": 68.57,
         "MCP_IT": 155.44,
@@ -19953,7 +19974,7 @@
         "ISP_Net": 458.98,
         "MCP_GR": 208.39,
         "MCP_BG": 208.39,
-        "MCP_IT": 208.22,
+        "MCP_IT": 206.72,
         "SCADA_AL": 122.0,
         "SCADA_BG": 463.0,
         "SCADA_IT": 0.0,
@@ -20012,7 +20033,14 @@
         "SCADA_MK": -30.0,
         "SCADA_TR": 6.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-27",
@@ -20026,7 +20054,7 @@
       },
       "ISP": {
         "Albania": -1822.0,
-        "Bulgaria": 19179.8,
+        "Bulgaria": 18717.9,
         "Italy": -2000.0,
         "North Macedonia": -5489.0,
         "Turkey": -55.0
@@ -20052,7 +20080,7 @@
         "ISP_Net": 662.0,
         "MCP_GR": 126.57,
         "MCP_BG": 92.93,
-        "MCP_IT": 178.67,
+        "MCP_IT": 179.0,
         "SCADA_AL": 74.0,
         "SCADA_BG": 462.0,
         "SCADA_IT": -251.0,
@@ -20078,7 +20106,7 @@
         "ISP_Net": 686.0,
         "MCP_GR": 121.93,
         "MCP_BG": 77.16,
-        "MCP_IT": 157.03,
+        "MCP_IT": 156.9,
         "SCADA_AL": 52.0,
         "SCADA_BG": 378.0,
         "SCADA_IT": -252.0,
@@ -20102,7 +20130,7 @@
         "Hour": "H06",
         "SCADA_Net": 1026.0,
         "ISP_Net": 746.3,
-        "MCP_GR": 133.96,
+        "MCP_GR": 134.3,
         "MCP_BG": 114.94,
         "MCP_IT": 170.03,
         "SCADA_AL": 121.0,
@@ -20130,7 +20158,7 @@
         "ISP_Net": -160.07,
         "MCP_GR": 129.9,
         "MCP_BG": 129.9,
-        "MCP_IT": 201.31,
+        "MCP_IT": 201.54,
         "SCADA_AL": -20.0,
         "SCADA_BG": 458.0,
         "SCADA_IT": -252.0,
@@ -20182,7 +20210,7 @@
         "ISP_Net": -916.3,
         "MCP_GR": 35.99,
         "MCP_BG": 35.99,
-        "MCP_IT": 151.69,
+        "MCP_IT": 150.72,
         "SCADA_AL": -557.0,
         "SCADA_BG": -30.0,
         "SCADA_IT": 0.0,
@@ -20205,7 +20233,7 @@
       {
         "Hour": "H14",
         "SCADA_Net": -999.0,
-        "ISP_Net": -993.82,
+        "ISP_Net": -993.83,
         "MCP_GR": 20.75,
         "MCP_BG": 20.75,
         "MCP_IT": 142.39,
@@ -20273,7 +20301,7 @@
         "ISP_Net": 132.8,
         "MCP_GR": 144.35,
         "MCP_BG": 144.35,
-        "MCP_IT": 215.59,
+        "MCP_IT": 212.25,
         "SCADA_AL": -8.0,
         "SCADA_BG": 206.0,
         "SCADA_IT": 0.0,
@@ -20345,7 +20373,14 @@
         "SCADA_MK": 81.0,
         "SCADA_TR": 110.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-26",
@@ -20359,7 +20394,7 @@
       },
       "ISP": {
         "Albania": -2989.0,
-        "Bulgaria": 4670.9,
+        "Bulgaria": 5699.5,
         "Italy": -6000.0,
         "North Macedonia": -2034.0,
         "Turkey": 770.762
@@ -20395,7 +20430,7 @@
       {
         "Hour": "H03",
         "SCADA_Net": -579.0,
-        "ISP_Net": -294.08,
+        "ISP_Net": -294.07,
         "MCP_GR": 129.28,
         "MCP_BG": 129.28,
         "MCP_IT": 190.0,
@@ -20488,7 +20523,7 @@
         "SCADA_Net": -812.0,
         "ISP_Net": -1377.5,
         "MCP_GR": -0.01,
-        "MCP_BG": 3.69,
+        "MCP_BG": 4.88,
         "MCP_IT": 188.99,
         "SCADA_AL": -537.0,
         "SCADA_BG": 221.0,
@@ -20500,8 +20535,8 @@
         "Hour": "H11",
         "SCADA_Net": -1040.0,
         "ISP_Net": -1434.22,
-        "MCP_GR": 0.0,
-        "MCP_BG": 0.05,
+        "MCP_GR": -0.01,
+        "MCP_BG": 0.04,
         "MCP_IT": 157.4,
         "SCADA_AL": -519.0,
         "SCADA_BG": 152.0,
@@ -20512,9 +20547,9 @@
       {
         "Hour": "H12",
         "SCADA_Net": -1074.0,
-        "ISP_Net": -1471.02,
-        "MCP_GR": 0.0,
-        "MCP_BG": -0.01,
+        "ISP_Net": -1471.03,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.0,
         "MCP_IT": 145.1,
         "SCADA_AL": -328.0,
         "SCADA_BG": -89.0,
@@ -20526,9 +20561,9 @@
         "Hour": "H13",
         "SCADA_Net": -1161.0,
         "ISP_Net": -1427.58,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 0.0,
-        "MCP_IT": 82.0,
+        "MCP_IT": 86.5,
         "SCADA_AL": -314.0,
         "SCADA_BG": -174.0,
         "SCADA_IT": -252.0,
@@ -20539,8 +20574,8 @@
         "Hour": "H14",
         "SCADA_Net": -1157.0,
         "ISP_Net": -1438.5,
-        "MCP_GR": 0.0,
-        "MCP_BG": -0.01,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.0,
         "MCP_IT": 75.0,
         "SCADA_AL": -258.0,
         "SCADA_BG": -244.0,
@@ -20551,10 +20586,10 @@
       {
         "Hour": "H15",
         "SCADA_Net": -1038.0,
-        "ISP_Net": -1432.18,
-        "MCP_GR": 0.0,
-        "MCP_BG": 0.0,
-        "MCP_IT": 79.24,
+        "ISP_Net": -1432.17,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.01,
+        "MCP_IT": 84.43,
         "SCADA_AL": -239.0,
         "SCADA_BG": -209.0,
         "SCADA_IT": -252.0,
@@ -20565,9 +20600,9 @@
         "Hour": "H16",
         "SCADA_Net": -1066.0,
         "ISP_Net": -1428.08,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 0.14,
-        "MCP_IT": 100.77,
+        "MCP_IT": 100.58,
         "SCADA_AL": -222.0,
         "SCADA_BG": -218.0,
         "SCADA_IT": -252.0,
@@ -20645,7 +20680,7 @@
         "ISP_Net": 232.45,
         "MCP_GR": 120.04,
         "MCP_BG": 120.04,
-        "MCP_IT": 199.89,
+        "MCP_IT": 198.72,
         "SCADA_AL": -105.0,
         "SCADA_BG": 509.0,
         "SCADA_IT": -251.0,
@@ -20678,7 +20713,14 @@
         "SCADA_MK": 198.0,
         "SCADA_TR": 285.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-25",
@@ -20692,7 +20734,7 @@
       },
       "ISP": {
         "Albania": -3733.0,
-        "Bulgaria": -2092.4,
+        "Bulgaria": -1984.4,
         "Italy": -6000.0,
         "North Macedonia": -7969.0,
         "Turkey": -152.0
@@ -20705,7 +20747,7 @@
         "ISP_Net": -1925.57,
         "MCP_GR": 149.15,
         "MCP_BG": 149.15,
-        "MCP_IT": 196.63,
+        "MCP_IT": 194.97,
         "SCADA_AL": -560.0,
         "SCADA_BG": -220.0,
         "SCADA_IT": -252.0,
@@ -20744,7 +20786,7 @@
         "ISP_Net": -2094.38,
         "MCP_GR": 124.2,
         "MCP_BG": 124.2,
-        "MCP_IT": 189.38,
+        "MCP_IT": 188.53,
         "SCADA_AL": -652.0,
         "SCADA_BG": -271.0,
         "SCADA_IT": -251.0,
@@ -20754,7 +20796,7 @@
       {
         "Hour": "H05",
         "SCADA_Net": -1780.0,
-        "ISP_Net": -1933.52,
+        "ISP_Net": -1933.53,
         "MCP_GR": 128.54,
         "MCP_BG": 128.54,
         "MCP_IT": 175.65,
@@ -20768,9 +20810,9 @@
         "Hour": "H06",
         "SCADA_Net": -1643.0,
         "ISP_Net": -1608.8,
-        "MCP_GR": 140.94,
-        "MCP_BG": 140.94,
-        "MCP_IT": 171.06,
+        "MCP_GR": 139.45,
+        "MCP_BG": 139.45,
+        "MCP_IT": 174.54,
         "SCADA_AL": -667.0,
         "SCADA_BG": -209.0,
         "SCADA_IT": -251.0,
@@ -20807,8 +20849,8 @@
         "Hour": "H09",
         "SCADA_Net": -1390.0,
         "ISP_Net": -2309.43,
-        "MCP_GR": 1.7,
-        "MCP_BG": 1.71,
+        "MCP_GR": 1.28,
+        "MCP_BG": 1.28,
         "MCP_IT": 145.1,
         "SCADA_AL": -660.0,
         "SCADA_BG": -17.0,
@@ -20820,7 +20862,7 @@
         "Hour": "H10",
         "SCADA_Net": -1768.0,
         "ISP_Net": -2053.55,
-        "MCP_GR": 0.0,
+        "MCP_GR": -0.01,
         "MCP_BG": 0.23,
         "MCP_IT": 156.93,
         "SCADA_AL": -670.0,
@@ -20833,7 +20875,7 @@
         "Hour": "H11",
         "SCADA_Net": -1417.0,
         "ISP_Net": -1543.08,
-        "MCP_GR": -0.02,
+        "MCP_GR": -0.01,
         "MCP_BG": -0.01,
         "MCP_IT": 143.43,
         "SCADA_AL": -568.0,
@@ -20859,9 +20901,9 @@
         "Hour": "H13",
         "SCADA_Net": -905.0,
         "ISP_Net": -1684.42,
-        "MCP_GR": 0.0,
-        "MCP_BG": 0.0,
-        "MCP_IT": 94.51,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.01,
+        "MCP_IT": 88.38,
         "SCADA_AL": -220.0,
         "SCADA_BG": -110.0,
         "SCADA_IT": -251.0,
@@ -20872,9 +20914,9 @@
         "Hour": "H14",
         "SCADA_Net": -1228.0,
         "ISP_Net": -1570.55,
-        "MCP_GR": 0.0,
-        "MCP_BG": 0.0,
-        "MCP_IT": 90.87,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.01,
+        "MCP_IT": 90.43,
         "SCADA_AL": -235.0,
         "SCADA_BG": -273.0,
         "SCADA_IT": -251.0,
@@ -20885,9 +20927,9 @@
         "Hour": "H15",
         "SCADA_Net": -1105.0,
         "ISP_Net": -1296.62,
-        "MCP_GR": 0.0,
-        "MCP_BG": 0.0,
-        "MCP_IT": 97.75,
+        "MCP_GR": -0.01,
+        "MCP_BG": -0.01,
+        "MCP_IT": 95.81,
         "SCADA_AL": -182.0,
         "SCADA_BG": -252.0,
         "SCADA_IT": -251.0,
@@ -20898,9 +20940,9 @@
         "Hour": "H16",
         "SCADA_Net": -888.0,
         "ISP_Net": -715.6,
-        "MCP_GR": -0.01,
-        "MCP_BG": -0.01,
-        "MCP_IT": 89.47,
+        "MCP_GR": -0.02,
+        "MCP_BG": -0.02,
+        "MCP_IT": 84.61,
         "SCADA_AL": -167.0,
         "SCADA_BG": -158.0,
         "SCADA_IT": -251.0,
@@ -20911,8 +20953,8 @@
         "Hour": "H17",
         "SCADA_Net": -330.0,
         "ISP_Net": -1251.48,
-        "MCP_GR": 0.01,
-        "MCP_BG": 0.01,
+        "MCP_GR": -0.0,
+        "MCP_BG": -0.0,
         "MCP_IT": 122.82,
         "SCADA_AL": -110.0,
         "SCADA_BG": 67.0,
@@ -20952,7 +20994,7 @@
         "ISP_Net": -10.23,
         "MCP_GR": 134.61,
         "MCP_BG": 126.94,
-        "MCP_IT": 201.19,
+        "MCP_IT": 201.99,
         "SCADA_AL": -129.0,
         "SCADA_BG": 391.0,
         "SCADA_IT": -251.0,
@@ -20976,8 +21018,8 @@
         "Hour": "H22",
         "SCADA_Net": 603.0,
         "ISP_Net": -161.2,
-        "MCP_GR": 164.77,
-        "MCP_BG": 164.77,
+        "MCP_GR": 164.68,
+        "MCP_BG": 164.68,
         "MCP_IT": 202.77,
         "SCADA_AL": -208.0,
         "SCADA_BG": 536.0,
@@ -21011,7 +21053,14 @@
         "SCADA_MK": 131.0,
         "SCADA_TR": 219.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-24",
@@ -21025,8 +21074,8 @@
       },
       "ISP": {
         "Albania": -1809.0,
-        "Bulgaria": 5744.8,
-        "Italy": -3542.5,
+        "Bulgaria": 5741.4,
+        "Italy": -3523.3,
         "North Macedonia": -35.0,
         "Turkey": 1165.0
       }
@@ -21064,7 +21113,7 @@
         "ISP_Net": -555.5,
         "MCP_GR": 153.26,
         "MCP_BG": 153.26,
-        "MCP_IT": 191.29,
+        "MCP_IT": 192.1,
         "SCADA_AL": -107.0,
         "SCADA_BG": 14.0,
         "SCADA_IT": -255.0,
@@ -21077,7 +21126,7 @@
         "ISP_Net": -624.93,
         "MCP_GR": 144.19,
         "MCP_BG": 144.19,
-        "MCP_IT": 191.15,
+        "MCP_IT": 191.37,
         "SCADA_AL": -91.0,
         "SCADA_BG": 26.0,
         "SCADA_IT": -255.0,
@@ -21192,8 +21241,8 @@
         "Hour": "H13",
         "SCADA_Net": 1168.0,
         "ISP_Net": 284.82,
-        "MCP_GR": 81.4,
-        "MCP_BG": 81.4,
+        "MCP_GR": 86.05,
+        "MCP_BG": 86.05,
         "MCP_IT": 75.33,
         "SCADA_AL": 136.0,
         "SCADA_BG": 417.0,
@@ -21207,7 +21256,7 @@
         "ISP_Net": 389.95,
         "MCP_GR": 100.02,
         "MCP_BG": 100.02,
-        "MCP_IT": 60.67,
+        "MCP_IT": 60.0,
         "SCADA_AL": 108.0,
         "SCADA_BG": 144.0,
         "SCADA_IT": 1.0,
@@ -21217,7 +21266,7 @@
       {
         "Hour": "H15",
         "SCADA_Net": 794.0,
-        "ISP_Net": 658.18,
+        "ISP_Net": 658.17,
         "MCP_GR": 98.81,
         "MCP_BG": 98.81,
         "MCP_IT": 60.0,
@@ -21233,7 +21282,7 @@
         "ISP_Net": 911.92,
         "MCP_GR": 81.44,
         "MCP_BG": 81.44,
-        "MCP_IT": 42.49,
+        "MCP_IT": 51.25,
         "SCADA_AL": 287.0,
         "SCADA_BG": 266.0,
         "SCADA_IT": 0.0,
@@ -21272,7 +21321,7 @@
         "ISP_Net": -685.75,
         "MCP_GR": 148.46,
         "MCP_BG": 147.91,
-        "MCP_IT": 173.91,
+        "MCP_IT": 168.91,
         "SCADA_AL": 108.0,
         "SCADA_BG": 189.0,
         "SCADA_IT": 0.0,
@@ -21295,10 +21344,10 @@
       {
         "Hour": "H21",
         "SCADA_Net": 36.0,
-        "ISP_Net": -814.78,
+        "ISP_Net": -814.77,
         "MCP_GR": 114.8,
         "MCP_BG": 114.8,
-        "MCP_IT": 205.86,
+        "MCP_IT": 205.12,
         "SCADA_AL": -171.0,
         "SCADA_BG": 126.0,
         "SCADA_IT": 0.0,
@@ -21311,7 +21360,7 @@
         "ISP_Net": -1112.6,
         "MCP_GR": 135.06,
         "MCP_BG": 135.06,
-        "MCP_IT": 203.52,
+        "MCP_IT": 203.73,
         "SCADA_AL": -247.0,
         "SCADA_BG": 116.0,
         "SCADA_IT": 0.0,
@@ -21324,7 +21373,7 @@
         "ISP_Net": -1214.62,
         "MCP_GR": 124.63,
         "MCP_BG": 124.63,
-        "MCP_IT": 203.12,
+        "MCP_IT": 203.75,
         "SCADA_AL": -294.0,
         "SCADA_BG": 129.0,
         "SCADA_IT": 0.0,
@@ -21344,7 +21393,14 @@
         "SCADA_MK": -254.0,
         "SCADA_TR": -17.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-23",
@@ -21358,7 +21414,7 @@
       },
       "ISP": {
         "Albania": -2969.0,
-        "Bulgaria": 6000.9,
+        "Bulgaria": 7368.2,
         "Italy": -6000.0,
         "North Macedonia": -7142.0,
         "Turkey": 169.722
@@ -21407,7 +21463,7 @@
       {
         "Hour": "H04",
         "SCADA_Net": -916.0,
-        "ISP_Net": -1335.52,
+        "ISP_Net": -1335.53,
         "MCP_GR": 139.92,
         "MCP_BG": 139.92,
         "MCP_IT": 166.24,
@@ -21423,7 +21479,7 @@
         "ISP_Net": -1118.92,
         "MCP_GR": 143.51,
         "MCP_BG": 143.51,
-        "MCP_IT": 163.37,
+        "MCP_IT": 163.75,
         "SCADA_AL": -478.0,
         "SCADA_BG": -36.0,
         "SCADA_IT": -254.0,
@@ -21436,7 +21492,7 @@
         "ISP_Net": -1063.38,
         "MCP_GR": 150.34,
         "MCP_BG": 150.34,
-        "MCP_IT": 168.08,
+        "MCP_IT": 167.53,
         "SCADA_AL": -422.0,
         "SCADA_BG": 3.0,
         "SCADA_IT": -254.0,
@@ -21486,8 +21542,8 @@
         "Hour": "H10",
         "SCADA_Net": -493.0,
         "ISP_Net": -1759.7,
-        "MCP_GR": 9.48,
-        "MCP_BG": 9.48,
+        "MCP_GR": 9.21,
+        "MCP_BG": 9.21,
         "MCP_IT": 179.04,
         "SCADA_AL": -476.0,
         "SCADA_BG": 477.0,
@@ -21499,8 +21555,8 @@
         "Hour": "H11",
         "SCADA_Net": -1149.0,
         "ISP_Net": -1667.35,
-        "MCP_GR": 20.29,
-        "MCP_BG": 20.29,
+        "MCP_GR": 15.14,
+        "MCP_BG": 15.14,
         "MCP_IT": 174.46,
         "SCADA_AL": -546.0,
         "SCADA_BG": 172.0,
@@ -21540,7 +21596,7 @@
         "ISP_Net": -893.93,
         "MCP_GR": 41.51,
         "MCP_BG": 41.51,
-        "MCP_IT": 140.4,
+        "MCP_IT": 140.1,
         "SCADA_AL": -497.0,
         "SCADA_BG": 154.0,
         "SCADA_IT": -254.0,
@@ -21563,7 +21619,7 @@
       {
         "Hour": "H16",
         "SCADA_Net": -481.0,
-        "ISP_Net": -966.68,
+        "ISP_Net": -966.67,
         "MCP_GR": 50.22,
         "MCP_BG": 50.22,
         "MCP_IT": 160.61,
@@ -21579,7 +21635,7 @@
         "ISP_Net": -396.7,
         "MCP_GR": 102.29,
         "MCP_BG": 102.29,
-        "MCP_IT": 185.18,
+        "MCP_IT": 186.86,
         "SCADA_AL": -294.0,
         "SCADA_BG": 171.0,
         "SCADA_IT": -254.0,
@@ -21670,14 +21726,21 @@
         "ISP_Net": 126.65,
         "MCP_GR": 170.42,
         "MCP_BG": 170.42,
-        "MCP_IT": 187.43,
+        "MCP_IT": 190.0,
         "SCADA_AL": -129.0,
         "SCADA_BG": 392.0,
         "SCADA_IT": -255.0,
         "SCADA_MK": 137.0,
         "SCADA_TR": 91.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-22",
@@ -21691,7 +21754,7 @@
       },
       "ISP": {
         "Albania": -1535.0,
-        "Bulgaria": 11146.2,
+        "Bulgaria": 10907.8,
         "Italy": -6000.0,
         "North Macedonia": -616.0,
         "Turkey": 884.0
@@ -21717,7 +21780,7 @@
         "ISP_Net": 312.6,
         "MCP_GR": 150.19,
         "MCP_BG": 150.19,
-        "MCP_IT": 168.46,
+        "MCP_IT": 171.34,
         "SCADA_AL": 81.0,
         "SCADA_BG": 196.0,
         "SCADA_IT": -255.0,
@@ -21743,7 +21806,7 @@
         "ISP_Net": 131.4,
         "MCP_GR": 136.83,
         "MCP_BG": 136.83,
-        "MCP_IT": 162.75,
+        "MCP_IT": 163.31,
         "SCADA_AL": 125.0,
         "SCADA_BG": 264.0,
         "SCADA_IT": -255.0,
@@ -21753,7 +21816,7 @@
       {
         "Hour": "H05",
         "SCADA_Net": 403.0,
-        "ISP_Net": 131.02,
+        "ISP_Net": 131.03,
         "MCP_GR": 131.45,
         "MCP_BG": 131.45,
         "MCP_IT": 162.78,
@@ -21782,7 +21845,7 @@
         "ISP_Net": -265.68,
         "MCP_GR": 154.58,
         "MCP_BG": 154.58,
-        "MCP_IT": 179.51,
+        "MCP_IT": 181.84,
         "SCADA_AL": 75.0,
         "SCADA_BG": 58.0,
         "SCADA_IT": -245.0,
@@ -21873,7 +21936,7 @@
         "ISP_Net": -1091.62,
         "MCP_GR": 52.5,
         "MCP_BG": 52.5,
-        "MCP_IT": 135.69,
+        "MCP_IT": 135.32,
         "SCADA_AL": -53.0,
         "SCADA_BG": -322.0,
         "SCADA_IT": -254.0,
@@ -21897,9 +21960,9 @@
         "Hour": "H16",
         "SCADA_Net": -563.0,
         "ISP_Net": -828.3,
-        "MCP_GR": 50.1,
-        "MCP_BG": 50.1,
-        "MCP_IT": 138.06,
+        "MCP_GR": 49.58,
+        "MCP_BG": 49.58,
+        "MCP_IT": 137.66,
         "SCADA_AL": -46.0,
         "SCADA_BG": -145.0,
         "SCADA_IT": -254.0,
@@ -21922,7 +21985,7 @@
       {
         "Hour": "H18",
         "SCADA_Net": -101.0,
-        "ISP_Net": -45.18,
+        "ISP_Net": -45.17,
         "MCP_GR": 110.77,
         "MCP_BG": 110.16,
         "MCP_IT": 159.72,
@@ -21964,7 +22027,7 @@
         "ISP_Net": 252.0,
         "MCP_GR": 133.34,
         "MCP_BG": 126.97,
-        "MCP_IT": 210.61,
+        "MCP_IT": 208.19,
         "SCADA_AL": 5.0,
         "SCADA_BG": 661.0,
         "SCADA_IT": -254.0,
@@ -21990,7 +22053,7 @@
         "ISP_Net": -353.3,
         "MCP_GR": 151.2,
         "MCP_BG": 151.2,
-        "MCP_IT": 166.22,
+        "MCP_IT": 183.17,
         "SCADA_AL": -107.0,
         "SCADA_BG": 546.0,
         "SCADA_IT": -255.0,
@@ -22010,7 +22073,14 @@
         "SCADA_MK": 67.0,
         "SCADA_TR": 125.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-21",
@@ -22024,8 +22094,8 @@
       },
       "ISP": {
         "Albania": -2651.0,
-        "Bulgaria": 24168.6,
-        "Italy": -5451.1,
+        "Bulgaria": 24119.6,
+        "Italy": -5546.1,
         "North Macedonia": -1830.0,
         "Turkey": 1085.0
       }
@@ -22048,7 +22118,7 @@
         "Hour": "H02",
         "SCADA_Net": 774.0,
         "ISP_Net": 688.03,
-        "MCP_GR": 162.05,
+        "MCP_GR": 162.57,
         "MCP_BG": 161.95,
         "MCP_IT": 173.51,
         "SCADA_AL": 190.0,
@@ -22060,7 +22130,7 @@
       {
         "Hour": "H03",
         "SCADA_Net": 987.0,
-        "ISP_Net": 865.22,
+        "ISP_Net": 865.23,
         "MCP_GR": 160.18,
         "MCP_BG": 160.18,
         "MCP_IT": 164.33,
@@ -22167,7 +22237,7 @@
         "ISP_Net": -320.85,
         "MCP_GR": 92.64,
         "MCP_BG": 92.64,
-        "MCP_IT": 169.9,
+        "MCP_IT": 169.93,
         "SCADA_AL": -354.0,
         "SCADA_BG": 647.0,
         "SCADA_IT": -255.0,
@@ -22178,9 +22248,9 @@
         "Hour": "H12",
         "SCADA_Net": 259.0,
         "ISP_Net": -483.8,
-        "MCP_GR": 93.22,
-        "MCP_BG": 93.22,
-        "MCP_IT": 163.93,
+        "MCP_GR": 92.17,
+        "MCP_BG": 92.17,
+        "MCP_IT": 165.45,
         "SCADA_AL": -228.0,
         "SCADA_BG": 542.0,
         "SCADA_IT": -254.0,
@@ -22190,10 +22260,10 @@
       {
         "Hour": "H13",
         "SCADA_Net": 285.0,
-        "ISP_Net": -216.98,
+        "ISP_Net": -216.97,
         "MCP_GR": 80.37,
         "MCP_BG": 80.37,
-        "MCP_IT": 162.11,
+        "MCP_IT": 162.08,
         "SCADA_AL": -165.0,
         "SCADA_BG": 473.0,
         "SCADA_IT": -255.0,
@@ -22284,7 +22354,7 @@
         "ISP_Net": 669.0,
         "MCP_GR": 216.41,
         "MCP_BG": 208.68,
-        "MCP_IT": 235.13,
+        "MCP_IT": 216.42,
         "SCADA_AL": 153.0,
         "SCADA_BG": 422.0,
         "SCADA_IT": -56.0,
@@ -22310,7 +22380,7 @@
         "ISP_Net": 691.0,
         "MCP_GR": 202.95,
         "MCP_BG": 174.1,
-        "MCP_IT": 209.81,
+        "MCP_IT": 208.48,
         "SCADA_AL": 91.0,
         "SCADA_BG": 605.0,
         "SCADA_IT": -90.0,
@@ -22343,7 +22413,14 @@
         "SCADA_MK": 514.0,
         "SCADA_TR": 64.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-20",
@@ -22357,8 +22434,8 @@
       },
       "ISP": {
         "Albania": -1768.0,
-        "Bulgaria": 15234.8,
-        "Italy": -5374.7,
+        "Bulgaria": 15154.4,
+        "Italy": -5478.1,
         "North Macedonia": 4852.0,
         "Turkey": 1010.0
       }
@@ -22370,7 +22447,7 @@
         "ISP_Net": 197.7,
         "MCP_GR": 147.45,
         "MCP_BG": 147.45,
-        "MCP_IT": 177.6,
+        "MCP_IT": 175.7,
         "SCADA_AL": 15.0,
         "SCADA_BG": 271.0,
         "SCADA_IT": -256.0,
@@ -22393,7 +22470,7 @@
       {
         "Hour": "H03",
         "SCADA_Net": 852.0,
-        "ISP_Net": 362.58,
+        "ISP_Net": 362.57,
         "MCP_GR": 132.85,
         "MCP_BG": 132.85,
         "MCP_IT": 147.24,
@@ -22471,10 +22548,10 @@
       {
         "Hour": "H09",
         "SCADA_Net": -173.0,
-        "ISP_Net": -643.22,
+        "ISP_Net": -643.23,
         "MCP_GR": 112.77,
         "MCP_BG": 112.77,
-        "MCP_IT": 187.43,
+        "MCP_IT": 190.0,
         "SCADA_AL": -165.0,
         "SCADA_BG": 211.0,
         "SCADA_IT": -257.0,
@@ -22523,7 +22600,7 @@
       {
         "Hour": "H13",
         "SCADA_Net": -381.0,
-        "ISP_Net": -506.72,
+        "ISP_Net": -506.73,
         "MCP_GR": 66.59,
         "MCP_BG": 66.59,
         "MCP_IT": 149.37,
@@ -22549,7 +22626,7 @@
       {
         "Hour": "H15",
         "SCADA_Net": 86.0,
-        "ISP_Net": -98.78,
+        "ISP_Net": -98.77,
         "MCP_GR": 57.8,
         "MCP_BG": 57.8,
         "MCP_IT": 158.44,
@@ -22575,10 +22652,10 @@
       {
         "Hour": "H17",
         "SCADA_Net": 1289.0,
-        "ISP_Net": 190.58,
+        "ISP_Net": 190.57,
         "MCP_GR": 98.44,
         "MCP_BG": 98.44,
-        "MCP_IT": 176.21,
+        "MCP_IT": 174.66,
         "SCADA_AL": 85.0,
         "SCADA_BG": 816.0,
         "SCADA_IT": -257.0,
@@ -22601,7 +22678,7 @@
       {
         "Hour": "H19",
         "SCADA_Net": 1389.0,
-        "ISP_Net": 613.72,
+        "ISP_Net": 613.73,
         "MCP_GR": 178.86,
         "MCP_BG": 178.86,
         "MCP_IT": 178.86,
@@ -22676,7 +22753,14 @@
         "SCADA_MK": 572.0,
         "SCADA_TR": 126.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-19",
@@ -22690,7 +22774,7 @@
       },
       "ISP": {
         "Albania": -4141.0,
-        "Bulgaria": 17957.5,
+        "Bulgaria": 17184.4,
         "Italy": -6000.0,
         "North Macedonia": -4167.0,
         "Turkey": 1440.0
@@ -22703,7 +22787,7 @@
         "ISP_Net": 95.3,
         "MCP_GR": 138.7,
         "MCP_BG": 138.7,
-        "MCP_IT": 181.61,
+        "MCP_IT": 182.46,
         "SCADA_AL": -90.0,
         "SCADA_BG": 211.0,
         "SCADA_IT": -257.0,
@@ -22807,7 +22891,7 @@
         "ISP_Net": -767.88,
         "MCP_GR": 46.42,
         "MCP_BG": 46.42,
-        "MCP_IT": 166.98,
+        "MCP_IT": 171.48,
         "SCADA_AL": -229.0,
         "SCADA_BG": 413.0,
         "SCADA_IT": -257.0,
@@ -22843,9 +22927,9 @@
       {
         "Hour": "H12",
         "SCADA_Net": -1349.0,
-        "ISP_Net": -1365.32,
-        "MCP_GR": 0.33,
-        "MCP_BG": 0.33,
+        "ISP_Net": -1365.33,
+        "MCP_GR": 0.18,
+        "MCP_BG": 0.18,
         "MCP_IT": 130.1,
         "SCADA_AL": -327.0,
         "SCADA_BG": -208.0,
@@ -22872,7 +22956,7 @@
         "ISP_Net": -1328.88,
         "MCP_GR": 2.85,
         "MCP_BG": 2.85,
-        "MCP_IT": 90.83,
+        "MCP_IT": 88.87,
         "SCADA_AL": -262.0,
         "SCADA_BG": -252.0,
         "SCADA_IT": -256.0,
@@ -22948,8 +23032,8 @@
         "Hour": "H20",
         "SCADA_Net": 714.0,
         "ISP_Net": 17.8,
-        "MCP_GR": 144.48,
-        "MCP_BG": 144.48,
+        "MCP_GR": 142.18,
+        "MCP_BG": 142.18,
         "MCP_IT": 199.26,
         "SCADA_AL": -29.0,
         "SCADA_BG": 433.0,
@@ -22986,7 +23070,7 @@
       {
         "Hour": "H23",
         "SCADA_Net": 822.0,
-        "ISP_Net": -309.58,
+        "ISP_Net": -309.57,
         "MCP_GR": 150.0,
         "MCP_BG": 150.0,
         "MCP_IT": 176.16,
@@ -23009,7 +23093,14 @@
         "SCADA_MK": 204.0,
         "SCADA_TR": 194.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-18",
@@ -23023,8 +23114,8 @@
       },
       "ISP": {
         "Albania": -4022.0,
-        "Bulgaria": 5902.5,
-        "Italy": -5953.1,
+        "Bulgaria": 5815.1,
+        "Italy": -5978.0,
         "North Macedonia": -2005.0,
         "Turkey": 768.0
       }
@@ -23033,7 +23124,7 @@
       {
         "Hour": "H01",
         "SCADA_Net": -404.0,
-        "ISP_Net": -737.32,
+        "ISP_Net": -737.33,
         "MCP_GR": 157.96,
         "MCP_BG": 157.96,
         "MCP_IT": 175.66,
@@ -23098,7 +23189,7 @@
       {
         "Hour": "H06",
         "SCADA_Net": -289.0,
-        "ISP_Net": -439.52,
+        "ISP_Net": -439.53,
         "MCP_GR": 132.81,
         "MCP_BG": 132.81,
         "MCP_IT": 167.47,
@@ -23111,7 +23202,7 @@
       {
         "Hour": "H07",
         "SCADA_Net": -287.0,
-        "ISP_Net": -417.08,
+        "ISP_Net": -417.07,
         "MCP_GR": 126.98,
         "MCP_BG": 126.98,
         "MCP_IT": 170.0,
@@ -23179,7 +23270,7 @@
         "ISP_Net": -1183.4,
         "MCP_GR": 8.16,
         "MCP_BG": 8.16,
-        "MCP_IT": 131.46,
+        "MCP_IT": 130.1,
         "SCADA_AL": -346.0,
         "SCADA_BG": 16.0,
         "SCADA_IT": -254.0,
@@ -23192,7 +23283,7 @@
         "ISP_Net": -1025.7,
         "MCP_GR": 10.38,
         "MCP_BG": 10.38,
-        "MCP_IT": 139.87,
+        "MCP_IT": 139.24,
         "SCADA_AL": -239.0,
         "SCADA_BG": -96.0,
         "SCADA_IT": -255.0,
@@ -23215,7 +23306,7 @@
       {
         "Hour": "H15",
         "SCADA_Net": -543.0,
-        "ISP_Net": -881.32,
+        "ISP_Net": -881.33,
         "MCP_GR": 13.57,
         "MCP_BG": 13.57,
         "MCP_IT": 147.56,
@@ -23228,7 +23319,7 @@
       {
         "Hour": "H16",
         "SCADA_Net": -637.0,
-        "ISP_Net": -532.78,
+        "ISP_Net": -532.77,
         "MCP_GR": 22.32,
         "MCP_BG": 22.32,
         "MCP_IT": 153.85,
@@ -23257,7 +23348,7 @@
         "ISP_Net": 32.7,
         "MCP_GR": 143.98,
         "MCP_BG": 143.98,
-        "MCP_IT": 189.5,
+        "MCP_IT": 190.76,
         "SCADA_AL": -11.0,
         "SCADA_BG": 534.0,
         "SCADA_IT": -255.0,
@@ -23293,7 +23384,7 @@
       {
         "Hour": "H21",
         "SCADA_Net": 345.0,
-        "ISP_Net": 187.48,
+        "ISP_Net": 187.47,
         "MCP_GR": 142.49,
         "MCP_BG": 142.49,
         "MCP_IT": 197.56,
@@ -23307,8 +23398,8 @@
         "Hour": "H22",
         "SCADA_Net": 873.0,
         "ISP_Net": 84.3,
-        "MCP_GR": 145.05,
-        "MCP_BG": 145.05,
+        "MCP_GR": 145.03,
+        "MCP_BG": 145.03,
         "MCP_IT": 192.03,
         "SCADA_AL": -115.0,
         "SCADA_BG": 510.0,
@@ -23342,7 +23433,14 @@
         "SCADA_MK": 102.0,
         "SCADA_TR": 171.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-17",
@@ -23356,8 +23454,8 @@
       },
       "ISP": {
         "Albania": -3395.0,
-        "Bulgaria": -16699.6,
-        "Italy": -4414.9,
+        "Bulgaria": -16644.8,
+        "Italy": -4536.3,
         "North Macedonia": -9032.0,
         "Turkey": 1099.0
       }
@@ -23392,7 +23490,7 @@
       {
         "Hour": "H03",
         "SCADA_Net": -1015.0,
-        "ISP_Net": -1379.02,
+        "ISP_Net": -1379.03,
         "MCP_GR": 151.97,
         "MCP_BG": 151.97,
         "MCP_IT": 157.4,
@@ -23470,10 +23568,10 @@
       {
         "Hour": "H09",
         "SCADA_Net": -1699.0,
-        "ISP_Net": -1854.98,
-        "MCP_GR": 85.7,
-        "MCP_BG": 85.7,
-        "MCP_IT": 175.72,
+        "ISP_Net": -1854.97,
+        "MCP_GR": 83.03,
+        "MCP_BG": 83.03,
+        "MCP_IT": 178.57,
         "SCADA_AL": -477.0,
         "SCADA_BG": -313.0,
         "SCADA_IT": -254.0,
@@ -23486,7 +23584,7 @@
         "ISP_Net": -2539.78,
         "MCP_GR": 85.36,
         "MCP_BG": 129.61,
-        "MCP_IT": 174.43,
+        "MCP_IT": 176.18,
         "SCADA_AL": -529.0,
         "SCADA_BG": -154.0,
         "SCADA_IT": -254.0,
@@ -23523,7 +23621,7 @@
         "Hour": "H13",
         "SCADA_Net": -1872.0,
         "ISP_Net": -2512.0,
-        "MCP_GR": 88.15,
+        "MCP_GR": 82.33,
         "MCP_BG": 100.59,
         "MCP_IT": 156.94,
         "SCADA_AL": -608.0,
@@ -23551,7 +23649,7 @@
         "ISP_Net": -2341.7,
         "MCP_GR": 93.7,
         "MCP_BG": 99.44,
-        "MCP_IT": 158.86,
+        "MCP_IT": 159.15,
         "SCADA_AL": -579.0,
         "SCADA_BG": -381.0,
         "SCADA_IT": -254.0,
@@ -23587,7 +23685,7 @@
       {
         "Hour": "H18",
         "SCADA_Net": -1667.0,
-        "ISP_Net": -1795.02,
+        "ISP_Net": -1795.03,
         "MCP_GR": 160.36,
         "MCP_BG": 167.88,
         "MCP_IT": 160.36,
@@ -23626,7 +23724,7 @@
       {
         "Hour": "H21",
         "SCADA_Net": -154.0,
-        "ISP_Net": -557.22,
+        "ISP_Net": -557.23,
         "MCP_GR": 198.12,
         "MCP_BG": 198.12,
         "MCP_IT": 198.12,
@@ -23665,7 +23763,7 @@
       {
         "Hour": "H24",
         "SCADA_Net": -500.0,
-        "ISP_Net": -725.78,
+        "ISP_Net": -725.77,
         "MCP_GR": 162.96,
         "MCP_BG": 162.96,
         "MCP_IT": 163.79,
@@ -23675,7 +23773,14 @@
         "SCADA_MK": -227.0,
         "SCADA_TR": -28.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-16",
@@ -23689,8 +23794,8 @@
       },
       "ISP": {
         "Albania": -3888.0,
-        "Bulgaria": -8864.4,
-        "Italy": -4305.8,
+        "Bulgaria": -9618.6,
+        "Italy": -4892.6,
         "North Macedonia": -7892.0,
         "Turkey": 1112.06
       }
@@ -23777,7 +23882,7 @@
       {
         "Hour": "H07",
         "SCADA_Net": -961.0,
-        "ISP_Net": -1797.48,
+        "ISP_Net": -1797.47,
         "MCP_GR": 174.11,
         "MCP_BG": 174.11,
         "MCP_IT": 173.68,
@@ -23830,7 +23935,7 @@
         "Hour": "H11",
         "SCADA_Net": -1879.0,
         "ISP_Net": -2555.94,
-        "MCP_GR": 23.76,
+        "MCP_GR": 11.88,
         "MCP_BG": 71.67,
         "MCP_IT": 158.83,
         "SCADA_AL": -632.0,
@@ -23845,7 +23950,7 @@
         "ISP_Net": -2505.15,
         "MCP_GR": 77.82,
         "MCP_BG": 88.15,
-        "MCP_IT": 148.61,
+        "MCP_IT": 151.46,
         "SCADA_AL": -652.0,
         "SCADA_BG": -331.0,
         "SCADA_IT": -254.0,
@@ -23856,7 +23961,7 @@
         "Hour": "H13",
         "SCADA_Net": -2075.0,
         "ISP_Net": -2473.35,
-        "MCP_GR": 94.55,
+        "MCP_GR": 89.78,
         "MCP_BG": 99.89,
         "MCP_IT": 150.51,
         "SCADA_AL": -638.0,
@@ -23959,7 +24064,7 @@
       {
         "Hour": "H21",
         "SCADA_Net": 200.0,
-        "ISP_Net": -349.02,
+        "ISP_Net": -349.03,
         "MCP_GR": 230.03,
         "MCP_BG": 230.03,
         "MCP_IT": 230.03,
@@ -23972,7 +24077,7 @@
       {
         "Hour": "H22",
         "SCADA_Net": 122.0,
-        "ISP_Net": -630.22,
+        "ISP_Net": -630.23,
         "MCP_GR": 212.01,
         "MCP_BG": 212.01,
         "MCP_IT": 212.01,
@@ -24008,7 +24113,14 @@
         "SCADA_MK": -34.0,
         "SCADA_TR": -9.0
       }
-    ]
+    ],
+    "Flags": {
+      "scada": true,
+      "isp": true,
+      "mcp_gr": 24,
+      "mcp_bg": 24,
+      "mcp_it": 24
+    }
   },
   {
     "Date": "2026-07-15",
