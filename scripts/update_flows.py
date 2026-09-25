@@ -6,8 +6,11 @@ import re
 import requests
 import pandas as pd
 import numpy as np
+import warnings
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+
+warnings.filterwarnings("ignore", message="Workbook contains no default style")
 
 # ---------------------------------------------------------------------------
 # ΑΡΧΗ ΛΕΙΤΟΥΡΓΙΑΣ ΑΥΤΟΥ ΤΟΥ ΑΡΧΕΙΟΥ
@@ -73,6 +76,13 @@ def get_entsoe_period(date_str):
     return start_utc.strftime("%Y%m%d%H00"), end_utc.strftime("%Y%m%d%H00")
 
 
+def parse_entsoe_time(txt):
+    txt = txt.replace('Z', '')
+    if len(txt) == 16:
+        return datetime.strptime(txt, "%Y-%m-%dT%H:%M")
+    return datetime.strptime(txt[:19], "%Y-%m-%dT%H:%M:%S")
+
+
 def fetch_entsoe_mcp(date_str, country_code):
     """Επιστρέφει λίστα 24 τιμών. Όπου λείπει τιμή -> None (όχι 0)."""
     empty = [None] * 24
@@ -110,30 +120,47 @@ def fetch_entsoe_mcp(date_str, country_code):
             if period is None:
                 continue
 
-            period_start_str = period.find('ns:timeInterval/ns:start', ns).text.replace('Z', '')
-            if len(period_start_str) == 16:
-                period_start_utc = datetime.strptime(period_start_str, "%Y-%m-%dT%H:%M")
-            else:
-                period_start_utc = datetime.strptime(period_start_str[:19], "%Y-%m-%dT%H:%M:%S")
-
+            period_start_utc = parse_entsoe_time(period.find('ns:timeInterval/ns:start', ns).text)
             resolution = period.find('ns:resolution', ns).text
+            if resolution == "PT15M":
+                step_min = 15
+            elif resolution == "PT60M":
+                step_min = 60
+            else:
+                continue
+
+            # Το ENTSO-E ΔΕΝ στέλνει τα σημεία όπου η τιμή είναι ίδια με το προηγούμενο
+            # σημείο (curve type A03). Οι θέσεις που λείπουν παίρνουν την προηγούμενη τιμή.
+            points = {}
             for point in period.findall('ns:Point', ns):
-                pos = int(point.find('ns:position', ns).text)
-                price = float(point.find('ns:price.amount', ns).text)
-                if resolution == "PT15M":
-                    point_time = period_start_utc + timedelta(minutes=15 * (pos - 1))
-                    diff_minutes = int((point_time - target_start_utc).total_seconds() // 60)
+                points[int(point.find('ns:position', ns).text)] = float(point.find('ns:price.amount', ns).text)
+            if not points:
+                continue
+            try:
+                period_end_utc = parse_entsoe_time(period.find('ns:timeInterval/ns:end', ns).text)
+                n_pos = int((period_end_utc - period_start_utc).total_seconds() // 60 // step_min)
+            except Exception:
+                n_pos = max(points)
+            n_pos = max(n_pos, max(points))
+
+            last_price = None
+            for pos in range(1, n_pos + 1):
+                if pos in points:
+                    last_price = points[pos]
+                if last_price is None:
+                    continue
+                point_time = period_start_utc + timedelta(minutes=step_min * (pos - 1))
+                diff_minutes = int((point_time - target_start_utc).total_seconds() // 60)
+                if step_min == 15:
                     idx = diff_minutes // 15
                     if 0 <= idx < 96:
-                        quarters[idx] = price
-                elif resolution == "PT60M":
-                    point_time = period_start_utc + timedelta(hours=(pos - 1))
-                    diff_hours = int((point_time - target_start_utc).total_seconds() // 3600)
-                    if 0 <= diff_hours < 24:
-                        start_idx = diff_hours * 4
+                        quarters[idx] = last_price
+                else:
+                    if 0 <= diff_minutes < 24 * 60:
+                        start_idx = (diff_minutes // 60) * 4
                         for i in range(4):
                             if quarters[start_idx + i] is None:
-                                quarters[start_idx + i] = price
+                                quarters[start_idx + i] = last_price
 
         hourly = []
         for h in range(24):
@@ -154,6 +181,9 @@ def fetch_entsoe_mcp(date_str, country_code):
 # ---------------------------------------------------------------------------
 # ADMIE
 # ---------------------------------------------------------------------------
+LAST_ADMIE_FILE = {}
+
+
 def fetch_admie_excel(date_str, category):
     url = f"https://www.admie.gr/getOperationMarketFile?dateStart={date_str}&dateEnd={date_str}&FileCategory={category}"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -169,6 +199,7 @@ def fetch_admie_excel(date_str, category):
             log(f"   ! ADMIE {category}: δεν υπάρχει αρχείο για {date_str} (ίσως δεν έχει δημοσιευτεί ακόμα)")
             return None
         file_path = data[0].get("file_path")
+        LAST_ADMIE_FILE[category] = f"{len(data)} αρχείο(α) για την ημέρα, χρησιμοποιείται το πρώτο: {os.path.basename(str(file_path))}"
         if file_path.startswith("/"):
             file_path = "https://www.admie.gr" + file_path
         file_res = http_get(file_path, headers=headers, what=f"ADMIE {category} αρχείο")
@@ -207,11 +238,48 @@ def extract_hourly_vals(df, keyword, col_index):
 
 
 def read_excel_safe(fileobj, what):
+    """Διαβάζει ΟΛΑ τα φύλλα του αρχείου (τα ADMIE .xls έχουν πάνω από ένα,
+    π.χ. System_Production + XDO_METADATA, και η σειρά τους ΔΕΝ είναι σταθερή)."""
     try:
-        return pd.read_excel(fileobj, header=None)
+        return pd.read_excel(fileobj, header=None, sheet_name=None)
     except Exception as e:
         log(f"   ! {what}: το αρχείο δεν διαβάστηκε ({type(e).__name__})")
         return None
+
+
+def pick_sheet(sheets, anchor_col, anchor_value, what):
+    """Επιστρέφει το φύλλο που περιέχει πραγματικά τα δεδομένα, ψάχνοντας
+    για μια γνωστή ετικέτα (π.χ. 'EXPORTS-IMPORTS'), ΟΧΙ με βάση τη θέση του φύλλου."""
+    if sheets is None:
+        return None
+    for sheet_name, df in sheets.items():
+        try:
+            if anchor_col not in df.columns:
+                continue
+            if (df[anchor_col].astype(str) == anchor_value).any():
+                return df
+        except Exception:
+            continue
+    log(f"   ! {what}: καμία από τις καρτέλες του αρχείου ({list(sheets.keys())}) δεν περιέχει '{anchor_value}'")
+    return None
+
+
+_LAYOUT_LOGGED = {"done": False}
+
+
+def log_layout(df):
+    """Διάγνωση (μία φορά ανά εκτέλεση): τι περιέχει το αρχείο όταν δεν βρίσκουμε τις γραμμές που περιμένουμε."""
+    if _LAYOUT_LOGGED["done"]:
+        return
+    _LAYOUT_LOGGED["done"] = True
+    try:
+        log(f"     (διάγνωση) αρχείο: {LAST_ADMIE_FILE.get('SystemRealizationSCADA', '?')}")
+        log(f"     (διάγνωση) διαστάσεις πίνακα: {df.shape}")
+        for c in (0, 1):
+            labels = [str(v)[:30] for v in df[c].dropna().unique()[:40]]
+            log(f"     (διάγνωση) στήλη {c}, πρώτες τιμές: {labels}")
+    except Exception:
+        pass
 
 
 def none_list(n=24):
@@ -235,7 +303,8 @@ def process_day(date_str):
 
     scada_file = fetch_admie_excel(date_str, "SystemRealizationSCADA")
     if scada_file:
-        df = read_excel_safe(scada_file, "SCADA")
+        sheets = read_excel_safe(scada_file, "SCADA")
+        df = pick_sheet(sheets, 1, "EXPORTS-IMPORTS", "SCADA")
         if df is not None:
             tot, hourly, ok = {}, {}, True
             for name, kw, code, _ in COUNTRY_MAP:
@@ -246,6 +315,7 @@ def process_day(date_str):
                 if None in (imp_t, exp_t) or imp_h is None or exp_h is None:
                     ok = False
                     log(f"   ! SCADA: δεν βρέθηκαν γραμμές για {name}")
+                    log_layout(df)
                     break
                 tot[name] = imp_t - exp_t
                 hourly[code] = imp_h - exp_h
@@ -272,7 +342,8 @@ def process_day(date_str):
 
     isp_file = fetch_admie_excel(date_str, "ISP2ISPResults")
     if isp_file:
-        df = read_excel_safe(isp_file, "ISP")
+        sheets = read_excel_safe(isp_file, "ISP")
+        df = pick_sheet(sheets, 0, "Net CBS Schedules", "ISP")
         if df is not None:
             for name, _, _, kw in COUNTRY_MAP:
                 v = extract_last_col_val(df, kw, 0)
