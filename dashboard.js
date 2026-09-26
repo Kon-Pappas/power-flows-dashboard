@@ -264,12 +264,12 @@ function updateUpdateTimes(latestDateStr) {
     if (!latestDateStr) return;
     let parts = latestDateStr.split('-');
     if (parts.length === 3) {
-        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 07:00`;
+        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 08:00`;
         let d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + 1);
         let day = String(d.getDate()).padStart(2, '0');
         let month = String(d.getMonth() + 1).padStart(2, '0');
         let year = d.getFullYear();
-        let nextStr = `${day}/${month}/${year} 07:00`;
+        let nextStr = `${day}/${month}/${year} 08:00`;
         document.getElementById('lastUpdateVal').innerText = lastStr;
         document.getElementById('nextUpdateVal').innerText = nextStr;
     }
@@ -298,7 +298,7 @@ async function fetchLocalData() {
         const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
         document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
 
-        if (dates.length > 0) updateUpdateTimes(latestComplete);
+        if (dates.length > 0) updateUpdateTimes(dates[0]);
 
         progressBar.style.width = '100%'; 
         progressPercentage.innerText = '100%';
