@@ -121,7 +121,12 @@ const i18n = {
         transitToggleTooltip: "When Greece simultaneously imports from one country and exports to the other, that shared energy is priced once, in the dominant direction, instead of twice. Import/export MWh figures never change — only the cash flow does.",
         transitInfoActive: "⇄ Transit removed in {n} hour(s) today",
         transitInfoNone: "No BG↔IT transit hours today — figures unchanged",
-        transitBadgeTitle: "Transit-adjusted this day"
+        transitBadgeTitle: "Transit-adjusted this day",
+        transitDirLabel: "Transit energy removed from cash flow today:",
+        transitDirItToBg: "Italy → Bulgaria (via Greece):",
+        transitDirBgToIt: "Bulgaria → Italy (via Greece):",
+        transitDirHours: "h",
+        transitChartSub: "Amber bars = transit hours (this leg's cash removed today)."
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -180,7 +185,12 @@ const i18n = {
         transitToggleTooltip: "Όταν η Ελλάδα εισάγει ταυτόχρονα από τη μία χώρα και εξάγει προς την άλλη, η κοινή ενέργεια τιμολογείται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Τα MWh εισαγωγών/εξαγωγών δεν αλλάζουν ποτέ, μόνο το ταμείο.",
         transitInfoActive: "⇄ Αφαιρέθηκε transit σε {n} ώρα(ες) σήμερα",
         transitInfoNone: "Καμία ώρα transit ΒΓ↔ΙΤ σήμερα — τα νούμερα δεν αλλάζουν",
-        transitBadgeTitle: "Προσαρμοσμένη ημέρα (transit)"
+        transitBadgeTitle: "Προσαρμοσμένη ημέρα (transit)",
+        transitDirLabel: "Διερχόμενη ενέργεια που αφαιρέθηκε σήμερα από το ταμείο:",
+        transitDirItToBg: "Ιταλία → Βουλγαρία (μέσω Ελλάδας):",
+        transitDirBgToIt: "Βουλγαρία → Ιταλία (μέσω Ελλάδας):",
+        transitDirHours: "ω",
+        transitChartSub: "Κίτρινες μπάρες = ώρες transit (το ταμείο αυτού του σκέλους αφαιρέθηκε σήμερα)."
     }
 };
 
@@ -333,14 +343,23 @@ function computeHourlyEconomics(dayData, transitNetting) {
     const n = flows.AL.length;
     const amount = { AL: [], BG: [], IT: [], MK: [], TR: [] };
     const transitHours = [];
+    const transitDetail = []; // null, or { dir: 'IT_TO_BG'|'BG_TO_IT', vol }
 
     for (let i = 0; i < n; i++) {
         const bg = flows.BG[i], it = flows.IT[i];
         let bgAmt = Math.abs(bg) * prices.BG[i];
         let itAmt = Math.abs(it) * prices.IT[i];
         let isTransit = false;
+        let detail = null;
 
-        if (transitNetting && bg !== 0 && it !== 0 && Math.sign(bg) !== Math.sign(it)) {
+        const isCrossing = bg !== 0 && it !== 0 && Math.sign(bg) !== Math.sign(it);
+        if (isCrossing) {
+            // Το πραγματικά "διερχόμενο" ποσό είναι το μικρότερο από τα δύο σκέλη·
+            // αυτό μπαίνει από τη μία χώρα και βγαίνει προς την άλλη χωρίς να αφήνει
+            // καθαρό εμπορικό ίχνος. Η κατεύθυνση ακολουθεί ποια χώρα εισάγει.
+            detail = { dir: it > 0 ? 'IT_TO_BG' : 'BG_TO_IT', vol: Math.min(Math.abs(bg), Math.abs(it)) };
+        }
+        if (transitNetting && isCrossing) {
             isTransit = true;
             const netVol = Math.abs(bg + it);
             if (Math.abs(it) >= Math.abs(bg)) { itAmt = netVol * prices.IT[i]; bgAmt = 0; }
@@ -353,8 +372,9 @@ function computeHourlyEconomics(dayData, transitNetting) {
         amount.MK.push(Math.abs(flows.MK[i]) * prices.MK[i]);
         amount.TR.push(Math.abs(flows.TR[i]) * prices.TR[i]);
         transitHours.push(isTransit);
+        transitDetail.push(detail);
     }
-    return { flows, prices, amount, transitHours };
+    return { flows, prices, amount, transitHours, transitDetail };
 }
 
 function aggregateEconomics(flows, amount) {
@@ -377,9 +397,19 @@ function calculateDayNet(dayData, transitNetting) {
 }
 
 function processArbitrageData(dayData, transitNetting) {
-    const { flows, prices, amount, transitHours } = computeHourlyEconomics(dayData, !!transitNetting);
+    const { flows, prices, amount, transitHours, transitDetail } = computeHourlyEconomics(dayData, !!transitNetting);
     const overall = aggregateEconomics(flows, amount);
     const complete = dayComplete(dayData);
+
+    const transitByDirection = {
+        IT_TO_BG: { vol: 0, hours: 0 },
+        BG_TO_IT: { vol: 0, hours: 0 }
+    };
+    transitDetail.forEach(d => {
+        if (!d) return;
+        transitByDirection[d.dir].vol += d.vol;
+        transitByDirection[d.dir].hours += 1;
+    });
 
     let summary = {};
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
@@ -393,6 +423,8 @@ function processArbitrageData(dayData, transitNetting) {
         transitNetting: !!transitNetting,
         transitHours: transitHours,
         transitHourCount: transitHours.filter(Boolean).length,
+        transitByDirection: transitByDirection,
+        transitDetail: transitDetail,
         hours: dayData.Hourly.map(h => h.Hour),
         summary: summary,
         expVol: overall.expVol, expEur: overall.expEur, expAvg: overall.expVol > 0 ? (overall.expEur/overall.expVol) : 0,
@@ -430,6 +462,23 @@ function updateArbitrageTab() {
             infoEl.innerText = t.transitInfoNone;
         } else {
             infoEl.innerText = '';
+        }
+    }
+
+    const dirEl = document.getElementById('transitDirectionPanel');
+    if (dirEl) {
+        if (data.transitNetting && data.transitHourCount > 0) {
+            const fmt = v => v.toLocaleString('el-GR', { maximumFractionDigits: 0 });
+            const itBg = data.transitByDirection.IT_TO_BG;
+            const bgIt = data.transitByDirection.BG_TO_IT;
+            const rows = [];
+            if (itBg.hours > 0) rows.push(`<div>${t.transitDirItToBg} <span class="text-cyan-300 font-semibold">${fmt(itBg.vol)} MWh</span> <span class="text-slate-500">(${itBg.hours}${t.transitDirHours})</span></div>`);
+            if (bgIt.hours > 0) rows.push(`<div>${t.transitDirBgToIt} <span class="text-cyan-300 font-semibold">${fmt(bgIt.vol)} MWh</span> <span class="text-slate-500">(${bgIt.hours}${t.transitDirHours})</span></div>`);
+            dirEl.innerHTML = `<div class="text-slate-400 mb-1">${t.transitDirLabel}</div>${rows.join('')}`;
+            dirEl.style.display = 'block';
+        } else {
+            dirEl.innerHTML = '';
+            dirEl.style.display = 'none';
         }
     }
 
@@ -516,12 +565,27 @@ function updateArbitrageTab() {
     const ctxArb = document.getElementById('arbitrageChart').getContext('2d');
     let datasets = [];
     if (activeCountry) {
-        datasets.push({ type: 'bar', label: `${names[activeCountry]} Flow (MW)`, data: data.summary[activeCountry].hourlyFlows, backgroundColor: countryColors[activeCountry], yAxisID: 'y' });
+        let barColors = countryColors[activeCountry];
+        const showTransitColors = data.transitNetting && (activeCountry === 'BG' || activeCountry === 'IT');
+        if (showTransitColors) {
+            barColors = data.hours.map((_, i) => {
+                const d = data.transitDetail[i];
+                const involvesCountry = d && ((activeCountry === 'IT' && d.dir === 'IT_TO_BG') || (activeCountry === 'BG' && d.dir === 'BG_TO_IT'));
+                return involvesCountry ? '#fbbf24' : countryColors[activeCountry];
+            });
+        }
+        datasets.push({ type: 'bar', label: `${names[activeCountry]} Flow (MW)`, data: data.summary[activeCountry].hourlyFlows, backgroundColor: barColors, yAxisID: 'y' });
         datasets.push({ type: 'line', label: `Applied MCP (€/MWh)`, data: data.summary[activeCountry].hourlyPrices, borderColor: '#f8fafc', borderWidth: 3, tension: 0.2, yAxisID: 'y1' });
     } else {
         ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
             datasets.push({ type: 'bar', label: names[c], data: data.summary[c].hourlyFlows, backgroundColor: countryColors[c], yAxisID: 'y' });
         });
+    }
+
+    const showTransitColors = data.transitNetting && (activeCountry === 'BG' || activeCountry === 'IT');
+    const arbSubEl = document.getElementById('arbitrageChartSub');
+    if (arbSubEl) {
+        arbSubEl.innerText = showTransitColors ? t.transitChartSub : t.arbitrageChartSub;
     }
 
     arbitrageChartInstance = new Chart(ctxArb, {
