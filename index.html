@@ -135,7 +135,18 @@
         <!-- Header -->
         <header class="border-b border-slate-700 pb-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
+                
+                <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ -->
+                <div class="flex flex-col items-start w-full md:w-auto">
+                    
+                    <!-- BREADCRUMB / BACK BUTTON -->
+                    <a href="https://kon-pappas.github.io/" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-cyan-300 transition-colors mb-2.5 group w-fit">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        <span class="font-medium tracking-wide">Konstantinos Pappas Hub <span class="text-slate-600 ml-0.5 font-bold">/</span></span>
+                    </a>
+
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-cyan-400" id="mainTitle">Greek Power Flows Analytics</h1>
                     </div>
@@ -146,7 +157,8 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3 flex-wrap justify-end">
+                <!-- ΔΕΞΙΑ ΣΤΗΛΗ (Κουμπιά, Dropdowns κλπ) -->
+                <div class="flex items-center gap-3 flex-wrap md:justify-end mt-2 md:mt-0">
                     
                     <!-- Methodology Button -->
                     <button onclick="toggleModal(true)" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-300 transition shadow-sm">
