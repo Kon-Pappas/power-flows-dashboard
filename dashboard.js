@@ -262,12 +262,13 @@ function setLang(lang) {
     document.getElementById('modalTransitText').innerText = t.modalTransitText;
     document.getElementById('modalCloseBtn').innerText = t.modalCloseBtn;
 
+    // Ενημέρωση των CSS classes για το Language Switcher (mobile full width)
     if(lang === 'el') {
-        document.getElementById('btnGr').className = "px-2 py-1 rounded bg-cyan-600 text-white transition";
-        document.getElementById('btnEn').className = "px-2 py-1 rounded text-slate-400 hover:text-white transition";
+        document.getElementById('btnGr').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition";
+        document.getElementById('btnEn').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition";
     } else {
-        document.getElementById('btnEn').className = "px-2 py-1 rounded bg-cyan-600 text-white transition";
-        document.getElementById('btnGr').className = "px-2 py-1 rounded text-slate-400 hover:text-white transition";
+        document.getElementById('btnEn').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition";
+        document.getElementById('btnGr').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition";
     }
     if (rawData.length > 0) renderCharts();
 }
@@ -710,6 +711,27 @@ function renderCharts() {
     const selectedDate = document.getElementById('dateSelect').value;
     const dayData = rawData.find(row => row.Date === selectedDate);
     
+    // Ενημέρωση δυναμικού Status Badge
+    const isComplete = dayData ? dayComplete(dayData) : false;
+    const badge = document.getElementById('dataStatusBadge');
+    const badgeText = document.getElementById('dataStatusText');
+    const badgeDot = document.getElementById('dataStatusDot');
+    
+    if (badge && badgeText && badgeDot) {
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+        
+        if (isComplete) {
+            badge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide mr-1";
+            badgeDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+            badgeText.innerText = currentLang === 'el' ? "Πλήρη Δεδομένα" : "Complete Data";
+        } else {
+            badge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wide mr-1";
+            badgeDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse";
+            badgeText.innerText = currentLang === 'el' ? "Ελλιπή Δεδομένα" : "Incomplete Data";
+        }
+    }
+
     if (dayData) {
         activeCountry = null;
         currentDayData = dayData;
@@ -777,7 +799,6 @@ function renderCharts() {
     }
     updateDataNotice(dayData, excludedDates);
 }
-
 
 // ---- UI Loading Animation (Waterfall Boot Sequence) ----
 function animateStep(stepNum, nextAction) {
@@ -863,7 +884,7 @@ window.addEventListener('load', () => {
             } catch (error) {
                 console.error("Error fetching local data:", error);
                 const overlay = document.getElementById('loading-overlay');
-                if (overlay) overlay.style.display = 'none'; // Σε περίπτωση σφάλματος να μην μείνει κλειδωμένη η οθόνη
+                if (overlay) overlay.style.display = 'none'; 
             }
         });
     }, 200);
