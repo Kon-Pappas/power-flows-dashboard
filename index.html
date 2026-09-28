@@ -1,301 +1,315 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Greek Power Flows Analytics</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js DataLabels Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
 </head>
-<body class="h-full text-slate-100 font-sans antialiased overflow-x-hidden flex flex-col justify-between">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between relative">
 
-    <!-- WATERFALL LOADING OVERLAY (MOBILE OPTIMIZED) -->
-    <div id="loading-overlay" class="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-center transition-opacity duration-500 px-3">
-        <div class="w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 sm:p-5 flex flex-col gap-3">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500 px-4">
+        <div class="w-16 h-16 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin mb-6"></div>
+        <div class="text-white text-xl font-semibold text-center mb-2" id="loading-title">Loading Interconnection Data...</div>
+        <div class="w-full max-w-md bg-slate-800 rounded-full h-4 p-0.5 border border-slate-700 overflow-hidden shadow-inner mt-4">
+            <div id="loading-progress-bar" class="bg-cyan-500 h-full rounded-full transition-all duration-300" style="width: 25%;"></div>
+        </div>
+        <div class="text-cyan-400 text-sm font-mono font-bold mt-2" id="loading-percentage">25%</div>
+    </div>
+
+    <!-- Methodology Modal -->
+    <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center px-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95" id="modalContent">
             
-            <!-- Header -->
-            <div class="flex items-center gap-3 mb-1 border-b border-slate-800 pb-3">
-                <div class="w-5 h-5 border-2 border-slate-700 border-t-emerald-500 rounded-full animate-spin flex-shrink-0" id="mainSpinner"></div>
-                <h2 class="text-white text-sm sm:text-base font-bold tracking-wide">System Initialization</h2>
-            </div>
-
-            <!-- Box 1: Data Fetching -->
-            <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 flex flex-col gap-2">
-                <div class="flex items-center gap-2 mb-1">
-                    <svg class="w-3.5 h-3.5 text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Fetching</span>
+            <div class="flex items-center justify-between p-5 border-b border-slate-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-100" id="modalTitle">Methodology & Core Assumptions</h3>
                 </div>
-                <div class="opacity-0 transition-opacity duration-300" id="loadRow1">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-xs text-slate-300 truncate pr-2">Reading data files</span>
-                        <span class="text-[10px] font-mono text-emerald-400 font-bold flex-shrink-0" id="loadPct1">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-blue-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar1"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Box 2: Analytics Engine (4 Tabs) -->
-            <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 flex flex-col gap-3">
-                <div class="flex items-center gap-2 mb-1">
-                    <svg class="w-3.5 h-3.5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Analytics Engine</span>
-                </div>
-                
-                <!-- Tab 1 -->
-                <div class="opacity-0 transition-opacity duration-300" id="loadRow2">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-xs text-slate-300 truncate pr-2">Daily Isp vs Scada</span>
-                        <span class="text-[10px] font-mono text-emerald-400 font-bold flex-shrink-0" id="loadPct2">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar2"></div>
-                    </div>
-                </div>
-
-                <!-- Tab 2 -->
-                <div class="opacity-0 transition-opacity duration-300" id="loadRow3">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-xs text-slate-300 truncate pr-2">Hourly Profiles</span>
-                        <span class="text-[10px] font-mono text-emerald-400 font-bold flex-shrink-0" id="loadPct3">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar3"></div>
-                    </div>
-                </div>
-
-                <!-- Tab 3 -->
-                <div class="opacity-0 transition-opacity duration-300" id="loadRow4">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-xs text-slate-300 truncate pr-2">Daily Arbitrage</span>
-                        <span class="text-[10px] font-mono text-emerald-400 font-bold flex-shrink-0" id="loadPct4">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar4"></div>
-                    </div>
-                </div>
-
-                <!-- Tab 4 -->
-                <div class="opacity-0 transition-opacity duration-300" id="loadRow5">
-                    <div class="flex justify-between items-end mb-1">
-                        <span class="text-xs text-slate-300 truncate pr-2">MTD Position</span>
-                        <span class="text-[10px] font-mono text-emerald-400 font-bold flex-shrink-0" id="loadPct5">0%</span>
-                    </div>
-                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar5"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Success Banner -->
-            <div class="opacity-0 transition-all duration-500 transform translate-y-2 flex items-center justify-center p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 gap-2" id="loadRow_FINAL">
-                <svg class="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span class="text-emerald-400 font-bold text-sm tracking-wide">Dashboard is ready!</span>
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white transition p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
             </div>
             
+            <div class="p-6 space-y-4 text-sm text-slate-300 leading-relaxed">
+                <p id="modalIntro">This Dashboard serves as an independent tool for monitoring and analyzing physical and financial power flows across the Greek interconnections.</p>
+                <ul class="list-disc pl-5 space-y-3 marker:text-slate-500">
+                    <li><strong class="text-slate-200" id="modalDataTitle">Data Sources:</strong> <span id="modalDataText">Physical flow data is fetched daily from IPTO's (ADMIE) official SCADA & ISP reports. Day-Ahead Market Clearing Prices (MCPs) are retrieved via the ENTSO-E Transparency Platform API.</span></li>
+                    <li><strong class="text-slate-200" id="modalCompletenessTitle">Data Completeness:</strong> <span id="modalCompletenessText">Some days may be missing SCADA or price data at the time of collection (e.g. not yet published by IPTO/ENTSO-E, or a temporary source issue). These days are marked with ⚠ in the date selector, their Cash Flow is shown as "n/a", and they are excluded from Month-to-Date totals so incomplete data cannot distort monthly aggregates. Where ENTSO-E returns a compressed price series (omitting quarter-hours that repeat the previous value), the gap is filled forward from the last known value.</span></li>
+                    <li><strong class="text-slate-200" id="modalIspTitle">ISP Schedule Selection:</strong> <span id="modalIspText">Cross-border schedule totals per country are taken from IPTO's "Total Market CBS (+XBID)" section — the final schedule after intraday (XBID) adjustments — rather than the day-ahead auction alone.</span></li>
+                    <li><strong class="text-slate-200" id="modalPricingTitle">Pricing Logic & Valuation:</strong> <span id="modalPricingText">For non-EUPHEMIA borders (Albania, North Macedonia, Turkey), flows are valued using the Greek MCP only. For EUPHEMIA-coupled borders (Italy, Bulgaria), flows are valued using the average of the two domestic MCPs. This produces a notional commercial valuation of the flow, not a formal congestion-rent calculation (which is defined as flow × price differential and accrues to the TSOs, not to a market participant).</span></li>
+                    <li><strong class="text-slate-200" id="modalSignTitle">Sign Convention:</strong> <span id="modalSignText">Following ENEX standards, Red denotes Exports and Yellow denotes Imports. In financial calculations (Cash Flow), Exporting energy generates positive income (+), while Importing energy represents a cost (-).</span></li>
+                    <li><strong class="text-slate-200" id="modalTransitTitle">Optional Transit Adjustment (Bulgaria ↔ Italy):</strong> <span id="modalTransitText">An optional toggle on the Daily Arbitrage tab lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.</span></li>
+                </ul>
+            </div>
+            
+            <div class="p-5 border-t border-slate-700 flex justify-end">
+                <button onclick="toggleModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
+            </div>
         </div>
     </div>
 
-    <!-- MAIN APP CONTAINER -->
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 py-4 w-full flex-grow flex flex-col gap-4">
+    <div class="max-w-7xl mx-auto space-y-6 w-full">
         
-        <!-- Header Section -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-xl">
-            <div>
-                <h1 id="mainTitle" class="text-xl sm:text-2xl font-black text-white tracking-tight">Greek Power Flows Analytics</h1>
-                <p id="dataSourceText" class="text-xs text-slate-400 mt-0.5">Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto justify-between md:justify-end">
-                <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-300">
-                    <span id="lastUpdateLabel" class="text-slate-400">Last Update:</span>
-                    <span id="lastUpdateVal" class="font-mono font-bold text-cyan-400">-</span>
+        <!-- Header -->
+        <header class="border-b border-slate-700 pb-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-3xl font-bold text-cyan-400" id="mainTitle">Greek Power Flows Analytics</h1>
+                    </div>
+                    <p class="text-slate-400 text-sm mt-1" id="dataSourceText">Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)</p>
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
+                        <div><span id="lastUpdateLabel">Latest Available Data:</span> <strong id="lastUpdateVal" class="text-cyan-400">-</strong></div>
+                        <div><span id="nextUpdateLabel">Next Update:</span> <strong id="nextUpdateVal" class="text-emerald-400">-</strong></div>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-300">
-                    <span id="nextUpdateLabel" class="text-slate-400">Next Update:</span>
-                    <span id="nextUpdateVal" class="font-mono font-bold text-cyan-400">-</span>
-                </div>
-                <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
-                    <button onclick="setLang('en')" id="btnEn" class="px-2.5 py-1 rounded text-xs font-bold transition">EN</button>
-                    <button onclick="setLang('el')" id="btnGr" class="px-2.5 py-1 rounded text-xs font-bold transition">GR</button>
+                
+                <div class="flex items-center gap-3 flex-wrap justify-end">
+                    
+                    <!-- Methodology Button -->
+                    <button onclick="toggleModal(true)" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-300 transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                        <span id="btnMethodology">Methodology & Assumptions</span>
+                    </button>
+
+                    <!-- Lang Switcher -->
+                    <div class="flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm">
+                        <button onclick="setLang('el')" id="btnGr" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">GR</button>
+                        <button onclick="setLang('en')" id="btnEn" class="px-2 py-1 rounded bg-cyan-600 text-white transition">EN</button>
+                    </div>
+
+                    <!-- Daily Date Picker -->
+                    <div id="datePickerContainer" class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm">
+                        <label class="text-xs text-slate-300 font-medium" id="dateLabel">Date:</label>
+                        <select id="dateSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-cyan-500 transition cursor-pointer">
+                            <option>Loading...</option>
+                        </select>
+                    </div>
+
+                    <!-- Monthly Date Picker -->
+                    <div id="monthPickerContainer" class="hidden items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-emerald-600 shadow-sm">
+                        <label class="text-xs text-emerald-400 font-medium" id="monthLabel">Month:</label>
+                        <select id="monthSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-emerald-500 transition cursor-pointer">
+                            <option>Loading...</option>
+                        </select>
+                    </div>
+
                 </div>
             </div>
         </header>
 
-        <!-- Controls Toolbar -->
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-md">
-            <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <label id="dateLabel" for="dateSelect" class="text-xs font-semibold text-slate-300">Date:</label>
-                    <select id="dateSelect" onchange="renderCharts()" class="bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"></select>
-                </div>
-                <div class="flex items-center gap-2">
-                    <label id="monthLabel" for="monthSelect" class="text-xs font-semibold text-slate-300">Month:</label>
-                    <select id="monthSelect" onchange="renderCharts()" class="bg-slate-950 border border-slate-800 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500 font-mono"></select>
-                </div>
-            </div>
-            <div>
-                <button onclick="openModal()" id="btnMethodology" class="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-lg border border-slate-700 transition">
-                    Methodology & Assumptions
-                </button>
-            </div>
+        <!-- TABS NAVIGATION -->
+        <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
+            <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Daily Isp vs Scada</button>
+            <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
+            <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Daily Arbitrage</button>
+            <button id="tabBtnMTD" onclick="switchTab('mtd')" class="text-emerald-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap">MTD Position</button>
         </div>
 
-        <!-- Navigation Tabs -->
-        <nav class="flex overflow-x-auto pb-1 gap-2 border-b border-slate-800 no-scrollbar">
-            <button onclick="switchTab('totals')" id="tabBtnTotals" class="px-4 py-2 text-xs font-bold rounded-t-lg bg-cyan-600 text-white transition whitespace-nowrap">Daily Isp vs Scada</button>
-            <button onclick="switchTab('hourly')" id="tabBtnHourly" class="px-4 py-2 text-xs font-bold rounded-t-lg bg-slate-900 text-slate-400 hover:text-white transition whitespace-nowrap">Hourly Profiles</button>
-            <button onclick="switchTab('arbitrage')" id="tabBtnArbitrage" class="px-4 py-2 text-xs font-bold rounded-t-lg bg-slate-900 text-slate-400 hover:text-white transition whitespace-nowrap">Daily Arbitrage</button>
-            <button onclick="switchTab('mtd')" id="tabBtnMTD" class="px-4 py-2 text-xs font-bold rounded-t-lg bg-slate-900 text-slate-400 hover:text-white transition whitespace-nowrap">MTD Position</button>
-        </nav>
-
-        <!-- TAB 1: DAILY ISP VS SCADA -->
-        <div id="tabContentTotals" class="space-y-4">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[350px]">
-                    <div class="mb-2">
-                        <h3 id="totalsChartTitle" class="text-sm font-bold text-white">Net Flows (ISP vs SCADA)</h3>
-                        <p id="totalsChartSub" class="text-[11px] text-slate-400">Negative values (-) = Exports. Positive values (+) = Imports.</p>
-                    </div>
-                    <div class="relative flex-grow w-full"><canvas id="totalsChart"></canvas></div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[350px]">
-                    <div class="mb-2">
-                        <h3 id="mcpChartTitle" class="text-sm font-bold text-white">Day-Ahead Market Clearing Prices</h3>
-                        <p class="text-[11px] text-slate-400">Hourly MCP benchmarks across connected zones.</p>
-                    </div>
-                    <div class="relative flex-grow w-full"><canvas id="mcpChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: HOURLY PROFILES -->
-        <div id="tabContentHourly" class="space-y-4 hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[400px]">
-                <div class="mb-2">
-                    <h3 id="flowsChartTitle" class="text-sm font-bold text-white">Total Hourly Net Flows</h3>
-                    <p class="text-[11px] text-slate-400">Scheduled vs Actual hourly power exchange profile.</p>
-                </div>
-                <div class="relative flex-grow w-full"><canvas id="flowsChart"></canvas></div>
-            </div>
-        </div>
-
-        <!-- TAB 3: DAILY ARBITRAGE -->
-        <div id="tabContentArbitrage" class="space-y-4 hidden">
-            <!-- KPI Cards Grid -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="kpiLabelCashFlow" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Daily Cash Flow</span>
-                    <div id="kpiCashFlowVal" class="text-lg sm:text-xl font-bold mt-1 text-emerald-400">0 €</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="kpiLabelExp" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Exports (Income)</span>
-                    <div id="kpiExpVol" class="text-base sm:text-lg font-bold mt-1 text-rose-500">0 MWh</div>
-                    <div id="kpiExpPrice" class="text-[11px] font-mono text-slate-400">0 €/MWh</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="kpiLabelImp" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Imports (Cost)</span>
-                    <div id="kpiImpVol" class="text-base sm:text-lg font-bold mt-1 text-yellow-400">0 MWh</div>
-                    <div id="kpiImpPrice" class="text-[11px] font-mono text-slate-400">0 €/MWh</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="kpiLabelStatus" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Physical Balance</span>
-                    <div id="kpiStatusVal" class="text-base sm:text-lg font-bold mt-1 text-white">-</div>
-                </div>
-            </div>
-
-            <!-- Arbitrage Chart & Table -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-                <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[380px]">
-                    <div class="mb-2">
-                        <h3 id="arbitrageChartTitle" class="text-sm font-bold text-white">Hourly SCADA & MCP</h3>
-                        <p id="arbitrageChartSub" class="text-[10px] text-slate-400">Click a country below to isolate flows.</p>
-                    </div>
-                    <div class="relative flex-grow w-full"><canvas id="arbitrageChart"></canvas></div>
-                </div>
-
-                <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg overflow-hidden flex flex-col justify-between">
+        <!-- VIEW 1: TOTALS PER COUNTRY -->
+        <div id="viewTotals" class="space-y-6 block">
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-start mb-6">
                     <div>
-                        <div class="grid grid-cols-4 gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-800 text-center">
-                            <div id="colCountry" class="text-left pl-2">Country</div>
-                            <div id="colNet">Imp / Exp (MWh)</div>
-                            <div id="colValue">Cash Flow (€)</div>
-                            <div id="colPrice">€/MWh</div>
+                        <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Flows (ISP vs SCADA)</h2>
+                        <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
+                    </div>
+                </div>
+                <div class="relative h-[500px]"><canvas id="totalsChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: HOURLY FLOWS & MCP -->
+        <div id="viewHourly" class="space-y-6 hidden">
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Hourly Net Flows</h2>
+                <div class="relative h-[350px] mt-4"><canvas id="flowsChart"></canvas></div>
+            </div>
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-slate-200" id="mcpChartTitle">Market Clearing Prices</h2>
+                <div class="relative h-[350px] mt-4"><canvas id="mcpChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- VIEW 3: DAILY ARBITRAGE -->
+        <div id="viewArbitrage" class="space-y-6 hidden">
+            <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="transitNettingToggle" class="sr-only peer" onchange="toggleTransitNetting()">
+                        <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
+                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                    </label>
+                    <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
+                    <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+                </div>
+                <p class="text-xs text-cyan-400" id="transitInfoLine"></p>
+            </div>
+            <div id="transitDirectionPanel" class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 text-sm text-slate-200" style="display:none;"></div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Daily Cash Flow</p>
+                    <p class="text-2xl font-bold transition-colors" id="kpiCashFlowVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Exports (Income)</p>
+                    <p class="text-xl font-bold text-rose-500" id="kpiExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Imports (Cost)</p>
+                    <p class="text-xl font-bold text-yellow-400" id="kpiImpVol">-</p>
+                    <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="kpiImpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Physical Balance</p>
+                    <p class="text-xl font-bold transition-colors" id="kpiStatusVal">-</p>
+                </div>
+            </div>
+            <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-200" id="arbitrageChartTitle">Hourly SCADA & MCP</h2>
+                        <p class="text-xs text-slate-400" id="arbitrageChartSub">Click country to isolate.</p>
+                    </div>
+                </div>
+                <div class="relative h-[350px]"><canvas id="arbitrageChart"></canvas></div>
+            </div>
+            <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase text-center">
+                    <div class="text-left pl-2" id="colCountry">Country</div>
+                    <div id="colNet">Abs. Net MWh</div>
+                    <div id="colValue">Cash Flow (€)</div>
+                    <div id="colPrice">Dominant €/MWh</div>
+                </div>
+                <div id="arbitrageListContainer" class="flex flex-col"></div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: MTD CUMULATIVE -->
+        <div id="viewMTD" class="space-y-6 hidden">
+            <!-- MTD KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
+                    <p class="text-2xl font-bold transition-colors" id="mtdCashFlowVal">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
+                    <p class="text-xl font-bold text-rose-500" id="mtdExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
+                    <p class="text-xl font-bold text-yellow-400" id="mtdImpVol">-</p>
+                    <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="mtdImpPrice">-</p>
+                </div>
+                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                    <p class="text-xs text-slate-400 uppercase font-bold mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
+                    <div class="flex flex-col gap-1 text-sm font-semibold">
+                        <div class="text-emerald-400 bg-emerald-400/10 rounded py-0.5" id="mtdBestDay">-</div>
+                        <div class="text-rose-400 bg-rose-500/10 rounded py-0.5" id="mtdWorstDay">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Cash Flow Chart -->
+                <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitleCash">Cumulative Financial Position (€)</h2>
                         </div>
-                        <div id="arbitrageListContainer" class="divide-y divide-slate-800/60 overflow-y-auto max-h-[300px]"></div>
+                    </div>
+                    <div class="relative h-[250px] md:h-[300px]">
+                        <canvas id="mtdChartCashFlow"></canvas>
+                    </div>
+                </div>
+
+                <!-- Volume Chart -->
+                <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-200" id="mtdChartTitleVol">Cumulative Physical Volume (GWh)</h2>
+                        </div>
+                    </div>
+                    <div class="relative h-[250px] md:h-[300px]">
+                        <canvas id="mtdChartVolume"></canvas>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 4: MTD POSITION -->
-        <div id="tabContentMTD" class="space-y-4 hidden">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="mtdLabelCashFlow" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">MTD Cash Flow</span>
-                    <div id="mtdCashFlowVal" class="text-lg sm:text-xl font-bold mt-1 text-emerald-400">0 €</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="mtdLabelExp" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">MTD Total Exports</span>
-                    <div id="mtdExpVol" class="text-base sm:text-lg font-bold mt-1 text-rose-500">0 GWh</div>
-                    <div id="mtdExpPrice" class="text-[11px] font-mono text-slate-400">0 €/MWh</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="mtdLabelImp" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">MTD Total Imports</span>
-                    <div id="mtdImpVol" class="text-base sm:text-lg font-bold mt-1 text-yellow-400">0 GWh</div>
-                    <div id="mtdImpPrice" class="text-[11px] font-mono text-slate-400">0 €/MWh</div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 shadow">
-                    <span id="mtdLabelExtremes" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Best / Worst Day</span>
-                    <div id="mtdBestDay" class="text-xs font-bold mt-1 text-emerald-400">-</div>
-                    <div id="mtdWorstDay" class="text-xs font-bold text-rose-400">-</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[350px]">
-                    <div class="mb-2"><h3 id="mtdChartTitleCash" class="text-sm font-bold text-white">Cumulative Financial Position (€)</h3></div>
-                    <div class="relative flex-grow w-full"><canvas id="mtdChartCashFlow"></canvas></div>
-                </div>
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col h-[350px]">
-                    <div class="mb-2"><h3 id="mtdChartTitleVol" class="text-sm font-bold text-white">Cumulative Physical Volume (GWh)</h3></div>
-                    <div class="relative flex-grow w-full"><canvas id="mtdChartVolume"></canvas></div>
-                </div>
-            </div>
-        </div>
+        <!-- FOOTER / SIGNATURE -->
+        <footer class="mt-12 pb-2 text-center">
+            <p class="text-slate-400 text-sm font-medium">Konstantinos Pappas <span class="mx-1 text-slate-600">|</span> Energy Market Analyst</p>
+            <p class="text-slate-500 text-xs mt-1">Business Operations & Risk Management <span class="mx-1 text-slate-600">|</span> Data Insights on Energy Transition & Grid Stability</p>
+        </footer>
 
     </div>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 text-[11px] text-slate-500 border-t border-slate-900 mt-6">
-        <span class="font-semibold text-slate-400">Konstantinos Pappas</span> | Energy Market Analyst<br>
-        Business Operations & Risk Management | Data Insights on Energy Transition & Grid Stability
-    </footer>
+    <script>
+        function toggleModal(show) {
+            const modal = document.getElementById('methodologyModal');
+            const content = document.getElementById('modalContent');
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    content.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                content.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+        }
 
-    <!-- Methodology Modal -->
-    <div id="methodologyModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative">
-            <h3 id="modalTitle" class="text-lg font-bold text-white mb-3">Methodology & Core Assumptions</h3>
-            <div class="space-y-3 text-xs text-slate-300 max-h-[60vh] overflow-y-auto pr-2">
-                <p id="modalIntro">This Dashboard serves as an independent monitoring tool.</p>
-                <h4 id="modalDataTitle" class="font-bold text-white">Data Sources:</h4>
-                <p id="modalDataText">Fetched from IPTO SCADA & ISP and ENTSO-E.</p>
-                <h4 id="modalPricingTitle" class="font-bold text-white">Pricing Logic:</h4>
-                <p id="modalPricingText">Non-EUPHEMIA use Greek MCP, coupled use average.</p>
-                <h4 id="modalSignTitle" class="font-bold text-white">Sign Convention:</h4>
-                <p id="modalSignText">Red = Exports, Yellow = Imports.</p>
-            </div>
-            <div class="mt-5 text-right">
-                <button onclick="closeModal()" id="modalCloseBtn" class="bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition">Close</button>
-            </div>
-        </div>
-    </div>
+        // Close modal when clicking outside
+        document.getElementById('methodologyModal').addEventListener('click', function(e) {
+            if (e.target === this) toggleModal(false);
+        });
 
-    <!-- MAIN DASHBOARD SCRIPT -->
-    <script src="dashboard.js"></script>
+        function switchTab(tabId) {
+            ['viewTotals', 'viewHourly', 'viewArbitrage', 'viewMTD'].forEach(id => { document.getElementById(id).classList.add('hidden'); });
+            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => { document.getElementById(id).className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap"; });
+            document.getElementById('tabBtnMTD').className = "text-slate-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap";
+
+            if (tabId === 'mtd') {
+                document.getElementById('datePickerContainer').classList.add('hidden');
+                document.getElementById('monthPickerContainer').classList.remove('hidden');
+                document.getElementById('monthPickerContainer').classList.add('flex');
+            } else {
+                document.getElementById('monthPickerContainer').classList.add('hidden');
+                document.getElementById('monthPickerContainer').classList.remove('flex');
+                document.getElementById('datePickerContainer').classList.remove('hidden');
+            }
+            
+            if (tabId === 'totals') {
+                document.getElementById('viewTotals').classList.remove('hidden');
+                document.getElementById('tabBtnTotals').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'hourly') {
+                document.getElementById('viewHourly').classList.remove('hidden');
+                document.getElementById('tabBtnHourly').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'arbitrage') {
+                document.getElementById('viewArbitrage').classList.remove('hidden');
+                document.getElementById('tabBtnArbitrage').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+            } else if (tabId === 'mtd') {
+                document.getElementById('viewMTD').classList.remove('hidden');
+                document.getElementById('tabBtnMTD').className = "text-emerald-400 font-bold border-b-2 border-emerald-400 pb-2 px-2 transition whitespace-nowrap";
+            }
+
+            renderCharts(); 
+        }
+    </script>
+    <script src="dashboard.js" defer></script>
 </body>
 </html>
