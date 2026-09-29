@@ -91,9 +91,9 @@
 
     <!-- Methodology Modal -->
     <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center px-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95" id="modalContent">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh] md:max-h-none md:block" id="modalContent">
             
-            <div class="flex items-center justify-between p-5 border-b border-slate-700">
+            <div class="flex items-center justify-between p-5 border-b border-slate-700 shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
@@ -105,7 +105,7 @@
                 </button>
             </div>
             
-            <div class="p-6 space-y-4 text-sm text-slate-300 leading-relaxed">
+            <div class="p-6 space-y-4 text-sm text-slate-300 leading-relaxed overflow-y-auto md:overflow-y-visible">
                 <p id="modalIntro">This Dashboard serves as an independent tool for monitoring and analyzing physical and financial power flows across the Greek interconnections.</p>
                 <ul class="list-disc pl-5 space-y-3 marker:text-slate-500">
                     <li><strong class="text-slate-200" id="modalDataTitle">Data Sources:</strong> <span id="modalDataText">Physical flow data is fetched daily from IPTO's (ADMIE) official SCADA & ISP reports. Day-Ahead Market Clearing Prices (MCPs) are retrieved via the ENTSO-E Transparency Platform API.</span></li>
@@ -117,7 +117,7 @@
                 </ul>
             </div>
             
-            <div class="p-5 border-t border-slate-700 flex justify-end">
+            <div class="p-5 border-t border-slate-700 flex justify-end shrink-0">
                 <button onclick="toggleModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
             </div>
         </div>
