@@ -764,36 +764,7 @@ function renderCharts() {
                     { label: t.actual, data: scadaTotals, backgroundColor: 'rgba(249, 115, 22, 0.9)', borderColor: '#f97316', borderWidth: 1, borderRadius: 4 }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    datalabels: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                let val = context.parsed.y;
-                                return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits: 0})} MWh`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: { grid: { display: false } },
-                    y: {
-                        grid: {
-                            color: ctx => ctx.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : '#334155',
-                            lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1
-                        },
-                        ticks: {
-                            callback: function(value) {
-                                return (value / 1000).toLocaleString('el-GR', {maximumFractionDigits: 0}) + ' GWh';
-                            }
-                        }
-                    }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1 } } } }
         });
 
         const ctxFlows = document.getElementById('flowsChart').getContext('2d');
