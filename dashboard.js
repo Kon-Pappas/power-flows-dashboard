@@ -448,25 +448,27 @@ function updateArbitrageTab() {
     const cfSign = data.netCashFlow > 0 ? "+" : "";
     const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
     if (data.complete) {
-        document.getElementById('kpiCashFlowVal').innerText = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
-        document.getElementById('kpiCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
-        document.getElementById('kpiExpVol').innerText = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
-        document.getElementById('kpiExpPrice').innerText = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
-        document.getElementById('kpiImpVol').innerText = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + " MWh";
-        document.getElementById('kpiImpPrice').innerText = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+        document.getElementById('kpiCashFlowVal').innerHTML = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€`;
+        document.getElementById('kpiCashFlowVal').className = `text-base md:text-2xl font-bold ${cfColor}`;
+        
+        document.getElementById('kpiExpVol').innerHTML = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + "&nbsp;MWh";
+        document.getElementById('kpiExpPrice').innerHTML = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
+        
+        document.getElementById('kpiImpVol').innerHTML = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + "&nbsp;MWh";
+        document.getElementById('kpiImpPrice').innerHTML = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
     } else {
-        document.getElementById('kpiCashFlowVal').innerText = t.notAvailable;
-        document.getElementById('kpiCashFlowVal').className = 'text-2xl font-bold text-slate-500';
-        ['kpiExpVol','kpiExpPrice','kpiImpVol','kpiImpPrice'].forEach(id => { document.getElementById(id).innerText = t.notAvailable; });
+        document.getElementById('kpiCashFlowVal').innerHTML = t.notAvailable;
+        document.getElementById('kpiCashFlowVal').className = 'text-base md:text-2xl font-bold text-slate-500';
+        ['kpiExpVol','kpiExpPrice','kpiImpVol','kpiImpPrice'].forEach(id => { document.getElementById(id).innerHTML = t.notAvailable; });
     }
 
     const isImp = data.netVol >= 0;
     if (data.complete || data.hasScada) {
-        document.getElementById('kpiStatusVal').innerText = isImp ? t.importer : t.exporter;
-        document.getElementById('kpiStatusVal').className = `text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
+        document.getElementById('kpiStatusVal').innerHTML = isImp ? t.importer : t.exporter;
+        document.getElementById('kpiStatusVal').className = `text-base md:text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
     } else {
-        document.getElementById('kpiStatusVal').innerText = t.notAvailable;
-        document.getElementById('kpiStatusVal').className = 'text-xl font-bold text-slate-500';
+        document.getElementById('kpiStatusVal').innerHTML = t.notAvailable;
+        document.getElementById('kpiStatusVal').className = 'text-base md:text-xl font-bold text-slate-500';
     }
 
     const listContainer = document.getElementById('arbitrageListContainer');
@@ -504,7 +506,7 @@ function updateArbitrageTab() {
                     <div class="text-rose-500" title="Exports">↑ ${expVolFmt}</div>
                 </div>
                 <div class="${cfColor}">
-                    ${cfFmt} €
+                    ${cfFmt}&nbsp;€
                 </div>
                 <div class="flex flex-col gap-1">
                     <div class="text-yellow-400">${impAvgFmt}</div>
@@ -561,7 +563,7 @@ function renderMTDTab(selectedMonth) {
     const monthData = allMonthData.filter(dayComplete);
     const excludedDates = allMonthData.filter(r => !dayComplete(r)).map(r => r.Date);
     if(monthData.length === 0) {
-        ['mtdCashFlowVal','mtdExpVol','mtdExpPrice','mtdImpVol','mtdImpPrice','mtdBestDay','mtdWorstDay'].forEach(id => { document.getElementById(id).innerText = '-'; });
+        ['mtdCashFlowVal','mtdExpVol','mtdExpPrice','mtdImpVol','mtdImpPrice','mtdBestDay','mtdWorstDay'].forEach(id => { document.getElementById(id).innerHTML = '-'; });
         return excludedDates;
     }
 
@@ -601,23 +603,24 @@ function renderMTDTab(selectedMonth) {
 
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-fuchsia-500";
-    document.getElementById('mtdCashFlowVal').innerText = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})} €`;
-    document.getElementById('mtdCashFlowVal').className = `text-2xl font-bold ${cfColor}`;
+    
+    document.getElementById('mtdCashFlowVal').innerHTML = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€`;
+    document.getElementById('mtdCashFlowVal').className = `text-base md:text-2xl font-bold ${cfColor}`;
 
     let expGwh = totalExpVol / 1000;
     let impGwh = totalImpVol / 1000;
     let expAvg = totalExpVol > 0 ? (totalExpEur / totalExpVol) : 0;
     let impAvg = totalImpVol > 0 ? (totalImpEur / totalImpVol) : 0;
 
-    document.getElementById('mtdExpVol').innerText = expGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
-    document.getElementById('mtdExpPrice').innerText = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
-    document.getElementById('mtdImpVol').innerText = impGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + " GWh";
-    document.getElementById('mtdImpPrice').innerText = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + " €/MWh";
+    document.getElementById('mtdExpVol').innerHTML = expGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + "&nbsp;GWh";
+    document.getElementById('mtdExpPrice').innerHTML = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
+    document.getElementById('mtdImpVol').innerHTML = impGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + "&nbsp;GWh";
+    document.getElementById('mtdImpPrice').innerHTML = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
 
     const formatDay = (d) => `${d.substring(8,10)}/${d.substring(5,7)}`;
     const bestSign = bestDay.val > 0 ? '+' : '';
-    document.getElementById('mtdBestDay').innerText = `${formatDay(bestDay.date)} (${bestSign}${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
-    document.getElementById('mtdWorstDay').innerText = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})} €)`;
+    document.getElementById('mtdBestDay').innerHTML = `${formatDay(bestDay.date)} (${bestSign}${bestDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€)`;
+    document.getElementById('mtdWorstDay').innerHTML = `${formatDay(worstDay.date)} (${worstDay.val.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€)`;
 
     if (mtdCashFlowChartInstance) mtdCashFlowChartInstance.destroy();
     const ctxCash = document.getElementById('mtdChartCashFlow').getContext('2d');
