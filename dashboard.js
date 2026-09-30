@@ -448,27 +448,41 @@ function updateArbitrageTab() {
     const cfSign = data.netCashFlow > 0 ? "+" : "";
     const cfColor = data.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500";
     if (data.complete) {
+        // Χρησιμοποιούμε innerHTML και &nbsp; αντί για .innerText και " " για αποφυγή line breaks
         document.getElementById('kpiCashFlowVal').innerHTML = `${cfSign}${data.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€`;
-        document.getElementById('kpiCashFlowVal').className = `text-base md:text-2xl font-bold ${cfColor}`;
+        document.getElementById('kpiCashFlowVal').className = `text-base md:text-2xl font-bold transition-colors whitespace-nowrap ${cfColor}`;
         
+        // Ίδιο μέγεθος (text-base md:text-2xl) στα Imports/Exports
         document.getElementById('kpiExpVol').innerHTML = data.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + "&nbsp;MWh";
+        document.getElementById('kpiExpVol').className = `text-base md:text-2xl font-bold text-rose-500 whitespace-nowrap`;
+        
         document.getElementById('kpiExpPrice').innerHTML = data.expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
         
         document.getElementById('kpiImpVol').innerHTML = data.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}) + "&nbsp;MWh";
+        document.getElementById('kpiImpVol').className = `text-base md:text-2xl font-bold text-yellow-400 whitespace-nowrap`;
+        
         document.getElementById('kpiImpPrice').innerHTML = data.impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
     } else {
         document.getElementById('kpiCashFlowVal').innerHTML = t.notAvailable;
-        document.getElementById('kpiCashFlowVal').className = 'text-base md:text-2xl font-bold text-slate-500';
-        ['kpiExpVol','kpiExpPrice','kpiImpVol','kpiImpPrice'].forEach(id => { document.getElementById(id).innerHTML = t.notAvailable; });
+        document.getElementById('kpiCashFlowVal').className = 'text-base md:text-2xl font-bold text-slate-500 transition-colors whitespace-nowrap';
+        
+        document.getElementById('kpiExpVol').innerHTML = t.notAvailable;
+        document.getElementById('kpiExpVol').className = `text-base md:text-2xl font-bold text-slate-500 whitespace-nowrap`;
+        document.getElementById('kpiExpPrice').innerHTML = t.notAvailable;
+        
+        document.getElementById('kpiImpVol').innerHTML = t.notAvailable;
+        document.getElementById('kpiImpVol').className = `text-base md:text-2xl font-bold text-slate-500 whitespace-nowrap`;
+        document.getElementById('kpiImpPrice').innerHTML = t.notAvailable;
     }
 
     const isImp = data.netVol >= 0;
     if (data.complete || data.hasScada) {
         document.getElementById('kpiStatusVal').innerHTML = isImp ? t.importer : t.exporter;
-        document.getElementById('kpiStatusVal').className = `text-base md:text-xl font-bold ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
+        // Ίδιο μέγεθος (text-base md:text-xl) στο Status (ώστε να ταιριάζει με το base)
+        document.getElementById('kpiStatusVal').className = `text-base md:text-xl font-bold transition-colors whitespace-nowrap ${isImp ? 'text-yellow-400' : 'text-rose-500'}`;
     } else {
         document.getElementById('kpiStatusVal').innerHTML = t.notAvailable;
-        document.getElementById('kpiStatusVal').className = 'text-base md:text-xl font-bold text-slate-500';
+        document.getElementById('kpiStatusVal').className = 'text-base md:text-xl font-bold transition-colors whitespace-nowrap text-slate-500';
     }
 
     const listContainer = document.getElementById('arbitrageListContainer');
@@ -505,7 +519,7 @@ function updateArbitrageTab() {
                     <div class="text-yellow-400" title="Imports">↓ ${impVolFmt}</div>
                     <div class="text-rose-500" title="Exports">↑ ${expVolFmt}</div>
                 </div>
-                <div class="${cfColor}">
+                <div class="${cfColor} whitespace-nowrap">
                     ${cfFmt}&nbsp;€
                 </div>
                 <div class="flex flex-col gap-1">
@@ -604,8 +618,9 @@ function renderMTDTab(selectedMonth) {
     const cfSign = cumEur > 0 ? "+" : "";
     const cfColor = cumEur >= 0 ? "text-emerald-400" : "text-fuchsia-500";
     
+    // Εξισορρόπηση μεγέθους στο MTD Tab - όλα text-base md:text-2xl
     document.getElementById('mtdCashFlowVal').innerHTML = `${cfSign}${cumEur.toLocaleString('el-GR', {maximumFractionDigits:0})}&nbsp;€`;
-    document.getElementById('mtdCashFlowVal').className = `text-base md:text-2xl font-bold ${cfColor}`;
+    document.getElementById('mtdCashFlowVal').className = `text-base md:text-2xl font-bold transition-colors whitespace-nowrap ${cfColor}`;
 
     let expGwh = totalExpVol / 1000;
     let impGwh = totalImpVol / 1000;
@@ -613,8 +628,13 @@ function renderMTDTab(selectedMonth) {
     let impAvg = totalImpVol > 0 ? (totalImpEur / totalImpVol) : 0;
 
     document.getElementById('mtdExpVol').innerHTML = expGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + "&nbsp;GWh";
+    document.getElementById('mtdExpVol').className = `text-base md:text-2xl font-bold text-rose-500 whitespace-nowrap`;
+    
     document.getElementById('mtdExpPrice').innerHTML = expAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
+    
     document.getElementById('mtdImpVol').innerHTML = impGwh.toLocaleString('el-GR', {maximumFractionDigits:1}) + "&nbsp;GWh";
+    document.getElementById('mtdImpVol').className = `text-base md:text-2xl font-bold text-yellow-400 whitespace-nowrap`;
+    
     document.getElementById('mtdImpPrice').innerHTML = impAvg.toLocaleString('el-GR', {maximumFractionDigits:2}) + "&nbsp;€/MWh";
 
     const formatDay = (d) => `${d.substring(8,10)}/${d.substring(5,7)}`;
