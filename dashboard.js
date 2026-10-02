@@ -141,7 +141,7 @@ const i18n = {
         transitInfoActive: "⇄ Transit removed in {n} hour(s) today",
         transitInfoNone: "No BG↔IT transit hours today — figures unchanged",
         transitBadgeTitle: "Transit-adjusted this day",
-        transitDirLabel: "Transit energy removed from cash flow today:",
+        transitDirLabel: "Transit Volumes Removed:",
         transitDirItToBg: "Italy → Bulgaria (via Greece):",
         transitDirBgToIt: "Bulgaria → Italy (via Greece):",
         transitDirHours: "h",
@@ -210,7 +210,7 @@ const i18n = {
         transitInfoActive: "⇄ Αφαιρέθηκε transit σε {n} ώρα(ες) σήμερα",
         transitInfoNone: "Καμία ώρα transit ΒΓ↔ΙΤ σήμερα — τα νούμερα δεν αλλάζουν",
         transitBadgeTitle: "Προσαρμοσμένη ημέρα (transit)",
-        transitDirLabel: "Διερχόμενη ενέργεια που αφαιρέθηκε σήμερα από το ταμείο:",
+        transitDirLabel: "Αφαιρέθηκε Transit:",
         transitDirItToBg: "Ιταλία → Βουλγαρία (μέσω Ελλάδας):",
         transitDirBgToIt: "Βουλγαρία → Ιταλία (μέσω Ελλάδας):",
         transitDirHours: "ω",
@@ -218,7 +218,7 @@ const i18n = {
     }
 };
 
-// Νέα χρωματική παλέτα, χωρίς να επικαλύπτονται τα χρώματα των KPIs (Πράσινο, Φούξια, Κίτρινο, Κόκκινο)
+// Χρωματική παλέτα χωρίς επικάλυψη με τα KPIs
 const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
 
 function setLang(lang) {
@@ -455,7 +455,7 @@ function updateArbitrageTab() {
             const rows = [];
             if (itBg.hours > 0) rows.push(`<div>${t.transitDirItToBg} <span class="text-cyan-300 font-semibold">${fmt(itBg.vol)} MWh</span> <span class="text-slate-500">(${itBg.hours}${t.transitDirHours})</span></div>`);
             if (bgIt.hours > 0) rows.push(`<div>${t.transitDirBgToIt} <span class="text-cyan-300 font-semibold">${fmt(bgIt.vol)} MWh</span> <span class="text-slate-500">(${bgIt.hours}${t.transitDirHours})</span></div>`);
-            dirEl.innerHTML = `<div class="text-slate-400 mb-1">${t.transitDirLabel}</div>${rows.join('')}`;
+            dirEl.innerHTML = `<div class="text-slate-400 text-xs font-semibold mb-1">${t.transitDirLabel}</div><div class="space-y-1">${rows.join('')}</div>`;
             dirEl.style.display = 'block';
         } else {
             dirEl.innerHTML = '';
@@ -550,7 +550,6 @@ function updateArbitrageTab() {
             barColors = data.hours.map((_, i) => {
                 const d = data.transitDetail[i];
                 const involvesCountry = d && ((activeCountry === 'IT' && d.dir === 'IT_TO_BG') || (activeCountry === 'BG' && d.dir === 'BG_TO_IT'));
-                // Κρατάμε το Κίτρινο χρώμα (#facc15) για το Transit, καθώς υποδηλώνει ώρες Εισαγωγών
                 return involvesCountry ? '#facc15' : countryColors[activeCountry];
             });
         }
