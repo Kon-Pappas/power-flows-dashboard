@@ -230,19 +230,22 @@
 
         <!-- VIEW 3: DAILY ARBITRAGE -->
         <div id="viewArbitrage" class="space-y-6 hidden">
-            <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex items-center justify-between flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="transitNettingToggle" class="sr-only peer" onchange="toggleTransitNetting()">
-                        <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
-                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                    </label>
-                    <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
-                    <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+            <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="transitNettingToggle" class="sr-only peer" onchange="toggleTransitNetting()">
+                            <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                        </label>
+                        <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
+                        <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+                    </div>
+                    <p class="text-xs text-cyan-400" id="transitInfoLine"></p>
                 </div>
-                <p class="text-xs text-cyan-400" id="transitInfoLine"></p>
+                <!-- Ενσωματωμένο panel λεπτομερειών transit εντός του ίδιου πλαισίου -->
+                <div id="transitDirectionPanel" class="border-t border-slate-700/60 pt-3 text-sm text-slate-200" style="display:none;"></div>
             </div>
-            <div id="transitDirectionPanel" class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 text-sm text-slate-200" style="display:none;"></div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
