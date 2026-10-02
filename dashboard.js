@@ -145,7 +145,7 @@ const i18n = {
         transitDirItToBg: "Italy → Bulgaria (via Greece):",
         transitDirBgToIt: "Bulgaria → Italy (via Greece):",
         transitDirHours: "h",
-        transitChartSub: "Amber bars = transit hours (this leg's cash removed today)."
+        transitChartSub: "Yellow bars = transit hours (this leg's cash removed today)."
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
@@ -218,7 +218,8 @@ const i18n = {
     }
 };
 
-const countryColors = { AL: '#3b82f6', BG: '#10b981', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
+// Νέα χρωματική παλέτα, χωρίς να επικαλύπτονται τα χρώματα των KPIs (Πράσινο, Φούξια, Κίτρινο, Κόκκινο)
+const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
 
 function setLang(lang) {
     currentLang = lang;
@@ -549,11 +550,12 @@ function updateArbitrageTab() {
             barColors = data.hours.map((_, i) => {
                 const d = data.transitDetail[i];
                 const involvesCountry = d && ((activeCountry === 'IT' && d.dir === 'IT_TO_BG') || (activeCountry === 'BG' && d.dir === 'BG_TO_IT'));
-                return involvesCountry ? '#fbbf24' : countryColors[activeCountry];
+                // Κρατάμε το Κίτρινο χρώμα (#facc15) για το Transit, καθώς υποδηλώνει ώρες Εισαγωγών
+                return involvesCountry ? '#facc15' : countryColors[activeCountry];
             });
         }
         datasets.push({ type: 'bar', label: `${names[activeCountry]} Flow (MW)`, data: data.summary[activeCountry].hourlyFlows, backgroundColor: barColors, yAxisID: 'y' });
-        datasets.push({ type: 'line', label: `Applied MCP (€/MWh)`, data: data.summary[activeCountry].hourlyPrices, borderColor: '#f8fafc', borderWidth: 3, tension: 0.2, yAxisID: 'y1' });
+        datasets.push({ type: 'line', label: `Applied MCP (€/MWh)`, data: data.summary[activeCountry].hourlyPrices, borderColor: '#ffffff', borderWidth: 3, tension: 0.2, yAxisID: 'y1' });
     } else {
         ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
             datasets.push({ type: 'bar', label: names[c], data: data.summary[c].hourlyFlows, backgroundColor: countryColors[c], yAxisID: 'y' });
