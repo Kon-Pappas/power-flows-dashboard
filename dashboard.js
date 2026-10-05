@@ -40,24 +40,35 @@ function hasPrices(day) {
 
 function dayComplete(day) { return hasScada(day) && hasPrices(day); }
 
-function updateDataNotice(dayData, excludedDates) {
+function updateDataNotice(dayData) {
     const t = i18n[currentLang];
     let el = document.getElementById('dataNotice');
     if (!el) {
         el = document.createElement('p');
         el.id = 'dataNotice';
         el.className = 'text-amber-400 text-xs mt-2';
-        const ref = document.getElementById('dataSourceText');
+        const ref = document.getElementById('updateTimesRow');
         if (ref) ref.insertAdjacentElement('afterend', el);
     }
-    const parts = [];
-    if (dayData && !dayComplete(dayData)) parts.push(t.noticeDay);
+    const show = dayData && !dayComplete(dayData);
+    el.innerText = show ? t.noticeDay : '';
+    el.style.display = show ? 'block' : 'none';
+}
+
+// Η ειδοποίηση για ημέρες που εξαιρέθηκαν από το MTD αφορά αποκλειστικά το tab
+// "MTD Position", οπότε εμφανίζεται μόνο εκεί, όχι σε όλο το dashboard.
+function updateMtdExclusionNotice(excludedDates) {
+    const t = i18n[currentLang];
+    const el = document.getElementById('mtdExclusionNotice');
+    if (!el) return;
     if (excludedDates.length > 0) {
         const list = excludedDates.map(d => d.substring(8, 10) + '/' + d.substring(5, 7)).join(', ');
-        parts.push(t.noticeExcluded.replace('{n}', excludedDates.length) + ' (' + list + ')');
+        el.innerText = t.noticeExcluded.replace('{n}', excludedDates.length) + ' (' + list + ')';
+        el.classList.remove('hidden');
+    } else {
+        el.innerText = '';
+        el.classList.add('hidden');
     }
-    el.innerText = parts.join('  •  ');
-    el.style.display = parts.length ? 'block' : 'none';
 }
 
 // ---- Helper Συνάρτηση για Δυναμικό Format στους Άξονες των Διαγραμμάτων ----
@@ -82,7 +93,9 @@ const i18n = {
         title: "Greek Power Flows Analytics",
         source: "Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)",
         lastUpdate: "Last Update:",
+        lastUpdateMobile: "Updated:",
         nextUpdate: "Next Update:",
+        nextUpdateMobile: "Next:",
         dateLabel: "Date:",
         monthLabel: "Month:",
         tabTotals: "Daily Isp vs Scada",
@@ -140,7 +153,9 @@ const i18n = {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
         source: "Πηγή δεδομένων: ΑΔΜΗΕ (SCADA & ISP) & ENTSO-E",
         lastUpdate: "Τελευταία Ενημέρωση:",
+        lastUpdateMobile: "Ενημέρωση:",
         nextUpdate: "Επόμενη Ενημέρωση:",
+        nextUpdateMobile: "Επόμενη:",
         dateLabel: "Ημερομηνία:",
         monthLabel: "Μήνας:",
         tabTotals: "Ημερήσια Ροή",
@@ -368,9 +383,10 @@ function setLang(lang) {
     
     document.getElementById('pageTitle').innerText = t.title;
     document.getElementById('mainTitle').innerText = t.title;
-    document.getElementById('dataSourceText').innerText = t.source;
     document.getElementById('lastUpdateLabel').innerText = t.lastUpdate;
+    document.getElementById('lastUpdateLabelMobile').innerText = t.lastUpdateMobile;
     document.getElementById('nextUpdateLabel').innerText = t.nextUpdate;
+    document.getElementById('nextUpdateLabelMobile').innerText = t.nextUpdateMobile;
     document.getElementById('dateLabel').innerText = t.dateLabel;
     document.getElementById('monthLabel').innerText = t.monthLabel;
     document.getElementById('btnMethodology').innerText = t.btnMethodology;
@@ -1006,7 +1022,8 @@ function renderCharts() {
     if (selectedMonth) {
         excludedDates = renderMTDTab(selectedMonth) || [];
     }
-    updateDataNotice(dayData, excludedDates);
+    updateDataNotice(dayData);
+    updateMtdExclusionNotice(excludedDates);
 }
 
 // ---- UI Loading Animation (Waterfall Boot Sequence) ----
