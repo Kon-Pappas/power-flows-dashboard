@@ -140,10 +140,9 @@
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-cyan-400" id="mainTitle">Greek Power Flows Analytics</h1>
                     </div>
-                    <p class="text-slate-400 text-sm mt-1" id="dataSourceText">Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)</p>
-                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2">
-                        <div><span id="lastUpdateLabel">Latest Available Data:</span> <strong id="lastUpdateVal" class="text-cyan-400">-</strong></div>
-                        <div><span id="nextUpdateLabel">Next Update:</span> <strong id="nextUpdateVal" class="text-emerald-400">-</strong></div>
+                    <div class="flex flex-wrap items-center gap-4 text-xs text-slate-400 mt-2" id="updateTimesRow">
+                        <div><span class="hidden md:inline" id="lastUpdateLabel">Last Update:</span><span class="md:hidden" id="lastUpdateLabelMobile">Updated:</span> <strong id="lastUpdateVal" class="text-cyan-400">-</strong></div>
+                        <div><span class="hidden md:inline" id="nextUpdateLabel">Next Update:</span><span class="md:hidden" id="nextUpdateLabelMobile">Next:</span> <strong id="nextUpdateVal" class="text-emerald-400">-</strong></div>
                     </div>
                 </div>
                 
@@ -289,6 +288,7 @@
 
         <!-- VIEW 4: MTD CUMULATIVE -->
         <div id="viewMTD" class="space-y-6 hidden">
+            <p class="text-amber-400 text-xs hidden" id="mtdExclusionNotice"></p>
             <!-- MTD KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
