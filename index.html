@@ -10,41 +10,113 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between relative">
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 z-[9999] bg-slate-900 flex flex-col items-center justify-center transition-opacity duration-500 px-4">
-        <div class="w-16 h-16 border-4 border-slate-700 border-t-cyan-500 rounded-full animate-spin mb-6"></div>
-        <div class="text-white text-xl font-semibold text-center mb-2" id="loading-title">Loading Interconnection Data...</div>
-        <div class="w-full max-w-md bg-slate-800 rounded-full h-4 p-0.5 border border-slate-700 overflow-hidden shadow-inner mt-4">
-            <div id="loading-progress-bar" class="bg-cyan-500 h-full rounded-full transition-all duration-300" style="width: 25%;"></div>
+    <!-- Loading Overlay (Waterfall Boot Sequence) -->
+    <div id="loading-overlay" class="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center transition-opacity duration-500 px-4">
+        <div class="w-full max-w-sm bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl p-5 flex flex-col gap-4">
+            
+            <div class="flex items-center gap-3 mb-1 border-b border-slate-700/50 pb-3">
+                <div class="w-5 h-5 border-2 border-slate-600 border-t-emerald-500 rounded-full animate-spin" id="mainSpinner"></div>
+                <h2 class="text-white text-base font-bold tracking-wide">System Initialization</h2>
+            </div>
+
+            <div class="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50 flex flex-col gap-2">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Data Fetching</span>
+                </div>
+                <div class="opacity-0 transition-opacity duration-300" id="loadRow1">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs text-slate-300">Reading data files</span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold" id="loadPct1">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-blue-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar1"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/50 rounded-xl p-3 border border-slate-700/50 flex flex-col gap-3 mt-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <svg class="w-3.5 h-3.5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Analytics Engine</span>
+                </div>
+                
+                <div class="opacity-0 transition-opacity duration-300" id="loadRow2">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs text-slate-300">Loading Daily Isp vs Scada...</span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold" id="loadPct2">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar2"></div>
+                    </div>
+                </div>
+
+                <div class="opacity-0 transition-opacity duration-300" id="loadRow3">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs text-slate-300">Loading Hourly Profiles...</span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold" id="loadPct3">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar3"></div>
+                    </div>
+                </div>
+
+                <div class="opacity-0 transition-opacity duration-300" id="loadRow4">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs text-slate-300">Calculating Daily Arbitrage...</span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold" id="loadPct4">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar4"></div>
+                    </div>
+                </div>
+
+                <div class="opacity-0 transition-opacity duration-300" id="loadRow5">
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-xs text-slate-300">Evaluating MTD Position...</span>
+                        <span class="text-[10px] font-mono text-emerald-400 font-bold" id="loadPct5">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <div class="bg-purple-500 h-full rounded-full w-0 transition-all duration-300 ease-out" id="loadBar5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="opacity-0 transition-all duration-500 transform translate-y-2 flex items-center justify-center p-3 mt-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 gap-2" id="loadRow_FINAL">
+                <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span class="text-emerald-400 font-bold text-sm tracking-wide">Dashboard is ready!</span>
+            </div>
         </div>
-        <div class="text-cyan-400 text-sm font-mono font-bold mt-2" id="loading-percentage">25%</div>
     </div>
 
     <!-- Methodology Modal -->
     <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center px-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col transform transition-transform duration-300 scale-95" id="modalContent">
-
+        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh] md:max-h-none md:block" id="modalContent">
+            
             <div class="flex items-center justify-between p-5 border-b border-slate-700 shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                     </div>
                     <h3 class="text-lg font-bold text-slate-100" id="modalTitle">Methodology & Core Assumptions</h3>
                 </div>
-                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white transition p-1 shrink-0">
+                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white transition p-1">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-
-            <div class="flex items-center gap-2 px-5 pt-4 shrink-0">
-                <div class="flex bg-slate-900/60 rounded-lg p-1 w-full max-w-xs">
-                    <button onclick="setMethodologyMode('short')" id="modalModeShortBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Short</button>
-                    <button onclick="setMethodologyMode('detailed')" id="modalModeDetailedBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Detailed</button>
-                </div>
+            
+            <div class="p-6 space-y-4 text-sm text-slate-300 leading-relaxed overflow-y-auto md:overflow-y-visible">
+                <p id="modalIntro">This Dashboard serves as an independent tool for monitoring and analyzing physical and financial power flows across the Greek interconnections.</p>
+                <ul class="list-disc pl-5 space-y-3 marker:text-slate-500">
+                    <li><strong class="text-slate-200" id="modalDataTitle">Data Sources:</strong> <span id="modalDataText">Physical flow data is fetched daily from IPTO's (ADMIE) official SCADA & ISP reports. Day-Ahead Market Clearing Prices (MCPs) are retrieved via the ENTSO-E Transparency Platform API.</span></li>
+                    <li><strong class="text-slate-200" id="modalCompletenessTitle">Data Completeness:</strong> <span id="modalCompletenessText">Some days may be missing SCADA or price data at the time of collection (e.g. not yet published by IPTO/ENTSO-E, or a temporary source issue). These days are marked with ⚠ in the date selector, their Cash Flow is shown as "n/a", and they are excluded from Month-to-Date totals so incomplete data cannot distort monthly aggregates. Where ENTSO-E returns a compressed price series (omitting quarter-hours that repeat the previous value), the gap is filled forward from the last known value.</span></li>
+                    <li><strong class="text-slate-200" id="modalIspTitle">ISP Schedule Selection:</strong> <span id="modalIspText">Cross-border schedule totals per country are taken from IPTO's "Total Market CBS (+XBID)" section — the final schedule after intraday (XBID) adjustments — rather than the day-ahead auction alone.</span></li>
+                    <li><strong class="text-slate-200" id="modalPricingTitle">Pricing Logic & Valuation:</strong> <span id="modalPricingText">For non-EUPHEMIA borders (Albania, North Macedonia, Turkey), flows are valued using the Greek MCP only. For EUPHEMIA-coupled borders (Italy, Bulgaria), flows are valued using the average of the two domestic MCPs. This produces a notional commercial valuation of the flow, not a formal congestion-rent calculation (which is defined as flow × price differential and accrues to the TSOs, not to a market participant).</span></li>
+                    <li><strong class="text-slate-200" id="modalSignTitle">Sign Convention:</strong> <span id="modalSignText">Following ENEX standards, Red denotes Exports and Yellow denotes Imports. In financial calculations (Cash Flow), Exporting energy generates positive income (+), while Importing energy represents a cost (-).</span></li>
+                    <li><strong class="text-slate-200" id="modalTransitTitle">Optional Transit Adjustment (Bulgaria ↔ Italy):</strong> <span id="modalTransitText">An optional toggle on the Daily Arbitrage tab lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.</span></li>
+                </ul>
             </div>
-
-            <div class="p-5 pt-4 overflow-y-auto text-sm text-slate-300 leading-relaxed grow" id="modalBody"></div>
-
+            
             <div class="p-5 border-t border-slate-700 flex justify-end shrink-0">
                 <button onclick="toggleModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
             </div>
@@ -56,7 +128,18 @@
         <!-- Header -->
         <header class="border-b border-slate-700 pb-4">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
+                
+                <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ -->
+                <div class="flex flex-col items-start w-full md:w-auto">
+                    
+                    <!-- BREADCRUMB / BACK BUTTON -->
+                    <a href="https://kon-pappas.github.io/" class="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-cyan-300 transition-colors mb-2.5 group w-fit">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                        </svg>
+                        <span class="font-medium tracking-wide">Konstantinos Pappas Hub <span class="text-slate-600 ml-0.5 font-bold">/</span></span>
+                    </a>
+
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-cyan-400" id="mainTitle">Greek Power Flows Analytics</h1>
                     </div>
@@ -67,46 +150,59 @@
                     </div>
                 </div>
                 
-                <div class="flex items-center gap-3 flex-wrap justify-end">
+                <!-- ΔΕΞΙΑ ΣΤΗΛΗ (Controls) -->
+                <div class="flex flex-col md:items-end w-full md:w-auto mt-4 md:mt-0 gap-3">
                     
-                    <!-- Methodology Button -->
-                    <button onclick="toggleModal(true)" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-xs text-slate-300 transition shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                        <span id="btnMethodology">Methodology & Assumptions</span>
-                    </button>
+                    <!-- ΓΡΑΜΜΗ 1 (PC) / ΠΑΝΩ (Mobile): Date/Month Pickers -->
+                    <div class="w-full md:w-auto flex flex-col md:flex-row gap-3 order-1">
+                        <!-- Daily Date Picker -->
+                        <div id="datePickerContainer" class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700 shadow-sm h-12 md:h-10 pl-2 pr-1">
+                            <label class="text-xs text-slate-300 font-medium whitespace-nowrap" id="dateLabel">Date:</label>
+                            <select id="dateSelect" onchange="renderCharts()" class="bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-indigo-500 transition cursor-pointer border border-slate-700 w-full md:w-auto">
+                                <option>Loading...</option>
+                            </select>
+                            <div id="dataStatusBadge" class="hidden items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide mr-1">
+                                <span id="dataStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span id="dataStatusText">Complete Data</span>
+                            </div>
+                        </div>
 
-                    <!-- Lang Switcher -->
-                    <div class="flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm">
-                        <button onclick="setLang('el')" id="btnGr" class="px-2 py-1 rounded text-slate-400 hover:text-white transition">GR</button>
-                        <button onclick="setLang('en')" id="btnEn" class="px-2 py-1 rounded bg-cyan-600 text-white transition">EN</button>
+                        <!-- Monthly Date Picker -->
+                        <div id="monthPickerContainer" class="hidden w-full md:w-auto items-center justify-between md:justify-end gap-2 bg-slate-800 p-1 rounded-lg border border-emerald-700/50 shadow-sm h-12 md:h-10 pl-2 pr-1">
+                            <label class="text-xs text-emerald-400 font-medium whitespace-nowrap" id="monthLabel">Month:</label>
+                            <select id="monthSelect" onchange="renderCharts()" class="bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-emerald-500 transition cursor-pointer border border-slate-700 w-full md:w-auto">
+                                <option>Loading...</option>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Daily Date Picker -->
-                    <div id="datePickerContainer" class="flex items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-slate-600 shadow-sm">
-                        <label class="text-xs text-slate-300 font-medium" id="dateLabel">Date:</label>
-                        <select id="dateSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-cyan-500 transition cursor-pointer">
-                            <option>Loading...</option>
-                        </select>
-                    </div>
+                    <!-- ΓΡΑΜΜΗ 2 (PC) / ΚΑΤΩ (Mobile): Methodology & Language -->
+                    <div class="w-full md:w-auto flex flex-col-reverse md:flex-row gap-3 order-2">
+                        <!-- Methodology Button -->
+                        <button onclick="toggleModal(true)" class="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 text-xs text-slate-300 transition shadow-sm h-12 md:h-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                            <span id="btnMethodology">Methodology & Assumptions</span>
+                        </button>
 
-                    <!-- Monthly Date Picker -->
-                    <div id="monthPickerContainer" class="hidden items-center gap-2 bg-slate-900/50 p-2 rounded-lg border border-emerald-600 shadow-sm">
-                        <label class="text-xs text-emerald-400 font-medium" id="monthLabel">Month:</label>
-                        <select id="monthSelect" onchange="renderCharts()" class="bg-slate-800 text-slate-200 text-sm font-semibold rounded p-1 outline-none focus:border-emerald-500 transition cursor-pointer">
-                            <option>Loading...</option>
-                        </select>
+                        <!-- Lang Switcher -->
+                        <div class="w-full md:w-auto flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm h-12 md:h-10">
+                            <button onclick="setLang('el')" id="btnGr" class="flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition">GR</button>
+                            <button onclick="setLang('en')" id="btnEn" class="flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition">EN</button>
+                        </div>
                     </div>
-
                 </div>
+
             </div>
         </header>
 
-        <!-- TABS NAVIGATION -->
-        <div class="flex space-x-6 border-b border-slate-800 pb-2 overflow-x-auto">
-            <button id="tabBtnTotals" onclick="switchTab('totals')" class="text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap">Daily Isp vs Scada</button>
-            <button id="tabBtnHourly" onclick="switchTab('hourly')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Hourly Profiles</button>
-            <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap">Daily Arbitrage</button>
-            <button id="tabBtnMTD" onclick="switchTab('mtd')" class="text-emerald-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap">MTD Position</button>
+        <!-- TABS NAVIGATION (Responsive Grid for Mobile & PC) -->
+        <div class="pt-5 mt-2 border-t border-slate-700/50 md:border-none md:pt-0 md:mt-0">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-0 md:border-b md:border-slate-800">
+                <button id="tabBtnTotals" onclick="switchTab('totals')" class="flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer bg-indigo-500 text-white border-indigo-500 md:bg-transparent md:border-transparent md:text-cyan-400 md:border-b-cyan-400">Daily Isp vs Scada</button>
+                <button id="tabBtnHourly" onclick="switchTab('hourly')" class="flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:border-transparent md:hover:text-cyan-300">Hourly Profiles</button>
+                <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" class="flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:border-transparent md:hover:text-cyan-300">Daily Arbitrage</button>
+                <button id="tabBtnMTD" onclick="switchTab('mtd')" class="flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:border-transparent md:hover:text-emerald-300">MTD Position</button>
+            </div>
         </div>
 
         <!-- VIEW 1: TOTALS PER COUNTRY -->
@@ -136,39 +232,44 @@
 
         <!-- VIEW 3: DAILY ARBITRAGE -->
         <div id="viewArbitrage" class="space-y-6 hidden">
-            <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex items-center justify-between flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="transitNettingToggle" class="sr-only peer" onchange="toggleTransitNetting()">
-                        <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
-                        <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
-                    </label>
-                    <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
-                    <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+            <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex flex-col gap-3">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="transitNettingToggle" class="sr-only peer" onchange="toggleTransitNetting()">
+                            <div class="w-11 h-6 bg-slate-600 rounded-full peer peer-checked:bg-cyan-500 transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
+                        </label>
+                        <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
+                        <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+                    </div>
+                    <p class="text-xs text-cyan-400" id="transitInfoLine"></p>
                 </div>
-                <p class="text-xs text-cyan-400" id="transitInfoLine"></p>
+                <!-- Ενσωματωμένο panel λεπτομερειών transit εντός του ίδιου πλαισίου -->
+                <div id="transitDirectionPanel" class="border-t border-slate-700/60 pt-3 text-sm text-slate-200" style="display:none;"></div>
             </div>
-            <div id="transitDirectionPanel" class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 text-sm text-slate-200" style="display:none;"></div>
+            
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Daily Cash Flow</p>
-                    <p class="text-2xl font-bold transition-colors" id="kpiCashFlowVal">-</p>
+                    <p class="text-lg md:text-2xl font-bold transition-colors whitespace-nowrap" id="kpiCashFlowVal">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
-                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Exports (Income)</p>
-                    <p class="text-xl font-bold text-rose-500" id="kpiExpVol">-</p>
-                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
-                </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                <div class="order-3 md:order-2 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-yellow-400 text-center">
                     <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Imports (Cost)</p>
-                    <p class="text-xl font-bold text-yellow-400" id="kpiImpVol">-</p>
+                    <p class="text-xl font-bold text-yellow-400 whitespace-nowrap" id="kpiImpVol">-</p>
                     <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="kpiImpPrice">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                <div class="order-4 md:order-3 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Exports (Income)</p>
+                    <p class="text-xl font-bold text-rose-500 whitespace-nowrap" id="kpiExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
+                </div>
+                <div class="order-2 md:order-4 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Physical Balance</p>
-                    <p class="text-xl font-bold transition-colors" id="kpiStatusVal">-</p>
+                    <p class="text-lg md:text-xl font-bold transition-colors whitespace-nowrap" id="kpiStatusVal">-</p>
                 </div>
             </div>
+
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <div class="flex justify-between items-start mb-6">
                     <div>
@@ -193,21 +294,21 @@
         <div id="viewMTD" class="space-y-6 hidden">
             <!-- MTD KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
-                    <p class="text-2xl font-bold transition-colors" id="mtdCashFlowVal">-</p>
+                    <p class="text-lg md:text-2xl font-bold transition-colors whitespace-nowrap" id="mtdCashFlowVal">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-rose-500 text-center">
-                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
-                    <p class="text-xl font-bold text-rose-500" id="mtdExpVol">-</p>
-                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
-                </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border-b-4 border-b-yellow-400 text-center">
+                <div class="order-3 md:order-2 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-yellow-400 text-center">
                     <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
-                    <p class="text-xl font-bold text-yellow-400" id="mtdImpVol">-</p>
+                    <p class="text-xl font-bold text-yellow-400 whitespace-nowrap" id="mtdImpVol">-</p>
                     <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="mtdImpPrice">-</p>
                 </div>
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 text-center flex flex-col justify-center">
+                <div class="order-4 md:order-3 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-rose-500 text-center">
+                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
+                    <p class="text-xl font-bold text-rose-500 whitespace-nowrap" id="mtdExpVol">-</p>
+                    <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
+                </div>
+                <div class="order-2 md:order-4 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
                     <p class="text-xs text-slate-400 uppercase font-bold mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
                     <div class="flex flex-col gap-1 text-sm font-semibold">
                         <div class="text-emerald-400 bg-emerald-400/10 rounded py-0.5" id="mtdBestDay">-</div>
@@ -256,7 +357,6 @@
             const modal = document.getElementById('methodologyModal');
             const content = document.getElementById('modalContent');
             if (show) {
-                if (typeof renderMethodology === 'function') renderMethodology();
                 modal.classList.remove('hidden');
                 setTimeout(() => {
                     modal.classList.remove('opacity-0');
@@ -278,8 +378,18 @@
 
         function switchTab(tabId) {
             ['viewTotals', 'viewHourly', 'viewArbitrage', 'viewMTD'].forEach(id => { document.getElementById(id).classList.add('hidden'); });
-            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => { document.getElementById(id).className = "text-slate-500 hover:text-cyan-300 pb-2 px-2 transition whitespace-nowrap"; });
-            document.getElementById('tabBtnMTD').className = "text-slate-500 hover:text-emerald-300 pb-2 px-2 transition whitespace-nowrap";
+            
+            // Updated baseClass ensures full width in the desktop grid
+            const baseClass = "flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer ";
+            
+            const inactiveClass = baseClass + "bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:border-transparent md:hover:text-cyan-300";
+            const inactiveMTDClass = baseClass + "bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:border-transparent md:hover:text-emerald-300";
+            
+            const activeDefaultClass = baseClass + "bg-indigo-500 text-white border-indigo-500 md:bg-transparent md:border-transparent md:text-cyan-400 md:border-b-cyan-400";
+            const activeMTDClass = baseClass + "bg-indigo-500 text-white border-indigo-500 md:bg-transparent md:border-transparent md:text-emerald-400 md:border-b-emerald-400";
+
+            ['tabBtnTotals', 'tabBtnHourly', 'tabBtnArbitrage'].forEach(id => { document.getElementById(id).className = inactiveClass; });
+            document.getElementById('tabBtnMTD').className = inactiveMTDClass;
 
             if (tabId === 'mtd') {
                 document.getElementById('datePickerContainer').classList.add('hidden');
@@ -293,16 +403,16 @@
             
             if (tabId === 'totals') {
                 document.getElementById('viewTotals').classList.remove('hidden');
-                document.getElementById('tabBtnTotals').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+                document.getElementById('tabBtnTotals').className = activeDefaultClass;
             } else if (tabId === 'hourly') {
                 document.getElementById('viewHourly').classList.remove('hidden');
-                document.getElementById('tabBtnHourly').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+                document.getElementById('tabBtnHourly').className = activeDefaultClass;
             } else if (tabId === 'arbitrage') {
                 document.getElementById('viewArbitrage').classList.remove('hidden');
-                document.getElementById('tabBtnArbitrage').className = "text-cyan-400 font-bold border-b-2 border-cyan-400 pb-2 px-2 transition whitespace-nowrap";
+                document.getElementById('tabBtnArbitrage').className = activeDefaultClass;
             } else if (tabId === 'mtd') {
                 document.getElementById('viewMTD').classList.remove('hidden');
-                document.getElementById('tabBtnMTD').className = "text-emerald-400 font-bold border-b-2 border-emerald-400 pb-2 px-2 transition whitespace-nowrap";
+                document.getElementById('tabBtnMTD').className = activeMTDClass;
             }
 
             renderCharts(); 
