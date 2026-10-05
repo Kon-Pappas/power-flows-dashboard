@@ -119,19 +119,8 @@ const i18n = {
         mtdChartTitleVol: "Cumulative Physical Volume (GWh) - Gross & Net",
 
         modalTitle: "Methodology & Core Assumptions",
-        modalIntro: "This Dashboard serves as an independent tool for monitoring and analyzing physical and financial power flows across the Greek interconnections.",
-        modalDataTitle: "Data Sources:",
-        modalDataText: "Physical flow data is fetched daily from IPTO's (ADMIE) official SCADA & ISP reports. Day-Ahead Market Clearing Prices (MCPs) are retrieved via the ENTSO-E Transparency Platform API.",
-        modalCompletenessTitle: "Data Completeness:",
-        modalCompletenessText: "Some days may be missing SCADA or price data at the time of collection (e.g. not yet published by IPTO/ENTSO-E, or a temporary source issue). These days are marked with ⚠ in the date selector, their Cash Flow is shown as \"n/a\", and they are excluded from Month-to-Date totals so incomplete data cannot distort monthly aggregates. Where ENTSO-E returns a compressed price series (omitting quarter-hours that repeat the previous value), the gap is filled forward from the last known value.",
-        modalIspTitle: "ISP Schedule Selection:",
-        modalIspText: "Cross-border schedule totals per country are taken from IPTO's \"Total Market CBS (+XBID)\" section — the final schedule after intraday (XBID) adjustments — rather than the day-ahead auction alone.",
-        modalPricingTitle: "Pricing Logic & Valuation:",
-        modalPricingText: "For non-EUPHEMIA borders (Albania, North Macedonia, Turkey), flows are valued using the Greek MCP only. For EUPHEMIA-coupled borders (Italy, Bulgaria), flows are valued using the average of the two domestic MCPs. This produces a notional commercial valuation of the flow, not a formal congestion-rent calculation (which is defined as flow × price differential and accrues to the TSOs, not to a market participant).",
-        modalSignTitle: "Sign Convention:",
-        modalSignText: "Following ENEX standards, Red denotes Exports and Yellow denotes Imports. In financial calculations (Cash Flow), Exporting energy generates positive income (+), while Importing energy represents a cost (-).",
-        modalTransitTitle: "Optional Transit Adjustment (Bulgaria ↔ Italy):",
-        modalTransitText: "An optional toggle on the Daily Arbitrage tab lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.",
+        modalModeShort: "Short",
+        modalModeDetailed: "Detailed",
         modalCloseBtn: "Close",
         noticeDay: "⚠ Incomplete data for this date (missing SCADA or prices). Cash flow is not shown.",
         noticeExcluded: "⚠ {n} day(s) excluded from MTD (incomplete data)",
@@ -188,19 +177,8 @@ const i18n = {
         mtdChartTitleVol: "Σωρευτικός Φυσικός Όγκος (GWh) - Ακαθάριστος & Καθαρός",
 
         modalTitle: "Μεθοδολογία & Παραδοχές",
-        modalIntro: "Αυτό το Dashboard αποτελεί ένα ανεξάρτητο εργαλείο παρακολούθησης και ανάλυσης των φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις.",
-        modalDataTitle: "Πηγές Δεδομένων:",
-        modalDataText: "Τα δεδομένα φυσικών ροών αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ. Οι Τιμές Εκκαθάρισης (MCPs) αντλούνται μέσω του API της πλατφόρμας ENTSO-E.",
-        modalCompletenessTitle: "Πληρότητα Δεδομένων:",
-        modalCompletenessText: "Ορισμένες ημέρες ενδέχεται να μην έχουν ακόμη δεδομένα SCADA ή τιμών τη στιγμή της συλλογής (π.χ. δεν έχουν δημοσιευτεί ακόμα από ΑΔΜΗΕ/ENTSO-E, ή προσωρινό σφάλμα πηγής). Οι ημέρες αυτές σημειώνονται με ⚠ στην επιλογή ημερομηνίας, το Ταμείο τους εμφανίζεται ως «μ/δ», και εξαιρούνται από τα σωρευτικά μηνιαία σύνολα (MTD), ώστε ελλιπή δεδομένα να μην αλλοιώνουν τα μηνιαία αθροίσματα. Όταν το ENTSO-E επιστρέφει συμπιεσμένη σειρά τιμών (παραλείποντας τεταρτάωρα με ίδια τιμή με το προηγούμενο), το κενό συμπληρώνεται με την τελευταία γνωστή τιμή.",
-        modalIspTitle: "Επιλογή Προγράμματος ISP:",
-        modalIspText: "Τα διασυνοριακά προγραμματισμένα σύνολα ανά χώρα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις προσαρμογές ενδοημερήσιας αγοράς (XBID) — και όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού.",
-        modalPricingTitle: "Λογική Τιμολόγησης & Αποτίμησης:",
-        modalPricingText: "Για μη-EUPHEMIA σύνορα (Αλβανία, Β. Μακεδονία, Τουρκία), η αποτίμηση γίνεται αποκλειστικά με την ελληνική MCP. Για συζευγμένα σύνορα EUPHEMIA (Ιταλία, Βουλγαρία), η αποτίμηση γίνεται με τον μέσο όρο των δύο εγχώριων MCP. Αυτό παράγει μια ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (το οποίο ορίζεται ως ροή × διαφορά τιμών, και αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς).",
-        modalSignTitle: "Σύμβαση Προσήμων:",
-        modalSignText: "Ακολουθώντας τα πρότυπα του ΕΝΕΧ, το Κόκκινο υποδηλώνει Εξαγωγές και το Κίτρινο Εισαγωγές. Στους οικονομικούς υπολογισμούς (Cash Flow), οι Εξαγωγές αποτελούν Έσοδο (+), ενώ οι Εισαγωγές αποτελούν Κόστος (-).",
-        modalTransitTitle: "Προαιρετική Προσαρμογή Transit (Βουλγαρία ↔ Ιταλία):",
-        modalTransitText: "Ένας προαιρετικός διακόπτης στο tab Daily Arbitrage επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου.",
+        modalModeShort: "Σύντομη",
+        modalModeDetailed: "Αναλυτική",
         modalCloseBtn: "Κλείσιμο",
         noticeDay: "⚠ Ελλιπή δεδομένα για αυτή την ημερομηνία (λείπει SCADA ή τιμές). Το ταμείο δεν εμφανίζεται.",
         noticeExcluded: "⚠ {n} ημέρα(ες) εξαιρούνται από το MTD (ελλιπή δεδομένα)",
@@ -217,6 +195,169 @@ const i18n = {
         transitChartSub: "Κίτρινες μπάρες = ώρες transit (το ταμείο αυτού του σκέλους αφαιρέθηκε σήμερα)."
     }
 };
+
+// ---- Methodology modal: content model + renderer (Short / Detailed, per tab) --------
+let methodologyMode = 'short';
+
+const methodologyData = {
+    en: {
+        introShort: "An independent tool for monitoring physical and financial power flows across Greece's electricity interconnections, built on open ADMIE and ENTSO-E data by a single analyst. Figures are estimates and indications, not official statistics.",
+        introDetailed: "An independent tool for monitoring and analyzing physical and financial power flows across Greece's electricity interconnections, built and maintained by a single analyst on open data. Figures are estimates and indications, not official statistics.",
+        sections: [
+            {
+                title: "ALL TABS",
+                shortItems: [
+                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
+                    ["Sources:", "ADMIE's SCADA & ISP reports, ENTSO-E day-ahead prices. Updated daily; the last 5 days are re-checked each run to catch late publications."],
+                    ["Pending data:", "a day without SCADA yet is marked ⚠ and excluded from Month-to-Date totals until complete."]
+                ],
+                items: [
+                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
+                    ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) from ENTSO-E."],
+                    ["Updates:", "daily via a scheduled job. The last 5 days are re-checked on every run to catch late publications and corrections."],
+                    ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates."]
+                ]
+            },
+            {
+                title: "DAILY ISP vs SCADA",
+                items: [
+                    ["ISP vs SCADA:", "ISP is the day-ahead cross-border schedule; SCADA is what was actually measured. Differences between them are expected and can reflect intraday re-dispatch or last-minute constraint activity."],
+                    ["ISP Schedule Selection:", "cross-border totals per country are taken from ADMIE's \"Total Market CBS (+XBID)\" section — the final schedule after intraday adjustments — rather than the day-ahead auction alone."]
+                ]
+            },
+            {
+                title: "HOURLY PROFILES",
+                items: [
+                    ["Hourly resolution:", "flows and prices are shown as hourly values; ADMIE's underlying schedule data is quarter-hourly and is averaged to the hour for display."],
+                    ["Prices shown:", "Day-Ahead Market Clearing Prices for Greece, Bulgaria and Italy, for context alongside the physical flows."]
+                ]
+            },
+            {
+                title: "DAILY ARBITRAGE",
+                items: [
+                    ["Pricing Logic & Valuation:", "for Albania, North Macedonia and Turkey, flows are valued using the Greek price only. For Bulgaria and Italy, flows are valued using the average of the two domestic prices. This is a notional commercial valuation of the flow, not a formal congestion-rent calculation (flow × price differential, which accrues to the transmission operators, not a market participant)."],
+                    ["Sign Convention:", "following ENEX standards, red denotes exports and yellow denotes imports. Exporting energy generates positive cash flow (+); importing represents a cost (–)."],
+                    ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation."]
+                ]
+            },
+            {
+                title: "MTD POSITION",
+                items: [
+                    ["", "Only complete days (SCADA present and usable prices) count toward Month-to-Date totals, Best/Worst Day, and averages. Incomplete days are listed and excluded so they can't distort the monthly picture."]
+                ]
+            },
+            {
+                title: "LIMITATIONS",
+                items: [
+                    ["Data:", "SCADA is published as preliminary by ADMIE and may be revised. ISP is a schedule, not a measurement of actual delivery."],
+                    ["Pricing:", "the valuation uses a simplified average-price convention, not a formal congestion-rent or bilateral-settlement calculation, and does not reflect any single participant's realized P&L."],
+                    ["Nature:", "this is an independent analysis of open data by a single analyst. It is not the official position of ADMIE, ENTSO-E, or any other organisation."]
+                ]
+            }
+        ]
+    },
+    el: {
+        introShort: "Ένα ανεξάρτητο εργαλείο παρακολούθησης φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις, βασισμένο σε ανοιχτά δεδομένα ΑΔΜΗΕ και ENTSO-E, από έναν αναλυτή. Τα στοιχεία είναι εκτιμήσεις και ενδείξεις, όχι επίσημη στατιστική.",
+        introDetailed: "Ένα ανεξάρτητο εργαλείο παρακολούθησης και ανάλυσης φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις, που φτιάχνει και συντηρεί ένας αναλυτής, πάνω σε ανοιχτά δεδομένα. Τα στοιχεία είναι εκτιμήσεις και ενδείξεις, όχι επίσημη στατιστική.",
+        sections: [
+            {
+                title: "ΟΛΑ ΤΑ TABS",
+                shortItems: [
+                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
+                    ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
+                    ["Εκκρεμή δεδομένα:", "μια ημέρα χωρίς SCADA ακόμα σημειώνεται με ⚠ και εξαιρείται από τα μηνιαία σύνολα μέχρι να ολοκληρωθεί."]
+                ],
+                items: [
+                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
+                    ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) από το ENTSO-E."],
+                    ["Ενημερώσεις:", "καθημερινά μέσω προγραμματισμένης διαδικασίας. Οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις και διορθώσεις."],
+                    ["Πληρότητα Δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν."]
+                ]
+            },
+            {
+                title: "DAILY ISP vs SCADA",
+                items: [
+                    ["ISP έναντι SCADA:", "το ISP είναι το προγραμματισμένο διασυνοριακό πρόγραμμα· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσιο αναπρογραμματισμό ή δραστηριότητα περιορισμών της τελευταίας στιγμής."],
+                    ["Επιλογή Προγράμματος ISP:", "τα σύνολα ανά χώρα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού."]
+                ]
+            },
+            {
+                title: "HOURLY PROFILES",
+                items: [
+                    ["Ωριαία ανάλυση:", "οι ροές και οι τιμές εμφανίζονται ως ωριαίες τιμές· τα υποκείμενα δεδομένα προγράμματος του ΑΔΜΗΕ είναι τεταρτωριαία και υπολογίζεται ο μέσος όρος τους για την ωριαία προβολή."],
+                    ["Τιμές που εμφανίζονται:", "Τιμές Εκκαθάρισης Ημερήσιας Αγοράς για Ελλάδα, Βουλγαρία και Ιταλία, ως πλαίσιο δίπλα στις φυσικές ροές."]
+                ]
+            },
+            {
+                title: "DAILY ARBITRAGE",
+                items: [
+                    ["Λογική Τιμολόγησης & Αποτίμησης:", "για Αλβανία, Β. Μακεδονία και Τουρκία, η αποτίμηση γίνεται αποκλειστικά με την ελληνική τιμή. Για Βουλγαρία και Ιταλία, με τον μέσο όρο των δύο εγχώριων τιμών. Πρόκειται για ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (ροή × διαφορά τιμών, το οποίο αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς)."],
+                    ["Σύμβαση Προσήμων:", "σύμφωνα με τα πρότυπα του ENEX, το κόκκινο αντιστοιχεί σε Εξαγωγές και το κίτρινο σε Εισαγωγές. Η εξαγωγή ενέργειας παράγει θετικό ταμείο (+), η εισαγωγή αντιπροσωπεύει κόστος (–)."],
+                    ["Προαιρετική Προσαρμογή Transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου."]
+                ]
+            },
+            {
+                title: "MTD POSITION",
+                items: [
+                    ["", "Μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."]
+                ]
+            },
+            {
+                title: "LIMITATIONS",
+                items: [
+                    ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
+                    ["Τιμολόγηση:", "η αποτίμηση χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι επίσημο υπολογισμό εσόδου συμφόρησης ή διμερούς διακανονισμού, και δεν αντανακλά το πραγματικό P&L κάποιου συγκεκριμένου συμμετέχοντα."],
+                    ["Φύση:", "πρόκειται για ανεξάρτητη ανάλυση ανοιχτών δεδομένων από έναν αναλυτή. Δεν αποτελεί επίσημη θέση του ΑΔΜΗΕ, του ENTSO-E, ή άλλου οργανισμού."]
+                ]
+            }
+        ]
+    }
+};
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderMethodologySection(section, items) {
+    const li = items.map(([lead, text]) => {
+        const leadHtml = lead ? `<strong class="text-slate-200">${escapeHtml(lead)}</strong> ` : '';
+        return `<li>${leadHtml}${escapeHtml(text)}</li>`;
+    }).join('');
+    return `<div class="mb-5 last:mb-0">
+        <div class="text-cyan-400 text-xs font-bold uppercase tracking-wide mb-2">${escapeHtml(section.title)}</div>
+        <ul class="list-disc pl-5 space-y-2 marker:text-slate-500">${li}</ul>
+    </div>`;
+}
+
+function renderMethodology() {
+    const bodyEl = document.getElementById('modalBody');
+    if (!bodyEl) return;
+    const d = methodologyData[currentLang] || methodologyData.en;
+
+    let html = `<p class="mb-5">${escapeHtml(methodologyMode === 'short' ? d.introShort : d.introDetailed)}</p>`;
+    if (methodologyMode === 'short') {
+        html += renderMethodologySection(d.sections[0], d.sections[0].shortItems);
+    } else {
+        d.sections.forEach(sec => { html += renderMethodologySection(sec, sec.items); });
+    }
+    bodyEl.innerHTML = html;
+
+    const shortBtn = document.getElementById('modalModeShortBtn');
+    const detailedBtn = document.getElementById('modalModeDetailedBtn');
+    const active = 'bg-cyan-500 text-white';
+    const inactive = 'text-slate-300 hover:text-white';
+    if (shortBtn && detailedBtn) {
+        shortBtn.className = `flex-1 py-1.5 rounded-md text-sm font-semibold transition ${methodologyMode === 'short' ? active : inactive}`;
+        detailedBtn.className = `flex-1 py-1.5 rounded-md text-sm font-semibold transition ${methodologyMode === 'detailed' ? active : inactive}`;
+    }
+}
+
+function setMethodologyMode(mode) {
+    methodologyMode = mode;
+    const bodyEl = document.getElementById('modalBody');
+    if (bodyEl) bodyEl.scrollTop = 0;
+    renderMethodology();
+}
 
 // Χρωματική παλέτα χωρίς επικάλυψη με τα KPIs
 const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
@@ -265,20 +406,10 @@ function setLang(lang) {
     document.getElementById('mtdChartTitleVol').innerText = t.mtdChartTitleVol;
 
     document.getElementById('modalTitle').innerText = t.modalTitle;
-    document.getElementById('modalIntro').innerText = t.modalIntro;
-    document.getElementById('modalDataTitle').innerText = t.modalDataTitle;
-    document.getElementById('modalDataText').innerText = t.modalDataText;
-    document.getElementById('modalCompletenessTitle').innerText = t.modalCompletenessTitle;
-    document.getElementById('modalCompletenessText').innerText = t.modalCompletenessText;
-    document.getElementById('modalIspTitle').innerText = t.modalIspTitle;
-    document.getElementById('modalIspText').innerText = t.modalIspText;
-    document.getElementById('modalPricingTitle').innerText = t.modalPricingTitle;
-    document.getElementById('modalPricingText').innerText = t.modalPricingText;
-    document.getElementById('modalSignTitle').innerText = t.modalSignTitle;
-    document.getElementById('modalSignText').innerText = t.modalSignText;
-    document.getElementById('modalTransitTitle').innerText = t.modalTransitTitle;
-    document.getElementById('modalTransitText').innerText = t.modalTransitText;
+    document.getElementById('modalModeShortBtn').innerText = t.modalModeShort;
+    document.getElementById('modalModeDetailedBtn').innerText = t.modalModeDetailed;
     document.getElementById('modalCloseBtn').innerText = t.modalCloseBtn;
+    if (typeof renderMethodology === 'function') renderMethodology();
 
     // Ενημέρωση των CSS classes για το Language Switcher (mobile full width)
     if(lang === 'el') {
