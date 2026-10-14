@@ -91,7 +91,7 @@
 
     <!-- Methodology Modal -->
     <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center px-4 transition-opacity duration-300 opacity-0">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh] md:max-h-none md:block" id="modalContent">
+        <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh]" id="modalContent">
             
             <div class="flex items-center justify-between p-5 border-b border-slate-700 shrink-0">
                 <div class="flex items-center gap-3">
@@ -106,13 +106,13 @@
             </div>
             
             <div class="flex items-center gap-2 px-6 pt-4 shrink-0">
-                <div class="flex bg-slate-900/60 rounded-lg p-1 w-full max-w-xs">
+                <div class="flex bg-slate-900/60 rounded-lg p-1 w-full">
                     <button onclick="setMethodologyMode('short')" id="modalModeShortBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Short</button>
                     <button onclick="setMethodologyMode('detailed')" id="modalModeDetailedBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Detailed</button>
                 </div>
             </div>
 
-            <div class="p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto md:overflow-y-visible" id="modalBody"></div>
+            <div class="p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto flex-1" id="modalBody"></div>
             
             <div class="p-5 border-t border-slate-700 flex justify-end shrink-0">
                 <button onclick="toggleModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
