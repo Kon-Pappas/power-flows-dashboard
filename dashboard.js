@@ -1,5 +1,9 @@
 let rawData = [];
-let currentLang = 'en'; 
+let currentLang = 'en';
+// D04 (όπως live D10): αγγλικά από προεπιλογή· η τελευταία επιλογή του επισκέπτη κρατιέται στον browser του,
+// στο κοινό κλειδί kp_lang, οπότε η γλώσσα τον ακολουθεί σε όλο το hub.
+try { const l = localStorage.getItem('kp_lang'); if (l === 'el' || l === 'en') currentLang = l; } catch (e) { /* ιδιωτική περιήγηση */ }
+let metaData = null;   // data/meta.json: πότε έγινε η τελευταία λήψη και πότε η επόμενη (D06)
 
 let totalsChartInstance = null;
 let flowsChartInstance = null;
@@ -91,6 +95,8 @@ const formatAxisTick = (value, isAbsolute = false) => {
 const i18n = {
     en: {
         title: "Greek Power Flows Analytics",
+        locale: "en-GB",
+        load: { title: "System Initialization", g1: "Data fetching", g2: "Building views", s1: "Reading the data", ready: "Dashboard is ready!", error: "The data could not be loaded. Reload the page in a few minutes." },
         source: "Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)",
         lastUpdate: "Last Update:",
         lastUpdateMobile: "Updated:",
@@ -98,7 +104,7 @@ const i18n = {
         nextUpdateMobile: "Next:",
         dateLabel: "Date:",
         monthLabel: "Month:",
-        tabTotals: "Daily Isp vs Scada",
+        tabTotals: "Daily ISP vs SCADA",
         tabHourly: "Hourly Profiles",
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
@@ -151,6 +157,8 @@ const i18n = {
     },
     el: {
         title: "Ανάλυση Ροών Ελληνικού Συστήματος",
+        locale: "el-GR",
+        load: { title: "Εκκίνηση", g1: "Λήψη δεδομένων", g2: "Προετοιμασία προβολών", s1: "Ανάγνωση δεδομένων", ready: "Το dashboard είναι έτοιμο!", error: "Τα δεδομένα δεν φορτώθηκαν. Ανανεώστε τη σελίδα σε λίγα λεπτά." },
         source: "Πηγή δεδομένων: ΑΔΜΗΕ (SCADA & ISP) & ENTSO-E",
         lastUpdate: "Τελευταία Ενημέρωση:",
         lastUpdateMobile: "Ενημέρωση:",
@@ -377,9 +385,11 @@ function setMethodologyMode(mode) {
 // Χρωματική παλέτα χωρίς επικάλυψη με τα KPIs
 const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
 
-function setLang(lang) {
-    currentLang = lang;
+// Όλα τα σταθερά κείμενα της σελίδας στη γλώσσα currentLang (και της οθόνης φόρτωσης).
+function applyStaticText() {
+    const lang = currentLang;
     const t = i18n[lang];
+    document.documentElement.lang = lang === 'el' ? 'el' : 'en';
     
     document.getElementById('pageTitle').innerText = t.title;
     document.getElementById('mainTitle').innerText = t.title;
@@ -435,22 +445,40 @@ function setLang(lang) {
         document.getElementById('btnEn').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition";
         document.getElementById('btnGr').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition";
     }
+
+    // Οθόνη φόρτωσης: τα βήματα 2…5 παίρνουν τα ονόματα των tabs, με τη σειρά τους
+    const L = t.load;
+    const stepText = { 1: L.s1, 2: t.tabTotals, 3: t.tabHourly, 4: t.tabArbitrage, 5: t.tabMTD };
+    const ids = { loadTitle: L.title, loadGroup1: L.g1, loadGroup2: L.g2, loadReady: L.ready };
+    Object.entries(ids).forEach(([id, txt]) => { const el = document.getElementById(id); if (el) el.textContent = txt; });
+    document.querySelectorAll('.load-row').forEach(r => { r.querySelector('[data-load-label]').textContent = stepText[r.dataset.step] || ''; });
+    updateHeader();
+}
+
+function setLang(lang) {
+    if (lang !== 'el' && lang !== 'en') return;
+    currentLang = lang;
+    try { localStorage.setItem('kp_lang', lang); } catch (e) { /* ιδιωτική περιήγηση */ }
+    applyStaticText();
     if (rawData.length > 0) renderCharts();
 }
 
-function updateUpdateTimes(latestDateStr) {
-    if (!latestDateStr) return;
-    let parts = latestDateStr.split('-');
-    if (parts.length === 3) {
-        let lastStr = `${parts[2]}/${parts[1]}/${parts[0]} 08:00`;
-        let d = new Date(parts[0], parts[1] - 1, parseInt(parts[2]) + 1);
-        let day = String(d.getDate()).padStart(2, '0');
-        let month = String(d.getMonth() + 1).padStart(2, '0');
-        let year = d.getFullYear();
-        let nextStr = `${day}/${month}/${year} 08:00`;
-        document.getElementById('lastUpdateVal').innerText = lastStr;
-        document.getElementById('nextUpdateVal').innerText = nextStr;
-    }
+// Ώρα Αθήνας, όποια κι αν είναι η ζώνη ώρας του επισκέπτη (όπως στο live).
+function fmtTimeAthens(isoTs) {
+    if (!isoTs) return '–';
+    const d = new Date(isoTs);
+    if (Number.isNaN(d.getTime())) return '–';
+    return new Intl.DateTimeFormat(i18n[currentLang].locale, {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Athens'
+    }).format(d);
+}
+
+// Τελευταία ενημέρωση = πότε έτρεξε πραγματικά η λήψη· Επόμενη = η επόμενη προγραμματισμένη (cron-job.org, 07:02).
+// Και οι δύο τιμές γράφονται από το scripts/update_flows.py στο data/meta.json· η σελίδα μόνο τις δείχνει.
+function updateHeader() {
+    const m = metaData;
+    document.getElementById('lastUpdateVal').innerText = m ? fmtTimeAthens(m.fetched) : '–';
+    document.getElementById('nextUpdateVal').innerText = m ? fmtTimeAthens(m.next_update) : '–';
 }
 
 function computeHourlyEconomics(dayData, transitNetting) {
@@ -895,14 +923,26 @@ function renderMTDTab(selectedMonth) {
     return excludedDates;
 }
 
+// Η ημέρα που είναι επιλεγμένη στο dropdown
+function selectedDayData() {
+    const selectedDate = document.getElementById('dateSelect').value;
+    return rawData.find(row => row.Date === selectedDate);
+}
+
+// Σχεδιάζει όλα τα tabs (αλλαγή ημερομηνίας, μήνα, γλώσσας). Στην εκκίνηση τα ίδια
+// καλούνται ένα-ένα, ένα βήμα ανά tab στην οθόνη φόρτωσης (D03).
 function renderCharts() {
     if (rawData.length === 0) return;
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.borderColor = '#334155';
+    const dayData = selectedDayData();
+    updateStatusBadge(dayData);
+    renderTotalsTab(dayData);
+    renderHourlyTab(dayData);
+    renderArbitrageTab(dayData);
+    renderMTDView();
+    updateDataNotice(dayData);
+}
 
-    const selectedDate = document.getElementById('dateSelect').value;
-    const dayData = rawData.find(row => row.Date === selectedDate);
-    
+function updateStatusBadge(dayData) {
     // Ενημέρωση δυναμικού Status Badge
     const isComplete = dayData ? dayComplete(dayData) : false;
     const badge = document.getElementById('dataStatusBadge');
@@ -924,12 +964,21 @@ function renderCharts() {
         }
     }
 
-    if (dayData) {
-        activeCountry = null;
-        currentDayData = dayData;
-        processArbitrageData(dayData, transitNettingOn);
-        updateArbitrageTab();
+}
 
+// Tab «Arbitrage»
+function renderArbitrageTab(dayData) {
+    if (!dayData) return;
+    activeCountry = null;
+    currentDayData = dayData;
+    processArbitrageData(dayData, transitNettingOn);
+    updateArbitrageTab();
+}
+
+// Tab «ISP vs SCADA» (σύνολα ανά χώρα)
+function renderTotalsTab(dayData) {
+    if (!dayData) return;
+    {
         const countries = ["Albania", "Bulgaria", "Italy", "North Macedonia", "Turkey"];
         const ispTotals = countries.map(c => dayData.Totals.ISP[c] || 0);
         const scadaTotals = countries.map(c => dayData.Totals.SCADA[c] || 0);
@@ -941,8 +990,6 @@ function renderCharts() {
         const mcpIT = dayData.Hourly.map(h => h.MCP_IT);
 
         if (totalsChartInstance) totalsChartInstance.destroy();
-        if (flowsChartInstance) flowsChartInstance.destroy();
-        if (mcpChartInstance) mcpChartInstance.destroy();
 
         const t = i18n[currentLang];
 
@@ -969,6 +1016,24 @@ function renderCharts() {
                 } 
             }
         });
+
+    }
+}
+
+// Tab «Ωριαία προφίλ» (ροές και τιμές)
+function renderHourlyTab(dayData) {
+    if (!dayData) return;
+    {
+        const hours = dayData.Hourly.map(h => h.Hour);
+        const scadaHourly = dayData.Hourly.map(h => h.SCADA_Net);
+        const ispHourly = dayData.Hourly.map(h => h.ISP_Net);
+        const mcpGR = dayData.Hourly.map(h => h.MCP_GR);
+        const mcpBG = dayData.Hourly.map(h => h.MCP_BG);
+        const mcpIT = dayData.Hourly.map(h => h.MCP_IT);
+        const t = i18n[currentLang];
+
+        if (flowsChartInstance) flowsChartInstance.destroy();
+        if (mcpChartInstance) mcpChartInstance.destroy();
 
         const ctxFlows = document.getElementById('flowsChart').getContext('2d');
         flowsChartInstance = new Chart(ctxFlows, {
@@ -1017,101 +1082,109 @@ function renderCharts() {
         });
     }
 
+}
+
+// Tab «Σωρευτική θέση» (MTD)
+function renderMTDView() {
     const selectedMonth = document.getElementById('monthSelect').value;
     let excludedDates = [];
     if (selectedMonth) {
         excludedDates = renderMTDTab(selectedMonth) || [];
     }
-    updateDataNotice(dayData);
     updateMtdExclusionNotice(excludedDates);
 }
 
-// ---- UI Loading Animation (Waterfall Boot Sequence) ----
-function animateStep(stepNum, nextAction) {
-    const row = document.getElementById(`loadRow${stepNum}`);
-    const bar = document.getElementById(`loadBar${stepNum}`);
-    const pct = document.getElementById(`loadPct${stepNum}`);
-    
-    if (row) row.classList.remove('opacity-0');
-    setTimeout(() => {
-        if (bar) bar.style.width = '100%';
-        let start = 0;
-        const interval = setInterval(() => {
-            start += 12; // Ταχύτητα γεμίσματος
-            if (start >= 100) {
-                start = 100;
-                clearInterval(interval);
-                if (pct) pct.innerHTML = `<svg class="w-3.5 h-3.5 text-emerald-400 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>`;
-                if (bar) {
-                    if(stepNum === 1) bar.classList.replace('bg-blue-500', 'bg-emerald-500');
-                    else bar.classList.replace('bg-purple-500', 'bg-emerald-500');
-                }
-            } else {
-                if (pct) pct.innerText = start + '%';
-            }
-        }, 30);
-        setTimeout(() => { if (nextAction) nextAction(); }, 500);
-    }, 50);
+// ---- Οθόνη φόρτωσης (D03, όπως live-greekpower D47) ----------------------
+// Πρώτα η δουλειά, μετά το γέμισμα της μπάρας, μετά το ✓. Χρόνοι ίδιοι με το live.
+const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const LOAD_STEP = REDUCE_MOTION ? 120 : 350, LOAD_MIN_READ = REDUCE_MOTION ? 200 : 650, LOAD_READY = REDUCE_MOTION ? 200 : 650;
+const pause = (ms) => (ms > 0 ? new Promise((r) => setTimeout(r, ms)) : Promise.resolve());
+const loadRow = (i) => document.querySelector(`.load-row[data-step="${i}"]`);
+function loadActivate(i) { const r = loadRow(i); if (r) r.classList.remove('opacity-50'); }
+function loadSet(i, pct) { const b = loadRow(i) && loadRow(i).querySelector('[data-load-bar]'); if (b) b.style.width = `${pct}%`; }
+function loadDone(i) {
+    const r = loadRow(i); if (!r) return;
+    const b = r.querySelector('[data-load-bar]');
+    b.style.width = '100%'; b.classList.remove('bg-blue-500', 'bg-acc-500'); b.classList.add('bg-emerald-500');
+    r.querySelector('[data-load-ck]').classList.remove('opacity-0');
+}
+async function loadStep(i, work) {          // βήματα 2…5: δουλειά → γέμισμα → ✓
+    loadActivate(i);
+    await pause(20);
+    await work();
+    const b = loadRow(i).querySelector('[data-load-bar]');
+    b.style.transitionDuration = `${LOAD_STEP}ms`; b.style.transitionTimingFunction = 'linear'; b.style.width = '100%';
+    await pause(LOAD_STEP);
+    loadDone(i);
 }
 
-// ---- System Initialization Sequence ----
-window.addEventListener('load', () => {
-    setTimeout(() => {
-        animateStep(1, async () => {
-            try {
-                // ΒΗΜΑ 1: Data Fetching
-                const response = await fetch('data/historical_flows.json');
-                if (!response.ok) throw new Error("JSON file not found.");
-                rawData = await response.json();
-                
-                animateStep(2, () => {
-                    // ΒΗΜΑ 2: Loading Daily Isp vs Scada
-                    const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
-                    const byDate = {};
-                    rawData.forEach(r => { byDate[r.Date] = r; });
-                    document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
-                    const latestComplete = dates.find(d => dayComplete(byDate[d])) || dates[0];
-                    if (latestComplete) document.getElementById('dateSelect').value = latestComplete;
-                    
-                    const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
-                    document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-                    if (dates.length > 0) updateUpdateTimes(dates[0]);
+// Αν τα δεδομένα δεν φορτώσουν: η οθόνη μένει, σταματά το spinner και γράφει μήνυμα (όπως στο live).
+function loadFailed(err) {
+    console.error(err);
+    document.getElementById('mainSpinner').classList.add('hidden');
+    const el = document.getElementById('loadError');
+    el.textContent = i18n[currentLang].load.error;
+    el.classList.remove('hidden');
+}
 
-                    animateStep(3, () => {
-                        // ΒΗΜΑ 3: Loading Hourly Profiles 
-                        Chart.register(ChartDataLabels);
-                        
-                        animateStep(4, () => {
-                            // ΒΗΜΑ 4: Calculating Daily Arbitrage 
-                            setLang('en'); // Triggers renderCharts() and initializes everything
-                            
-                            animateStep(5, () => {
-                                // ΒΗΜΑ 5: Evaluating MTD Position
-                                const finalRow = document.getElementById('loadRow_FINAL');
-                                const spinner = document.getElementById('mainSpinner');
-                                
-                                if (spinner) spinner.classList.add('hidden');
-                                if (finalRow) {
-                                    finalRow.classList.remove('opacity-0', 'translate-y-2');
-                                    finalRow.classList.add('opacity-100', 'translate-y-0');
-                                }
-                                
-                                setTimeout(() => {
-                                    const overlay = document.getElementById('loading-overlay');
-                                    if (overlay) {
-                                        overlay.classList.add('opacity-0');
-                                        setTimeout(() => overlay.style.display = 'none', 500); 
-                                    }
-                                }, 800);
-                            });
-                        });
-                    });
-                });
-            } catch (error) {
-                console.error("Error fetching local data:", error);
-                const overlay = document.getElementById('loading-overlay');
-                if (overlay) overlay.style.display = 'none'; 
-            }
-        });
-    }, 200);
-});
+// Λήψη JSON. Το meta.json αλλάζει κάθε μέρα, οπότε παίρνει cache-busting.
+async function getJSON(path, bust = false) {
+    const r = await fetch(path + (bust ? `?v=${Date.now()}` : ''));
+    if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
+    return r.json();
+}
+
+function fillPickers() {
+    const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
+    const byDate = {};
+    rawData.forEach(r => { byDate[r.Date] = r; });
+    document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
+    const latestComplete = dates.find(d => dayComplete(byDate[d])) || dates[0];
+    if (latestComplete) document.getElementById('dateSelect').value = latestComplete;
+    const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
+    document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+async function boot() {
+    applyStaticText();
+    try {
+        Chart.register(ChartDataLabels);
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+
+        // Βήμα 1: πραγματική πρόοδος (2 αρχεία: meta + ροές), με ελάχιστο χρόνο ανάγνωσης
+        loadActivate(1);
+        const t0 = Date.now();
+        const files = [
+            getJSON('data/meta.json', true).catch((e) => { console.warn('meta.json', e); return null; }),   // όχι κρίσιμο
+            getJSON('data/historical_flows.json')
+        ];
+        let done = 0;
+        const [meta, flows] = await Promise.all(files.map((p) => p.then((v) => { loadSet(1, Math.round(++done / files.length * 100)); return v; })));
+        if (!Array.isArray(flows) || flows.length === 0) throw new Error('historical_flows.json is empty');
+        rawData = flows;
+        metaData = meta;
+        updateHeader();
+        await pause(Math.max(0, LOAD_MIN_READ - (Date.now() - t0)));
+        loadDone(1);
+        await pause(LOAD_STEP);
+
+        // Βήματα 2…5: ένα ανά tab, με τη σειρά των tabs
+        let day = null;
+        await loadStep(2, async () => { fillPickers(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); renderTotalsTab(day); });
+        await loadStep(3, async () => { renderHourlyTab(day); });
+        await loadStep(4, async () => { renderArbitrageTab(day); });
+        await loadStep(5, async () => { renderMTDView(); });
+
+        document.getElementById('mainSpinner').classList.add('hidden');
+        document.getElementById('loadRowFinal').classList.remove('opacity-0', 'translate-y-2');
+        await pause(LOAD_READY);
+        const ov = document.getElementById('loading-overlay');
+        ov.classList.add('opacity-0');
+        setTimeout(() => { ov.style.display = 'none'; }, 500);
+    } catch (err) { loadFailed(err); }
+}
+
+// Τα scripts είναι defer, οπότε το Chart.js και το plugin έχουν ήδη φορτώσει εδώ.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();

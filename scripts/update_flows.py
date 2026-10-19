@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 import warnings
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 warnings.filterwarnings("ignore", message="Workbook contains no default style")
 
@@ -39,6 +40,12 @@ COUNTRY_MAP = [
 SCADA_FIELDS = ["SCADA_Net", "SCADA_AL", "SCADA_BG", "SCADA_IT", "SCADA_MK", "SCADA_TR"]
 ISP_FIELDS = ["ISP_Net"]
 MCP_FIELDS = ["MCP_GR", "MCP_BG", "MCP_IT"]
+
+# Η ενημέρωση ξεκινά ΜΟΝΟ από το εξωτερικό cron-job.org, κάθε μέρα στις 07:02 ώρα Ελλάδος (D05).
+# Αν αλλάξει η ώρα στο cron-job.org, αλλάζει και εδώ (το «Επόμενη ενημέρωση» της σελίδας βγαίνει από αυτήν).
+ATHENS = ZoneInfo("Europe/Athens")
+UPDATE_TIME_ATHENS = (7, 2)
+META_PATH = "data/meta.json"
 
 # Αν μια "ημέρα τιμών" έχει πάνω από τόσες μηδενικές ώρες θεωρείται χαλασμένη
 MAX_ZERO_PRICE_HOURS = 12
@@ -519,6 +526,32 @@ def save_atomic(json_path, data):
     os.replace(tmp, json_path)
 
 
+def next_update_utc(now_utc):
+    """Η επόμενη προγραμματισμένη εκτέλεση (07:02 Αθήνας) μετά από τώρα, σε UTC.
+    Η ώρα Αθήνας λογαριάζεται με τη ζώνη ώρας, άρα σωστά και πριν/μετά την αλλαγή ώρας."""
+    now_ath = now_utc.astimezone(ATHENS)
+    h, m = UPDATE_TIME_ATHENS
+    day = now_ath.date()
+    for _ in range(3):
+        cand = datetime(day.year, day.month, day.day, h, m, tzinfo=ATHENS)
+        if cand > now_ath:
+            return cand.astimezone(timezone.utc)
+        day = day + timedelta(days=1)
+    return None
+
+
+def write_meta(now_utc):
+    """data/meta.json (D06): μοναδικός writer αυτό το script. Η σελίδα το διαβάζει για τα
+    «Τελευταία / Επόμενη ενημέρωση». Γράφεται ΜΟΝΟ αφού γραφτούν επιτυχώς τα δεδομένα."""
+    nxt = next_update_utc(now_utc)
+    meta = {
+        "fetched": now_utc.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+        "next_update": nxt.replace(microsecond=0).isoformat().replace("+00:00", "Z") if nxt else None,
+    }
+    save_atomic(META_PATH, meta)
+    log(f"meta.json: fetched={meta['fetched']} next_update={meta['next_update']}")
+
+
 if __name__ == "__main__":
     start_env = os.environ.get("START_DATE")
     end_env = os.environ.get("END_DATE")
@@ -545,6 +578,7 @@ if __name__ == "__main__":
 
     result = sorted(by_date.values(), key=lambda x: x["Date"], reverse=True)
     save_atomic(json_path, result)
+    write_meta(datetime.now(timezone.utc))
 
     log("--- Σύνοψη ---")
     for d in dates_to_fetch:
