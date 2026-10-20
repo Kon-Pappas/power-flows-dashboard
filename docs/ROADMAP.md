@@ -20,10 +20,11 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Methodology modal as in live, footer rule, header labels~~ — done in batch 4 (D15)
 - ~~Methodology links next to the transit toggle and the ⚠ notices~~ — done in batch 4 (D16)
 - ~~Greek texts: country names, chart legends, methodology section titles~~ — done in batch 5 (D17)
+- ~~Greek casing and Greek capitals~~ — done in batch 6 (D18, D19)
 
 ## Hub-wide (all repositories in one pass)
 
-- H01 one divider on mobile; H02 short header labels on mobile (see `KNOWN_ISSUES.md`)
+- H01 one divider on mobile; H02 short header labels on mobile; H03 Greek capitals written by the page; H04 units outside uppercased labels; convention C01 for titles and casing (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts
 

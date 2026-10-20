@@ -20,5 +20,14 @@ Same structure in every hub page, so a fix here alone would make this page diffe
 | # | Issue | Seen in | Proposal |
 |---|---|---|---|
 | H01 | Mobile: two divider lines between the header and the tabs (`header` bottom border + tabs top border `pt-5 mt-2 border-t … md:border-none`). Was K11 here | Flows, live-greekpower (same classes); to check in BESS, Gas-Power, BigHydro | Keep one: drop the tabs' top border on mobile |
-| H02 | Header labels on mobile: Flows uses short labels ("Updated:" / "Next:", "Ενημέρωση:" / "Επόμενη:"); live-greekpower shortens only "Next" | Flows, live-greekpower | Use Flows' short labels everywhere |
+| H02 | Header labels on mobile: Flows uses short labels ("Updated:" / "Next:", "Ενημέρωση:" / "Επόμενη:"); live-greekpower shortens only "Next" | Flows, live-greekpower | Use Flows' short labels everywhere || H03 | Greek capitals: labels styled `uppercase` rely on the browser to drop the accents (`ΗΜΕΡΗΣΙΟ`, not `ΗΜΕΡΉΣΙΟ`); untested in Safari | Every hub page with Greek uppercase labels | Use the same `greekUpper()` / `applyGreekCaps()` as Flows D19 |
+| H04 | Units in uppercase labels are shown in capitals (`MWH`, `GWH`, `VS`) in both languages, because the whole label is uppercased | Flows; probably every page with uppercase labels | Keep units out of the uppercased text (e.g. wrap them in a span without `uppercase`), in all pages at once |
+
+## Hub conventions
+
+Rules that every hub page should follow; checked in each repository during the hub-wide pass.
+
+| # | Convention | Status |
+|---|---|---|
+| C01 | **Main title** is the dashboard's name: a capital on every word except articles and conjunctions ("Ανάλυση Ροών Ελληνικού Συστήματος", "Ελληνικά Υδροηλεκτρικά και Ταμιευτήρες", "Ανάλυση Ελληνικής Αγοράς Φυσικού Αερίου"); an English brand name may stay untranslated ("Greek Power Live"). **Everything else** in Greek has a capital on the first word only | Flows, Gas-Power, BigHydro titles follow it; live-greekpower uses a brand name; in BESS only the English title was found in the code — to check in its own thread. Labels beyond the title: to check in Gas-Power, BigHydro, BESS |
 
