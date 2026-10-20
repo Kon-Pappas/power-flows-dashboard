@@ -15,6 +15,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0" defer></script>
     <style>
+        .scroll-thin::-webkit-scrollbar { width: 6px; }
+        .scroll-thin::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        .scroll-thin { scrollbar-width: thin; scrollbar-color: #475569 transparent; }
         /* Λιγότερη κίνηση: μόνο στην οθόνη φόρτωσης (D03). Οι χρόνοι ρυθμίζονται και στο dashboard.js. */
         @media (prefers-reduced-motion: reduce) { #loading-overlay *, #loading-overlay *::before, #loading-overlay *::after { transition: none !important; animation: none !important; } }
     </style>
@@ -70,32 +73,32 @@
     </div>
 
     <!-- Methodology Modal -->
-    <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center px-4 transition-opacity duration-300 opacity-0">
+    <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center px-4 transition-opacity duration-300 opacity-0" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh]" id="modalContent">
             
-            <div class="flex items-center justify-between p-5 border-b border-slate-700 shrink-0">
+            <div class="flex items-center justify-between gap-3 p-5 border-b border-slate-700 shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-full bg-acc-500/20 flex items-center justify-center text-acc-400">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                     </div>
                     <h3 class="text-lg font-bold text-slate-100" id="modalTitle">Methodology & Core Assumptions</h3>
                 </div>
-                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-white transition p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <button type="button" onclick="toggleModal(false)" id="modalXBtn" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg border border-slate-600 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-400 transition" aria-label="Close">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
             
             <div class="flex items-center gap-2 px-6 pt-4 shrink-0">
                 <div class="flex bg-slate-900/60 rounded-lg p-1 w-full">
-                    <button onclick="setMethodologyMode('short')" id="modalModeShortBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Short</button>
-                    <button onclick="setMethodologyMode('detailed')" id="modalModeDetailedBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Detailed</button>
+                    <button type="button" onclick="setMethodologyMode('short')" id="modalModeShortBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Short</button>
+                    <button type="button" onclick="setMethodologyMode('detailed')" id="modalModeDetailedBtn" class="flex-1 py-1.5 rounded-md text-sm font-semibold transition">Detailed</button>
                 </div>
             </div>
 
-            <div class="p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto flex-1" id="modalBody"></div>
+            <div class="p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto flex-1 scroll-thin" id="modalBody"></div>
             
-            <div class="p-5 border-t border-slate-700 flex justify-end shrink-0">
-                <button onclick="toggleModal(false)" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
+            <div class="p-4 border-t border-slate-700 flex justify-end shrink-0">
+                <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-600 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
             </div>
         </div>
     </div>
@@ -144,7 +147,7 @@
                     <!-- ΓΡΑΜΜΗ 2 (PC) / ΚΑΤΩ (Mobile): Methodology & Language -->
                     <div class="w-full md:w-auto flex flex-col-reverse md:flex-row gap-3 order-2">
                         <!-- Methodology Button -->
-                        <button onclick="toggleModal(true)" class="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 text-xs text-slate-300 transition shadow-sm h-12 md:h-10">
+                        <button type="button" id="btnMethodologyWrap" onclick="openMethodology()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 text-xs text-slate-300 transition shadow-sm h-12 md:h-10">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
                             <span id="btnMethodology">Methodology & Assumptions</span>
                         </button>
@@ -206,7 +209,7 @@
                             <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></div>
                         </label>
                         <span class="text-sm font-semibold text-slate-200" id="transitToggleLabel">Remove BG↔IT transit</span>
-                        <span class="text-slate-500 cursor-help" id="transitToggleTooltip" title="">ⓘ</span>
+                        <button type="button" class="text-slate-500 hover:text-acc-300 transition" id="transitToggleTooltip" title="" onclick="openMethodology('m-transit')">ⓘ</button>
                     </div>
                     <p class="text-xs text-slate-300" id="transitInfoLine"></p>
                 </div>
@@ -311,7 +314,7 @@
         </div>
 
         <!-- FOOTER / SIGNATURE -->
-        <footer class="mt-12 pb-2 text-center">
+        <footer class="mt-12 pt-6 pb-2 text-center border-t border-slate-800">
             <p class="text-slate-400 text-sm font-medium">Konstantinos Pappas <span class="mx-1 text-slate-600">|</span> Energy Market Analyst</p>
             <p class="text-slate-500 text-xs mt-1">Business Operations & Risk Management <span class="mx-1 text-slate-600">|</span> Data Insights on Energy Transition & Grid Stability</p>
         </footer>
@@ -319,24 +322,34 @@
     </div>
 
     <script>
+        // Modal όπως στο live (D15): η σελίδα από πίσω δεν κυλάει, focus στο κλείσιμο, επιστροφή στο κουμπί, Esc κλείνει
         function toggleModal(show) {
             const modal = document.getElementById('methodologyModal');
             const content = document.getElementById('modalContent');
             if (show) {
                 if (typeof renderMethodology === 'function') renderMethodology();
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.classList.remove('opacity-0');
-                    content.classList.remove('scale-95');
-                }, 10);
+                modal.classList.remove('hidden'); modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+                requestAnimationFrame(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); });
+                document.getElementById('modalXBtn').focus();
             } else {
+                if (modal.classList.contains('hidden')) return;
                 modal.classList.add('opacity-0');
                 content.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
+                document.body.style.overflow = '';
+                setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); document.getElementById('btnMethodologyWrap').focus(); }, 300);
             }
         }
+
+        // Ανοίγει τη Μεθοδολογία· με άγκυρα: στην αναλυτική μορφή, στην αντίστοιχη ενότητα (D16, όπως live D40)
+        function openMethodology(anchor) {
+            if (anchor && typeof methodologyMode !== 'undefined') methodologyMode = 'detailed';
+            toggleModal(true);
+            document.getElementById('modalBody').scrollTop = 0;
+            if (anchor) setTimeout(() => { const el = document.getElementById(anchor); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 320);
+        }
+
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleModal(false); });
 
         // Close modal when clicking outside
         document.getElementById('methodologyModal').addEventListener('click', function(e) {

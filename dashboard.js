@@ -60,7 +60,7 @@ function updateDataNotice(dayData) {
         if (ref) ref.insertAdjacentElement('afterend', el);
     }
     const show = dayData && !dayComplete(dayData);
-    el.innerText = show ? t.noticeDay : '';
+    el.innerHTML = show ? escapeHtml(t.noticeDay) + ` <button type="button" class="underline decoration-dotted underline-offset-2 hover:text-amber-200" onclick="openMethodology('m-complete')">${escapeHtml(t.methodLink)}</button>` : '';
     el.style.display = show ? 'block' : 'none';
 }
 
@@ -72,7 +72,7 @@ function updateMtdExclusionNotice(excludedDates) {
     if (!el) return;
     if (excludedDates.length > 0) {
         const list = excludedDates.map(d => d.substring(8, 10) + '/' + d.substring(5, 7)).join(', ');
-        el.innerText = t.noticeExcluded.replace('{n}', excludedDates.length) + ' (' + list + ')';
+        el.innerHTML = escapeHtml(t.noticeExcluded.replace('{n}', excludedDates.length) + ' (' + list + ')') + ` <button type="button" class="underline decoration-dotted underline-offset-2 hover:text-amber-200" onclick="openMethodology('m-complete')">${escapeHtml(t.methodLink)}</button>`;
         el.classList.remove('hidden');
     } else {
         el.innerText = '';
@@ -103,12 +103,22 @@ const i18n = {
         locale: "en-GB",
         load: { title: "System Initialization", g1: "Data fetching", g2: "Building views", s1: "Reading the data", ready: "Dashboard is ready!", error: "The data could not be loaded. Reload the page in a few minutes." },
         source: "Data source: IPTO (SCADA & ISP) & ENTSO-E (MCPs)",
-        lastUpdate: "Last Update:",
+        lastUpdate: "Last update:",
         lastUpdateMobile: "Updated:",
-        nextUpdate: "Next Update:",
+        nextUpdate: "Next update:",
         nextUpdateMobile: "Next:",
         dateLabel: "Date:",
         today: "today",
+        methodLink: "Methodology →",
+        countries: { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" },
+        priceCodes: { GR: "GR", BG: "BG", IT: "IT" },
+        flowSeries: "{c} Flow (MW)",
+        appliedMcp: "Applied MCP (€/MWh)",
+        mtdCumLegend: "Cum. Cash Flow (€)",
+        mtdNetLegend: "Net GWh",
+        mtdImpLegend: "Imports (GWh)",
+        mtdExpLegend: "Exports (GWh)",
+        transitInfoBtn: "How transit removal works",
         pillComplete: "Complete data",
         pillIncomplete: "Incomplete data",
         monthLabel: "Month:",
@@ -168,12 +178,22 @@ const i18n = {
         locale: "el-GR",
         load: { title: "Εκκίνηση", g1: "Λήψη δεδομένων", g2: "Προετοιμασία προβολών", s1: "Ανάγνωση δεδομένων", ready: "Το dashboard είναι έτοιμο!", error: "Τα δεδομένα δεν φορτώθηκαν. Ανανεώστε τη σελίδα σε λίγα λεπτά." },
         source: "Πηγή δεδομένων: ΑΔΜΗΕ (SCADA & ISP) & ENTSO-E",
-        lastUpdate: "Τελευταία Ενημέρωση:",
+        lastUpdate: "Τελευταία ενημέρωση:",
         lastUpdateMobile: "Ενημέρωση:",
-        nextUpdate: "Επόμενη Ενημέρωση:",
+        nextUpdate: "Επόμενη ενημέρωση:",
         nextUpdateMobile: "Επόμενη:",
         dateLabel: "Ημέρα:",
         today: "σήμερα",
+        methodLink: "Μεθοδολογία →",
+        countries: { AL: "Αλβανία", BG: "Βουλγαρία", IT: "Ιταλία", MK: "Β. Μακεδονία", TR: "Τουρκία" },
+        priceCodes: { GR: "ΕΛ", BG: "ΒΓ", IT: "ΙΤ" },
+        flowSeries: "Ροή {c} (MW)",
+        appliedMcp: "Εφαρμοζόμενη τιμή (€/MWh)",
+        mtdCumLegend: "Σωρευτικό ταμείο (€)",
+        mtdNetLegend: "Καθαρό GWh",
+        mtdImpLegend: "Εισαγωγές (GWh)",
+        mtdExpLegend: "Εξαγωγές (GWh)",
+        transitInfoBtn: "Πώς λειτουργεί η αφαίρεση transit",
         pillComplete: "Πλήρη δεδομένα",
         pillIncomplete: "Ελλιπή δεδομένα",
         monthLabel: "Μήνας:",
@@ -249,7 +269,7 @@ const methodologyData = {
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
                     ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) from ENTSO-E."],
                     ["Updates:", "daily via a scheduled job. The last 5 days are re-checked on every run to catch late publications and corrections."],
-                    ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates."]
+                    ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates.", "m-complete"]
                 ]
             },
             {
@@ -271,7 +291,7 @@ const methodologyData = {
                 items: [
                     ["Pricing Logic & Valuation:", "for Albania, North Macedonia and Turkey, flows are valued using the Greek price only. For Bulgaria and Italy, flows are valued using the average of the two domestic prices. This is a notional commercial valuation of the flow, not a formal congestion-rent calculation (flow × price differential, which accrues to the transmission operators, not a market participant)."],
                     ["Sign Convention:", "following ENEX standards, red denotes exports and yellow denotes imports. Exporting energy generates positive cash flow (+); importing represents a cost (–)."],
-                    ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation."]
+                    ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.", "m-transit"]
                 ]
             },
             {
@@ -295,7 +315,7 @@ const methodologyData = {
         introDetailed: "Ένα ανεξάρτητο εργαλείο παρακολούθησης και ανάλυσης φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις, που φτιάχνει και συντηρεί ένας αναλυτής, πάνω σε ανοιχτά δεδομένα. Τα στοιχεία είναι εκτιμήσεις και ενδείξεις, όχι επίσημη στατιστική.",
         sections: [
             {
-                title: "ΟΛΑ ΤΑ TABS",
+                title: "ΓΙΑ ΟΛΑ ΤΑ TABS",
                 shortItems: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
                     ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
@@ -305,39 +325,39 @@ const methodologyData = {
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
                     ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) από το ENTSO-E."],
                     ["Ενημερώσεις:", "καθημερινά μέσω προγραμματισμένης διαδικασίας. Οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις και διορθώσεις."],
-                    ["Πληρότητα Δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν."]
+                    ["Πληρότητα Δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν.", "m-complete"]
                 ]
             },
             {
-                title: "DAILY ISP vs SCADA",
+                title: "ΗΜΕΡΗΣΙΑ ΡΟΗ (ISP vs SCADA)",
                 items: [
                     ["ISP έναντι SCADA:", "το ISP είναι το προγραμματισμένο διασυνοριακό πρόγραμμα· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσιο αναπρογραμματισμό ή δραστηριότητα περιορισμών της τελευταίας στιγμής."],
                     ["Επιλογή Προγράμματος ISP:", "τα σύνολα ανά χώρα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού."]
                 ]
             },
             {
-                title: "HOURLY PROFILES",
+                title: "ΩΡΙΑΙΑ ΠΡΟΦΙΛ",
                 items: [
                     ["Ωριαία ανάλυση:", "οι ροές και οι τιμές εμφανίζονται ως ωριαίες τιμές· τα υποκείμενα δεδομένα προγράμματος του ΑΔΜΗΕ είναι τεταρτωριαία και υπολογίζεται ο μέσος όρος τους για την ωριαία προβολή."],
                     ["Τιμές που εμφανίζονται:", "Τιμές Εκκαθάρισης Ημερήσιας Αγοράς για Ελλάδα, Βουλγαρία και Ιταλία, ως πλαίσιο δίπλα στις φυσικές ροές."]
                 ]
             },
             {
-                title: "DAILY ARBITRAGE",
+                title: "ΗΜΕΡΗΣΙΟ ARBITRAGE",
                 items: [
                     ["Λογική Τιμολόγησης & Αποτίμησης:", "για Αλβανία, Β. Μακεδονία και Τουρκία, η αποτίμηση γίνεται αποκλειστικά με την ελληνική τιμή. Για Βουλγαρία και Ιταλία, με τον μέσο όρο των δύο εγχώριων τιμών. Πρόκειται για ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (ροή × διαφορά τιμών, το οποίο αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς)."],
                     ["Σύμβαση Προσήμων:", "σύμφωνα με τα πρότυπα του ENEX, το κόκκινο αντιστοιχεί σε Εξαγωγές και το κίτρινο σε Εισαγωγές. Η εξαγωγή ενέργειας παράγει θετικό ταμείο (+), η εισαγωγή αντιπροσωπεύει κόστος (–)."],
-                    ["Προαιρετική Προσαρμογή Transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου."]
+                    ["Προαιρετική Προσαρμογή Transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου.", "m-transit"]
                 ]
             },
             {
-                title: "MTD POSITION",
+                title: "ΣΩΡΕΥΤΙΚΗ ΘΕΣΗ (MTD)",
                 items: [
                     ["", "Μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."]
                 ]
             },
             {
-                title: "LIMITATIONS",
+                title: "ΠΕΡΙΟΡΙΣΜΟΙ",
                 items: [
                     ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
                     ["Τιμολόγηση:", "η αποτίμηση χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι επίσημο υπολογισμό εσόδου συμφόρησης ή διμερούς διακανονισμού, και δεν αντανακλά το πραγματικό P&L κάποιου συγκεκριμένου συμμετέχοντα."],
@@ -353,9 +373,10 @@ function escapeHtml(str) {
 }
 
 function renderMethodologySection(section, items) {
-    const li = items.map(([lead, text]) => {
+    const li = items.map(([lead, text, anchor]) => {
         const leadHtml = lead ? `<strong class="text-slate-200">${escapeHtml(lead)}</strong> ` : '';
-        return `<li>${leadHtml}${escapeHtml(text)}</li>`;
+        const idAttr = anchor ? ` id="${anchor}" class="scroll-mt-4"` : '';
+        return `<li${idAttr}>${leadHtml}${escapeHtml(text)}</li>`;
     }).join('');
     return `<div class="mb-5 last:mb-0">
         <div class="text-acc-400 text-xs font-bold uppercase tracking-wide mb-2">${escapeHtml(section.title)}</div>
@@ -434,6 +455,7 @@ function applyStaticText() {
     document.getElementById('colPrice').innerText = t.colPrice;
     document.getElementById('transitToggleLabel').innerText = t.transitToggleLabel;
     document.getElementById('transitToggleTooltip').title = t.transitToggleTooltip;
+    document.getElementById('transitToggleTooltip').setAttribute('aria-label', t.transitInfoBtn);
 
     document.getElementById('mtdLabelCashFlow').innerText = t.mtdLabelCashFlow;
     document.getElementById('mtdLabelExp').innerText = t.mtdLabelExp;
@@ -446,6 +468,7 @@ function applyStaticText() {
     document.getElementById('modalModeShortBtn').innerText = t.modalModeShort;
     document.getElementById('modalModeDetailedBtn').innerText = t.modalModeDetailed;
     document.getElementById('modalCloseBtn').innerText = t.modalCloseBtn;
+    document.getElementById('modalXBtn').setAttribute('aria-label', t.modalCloseBtn);
     if (typeof renderMethodology === 'function') renderMethodology();
 
     // GR | EN όπως στο live (D14): ενεργό σε accent με σκούρα γράμματα
@@ -683,7 +706,7 @@ function updateArbitrageTab() {
 
     const listContainer = document.getElementById('arbitrageListContainer');
     listContainer.innerHTML = ''; 
-    const names = { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" };
+    const names = i18n[currentLang].countries;   // ονόματα χωρών στη γλώσσα της σελίδας (K12)
     
     const na0 = v => (data.hasScada ? v : '-');
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
@@ -739,8 +762,8 @@ function updateArbitrageTab() {
                 return involvesCountry ? '#facc15' : countryColors[activeCountry];
             });
         }
-        datasets.push({ type: 'bar', label: `${names[activeCountry]} Flow (MW)`, data: data.summary[activeCountry].hourlyFlows, backgroundColor: barColors, yAxisID: 'y' });
-        datasets.push({ type: 'line', label: `Applied MCP (€/MWh)`, data: data.summary[activeCountry].hourlyPrices, borderColor: '#ffffff', borderWidth: 3, tension: 0.2, yAxisID: 'y1' });
+        datasets.push({ type: 'bar', label: i18n[currentLang].flowSeries.replace('{c}', names[activeCountry]), data: data.summary[activeCountry].hourlyFlows, backgroundColor: barColors, yAxisID: 'y' });
+        datasets.push({ type: 'line', label: i18n[currentLang].appliedMcp, data: data.summary[activeCountry].hourlyPrices, borderColor: '#ffffff', borderWidth: 3, tension: 0.2, yAxisID: 'y1' });
     } else {
         ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
             datasets.push({ type: 'bar', label: names[c], data: data.summary[c].hourlyFlows, backgroundColor: countryColors[c], yAxisID: 'y' });
@@ -852,7 +875,7 @@ function renderMTDTab(selectedMonth) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Cum. Cash Flow (€)',
+                label: i18n[currentLang].mtdCumLegend,
                 data: dataEur,
                 fill: { target: 'origin', above: 'rgba(16, 185, 129, 0.2)', below: 'rgba(217, 70, 239, 0.2)' },
                 segment: { borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#10b981' : '#d946ef' },
@@ -882,7 +905,7 @@ function renderMTDTab(selectedMonth) {
             datasets: [
                 {
                     type: 'line',
-                    label: 'Net GWh',
+                    label: i18n[currentLang].mtdNetLegend,
                     data: dataCumNet,
                     borderColor: '#ffffff', 
                     borderWidth: 3,
@@ -891,14 +914,14 @@ function renderMTDTab(selectedMonth) {
                 },
                 {
                     type: 'bar',
-                    label: 'Imports (GWh)',
+                    label: i18n[currentLang].mtdImpLegend,
                     data: dataCumImp,
                     backgroundColor: 'rgba(250, 204, 21, 0.7)', 
                     stacked: true
                 },
                 {
                     type: 'bar',
-                    label: 'Exports (GWh)',
+                    label: i18n[currentLang].mtdExpLegend,
                     data: dataCumExp,
                     backgroundColor: 'rgba(244, 63, 94, 0.7)', 
                     stacked: true
@@ -998,7 +1021,7 @@ function renderTotalsTab(dayData) {
         totalsChartInstance = new Chart(ctxTotals, {
             type: 'bar',
             data: {
-                labels: currentLang === 'el' ? ["Αλβανία", "Βουλγαρία", "Ιταλία", "Β. Μακεδονία", "Τουρκία"] : countries,
+                labels: ["AL", "BG", "IT", "MK", "TR"].map(c => i18n[currentLang].countries[c]),
                 datasets: [
                     { label: t.scheduled, data: ispTotals, backgroundColor: 'rgba(120, 150, 192, 0.9)', borderColor: '#7896c0', borderWidth: 1, borderRadius: 4 },
                     { label: t.actual, data: scadaTotals, backgroundColor: 'rgba(249, 115, 22, 0.9)', borderColor: '#f97316', borderWidth: 1, borderRadius: 4 }
@@ -1064,9 +1087,9 @@ function renderHourlyTab(dayData) {
         mcpChartInstance = new Chart(ctxMCP, {
             type: 'line',
             data: { labels: hours, datasets: [
-                { label: 'GR (€/MWh)', data: mcpGR, borderColor: '#3b82f6', borderWidth: 2, tension: 0.2 },
-                { label: 'BG (€/MWh)', data: mcpBG, borderColor: '#10b981', borderWidth: 2, tension: 0.2 },
-                { label: 'IT (€/MWh)', data: mcpIT, borderColor: countryColors.IT, borderWidth: 2, tension: 0.2 }
+                { label: `${i18n[currentLang].priceCodes.GR} (€/MWh)`, data: mcpGR, borderColor: '#3b82f6', borderWidth: 2, tension: 0.2 },
+                { label: `${i18n[currentLang].priceCodes.BG} (€/MWh)`, data: mcpBG, borderColor: '#10b981', borderWidth: 2, tension: 0.2 },
+                { label: `${i18n[currentLang].priceCodes.IT} (€/MWh)`, data: mcpIT, borderColor: countryColors.IT, borderWidth: 2, tension: 0.2 }
             ]},
             options: { 
                 responsive: true, maintainAspectRatio: false, 

@@ -17,8 +17,13 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~One picker box, dates in the visitor's language, completeness pill in the header; completeness computed in Python~~ — done in batch 3 (D13, D14)
 - ~~New data colours for ISP, Turkey and the Italian price~~ — done in batch 2 (D12)
 - ~~GR | EN switch as on the other pages~~ — done in batch 3 (D14)
-- One divider between header and tabs on mobile (K11)
-- Methodology modal with boxed X and fixed header / footer (K06)
+- ~~Methodology modal as in live, footer rule, header labels~~ — done in batch 4 (D15)
+- ~~Methodology links next to the transit toggle and the ⚠ notices~~ — done in batch 4 (D16)
+- ~~Greek texts: country names, chart legends, methodology section titles~~ — done in batch 5 (D17)
+
+## Hub-wide (all repositories in one pass)
+
+- H01 one divider on mobile; H02 short header labels on mobile (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts
 
