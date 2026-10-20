@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import math
 import time
 import re
 import requests
@@ -466,6 +467,26 @@ def isp_ok(day):
     return all(t.get(c) is not None for c in COUNTRIES) and n_valid(series(day, "ISP_Net")) == 24
 
 
+def price_series_ok(vals):
+    """24 τιμές, χωρίς κενά, το πολύ MAX_ZERO_PRICE_HOURS μηδενικά (D10)."""
+    if len(vals) != 24 or any(v is None or (isinstance(v, float) and math.isnan(v)) for v in vals):
+        return False
+    return sum(1 for v in vals if v == 0) <= MAX_ZERO_PRICE_HOURS
+
+
+def day_complete(day):
+    """Ο ΜΟΝΑΔΙΚΟΣ ορισμός της «πλήρους ημέρας» (D13): SCADA, τιμή GR, και τιμή BG / IT
+    όταν υπάρχει ροή προς αυτές. Η σελίδα διαβάζει μόνο το Flags.complete."""
+    f = day.get("Flags") or {}
+    scada = f["scada"] if isinstance(f.get("scada"), bool) else scada_ok(day)
+    if not scada or not price_series_ok(series(day, "MCP_GR")):
+        return False
+    for c in ("BG", "IT"):
+        if any_nonzero(series(day, f"SCADA_{c}")) and not price_series_ok(series(day, f"MCP_{c}")):
+            return False
+    return True
+
+
 def compute_flags(day):
     return {
         "scada": scada_ok(day),
@@ -577,6 +598,9 @@ if __name__ == "__main__":
         by_date[d] = new_day
 
     result = sorted(by_date.values(), key=lambda x: x["Date"], reverse=True)
+    # Η πληρότητα ξαναϋπολογίζεται για ΟΛΟ το ιστορικό σε κάθε εκτέλεση (D13)
+    for day in result:
+        day.setdefault("Flags", {})["complete"] = day_complete(day)
     save_atomic(json_path, result)
     write_meta(datetime.now(timezone.utc))
 

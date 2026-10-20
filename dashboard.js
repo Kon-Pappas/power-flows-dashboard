@@ -42,7 +42,12 @@ function hasPrices(day) {
     return true;
 }
 
-function dayComplete(day) { return hasScada(day) && hasPrices(day); }
+// Η πληρότητα υπολογίζεται στο Python (D13, Flags.complete). Ο τοπικός κανόνας από πάνω μένει
+// μόνο για ημέρες που δεν έχουν ακόμη το πεδίο (πριν από την πρώτη εκτέλεση μετά το batch 3· K10).
+function dayComplete(day) {
+    if (day && day.Flags && typeof day.Flags.complete === 'boolean') return day.Flags.complete;
+    return hasScada(day) && hasPrices(day);
+}
 
 function updateDataNotice(dayData) {
     const t = i18n[currentLang];
@@ -103,6 +108,9 @@ const i18n = {
         nextUpdate: "Next Update:",
         nextUpdateMobile: "Next:",
         dateLabel: "Date:",
+        today: "today",
+        pillComplete: "Complete data",
+        pillIncomplete: "Incomplete data",
         monthLabel: "Month:",
         tabTotals: "Daily ISP vs SCADA",
         tabHourly: "Hourly Profiles",
@@ -164,7 +172,10 @@ const i18n = {
         lastUpdateMobile: "Ενημέρωση:",
         nextUpdate: "Επόμενη Ενημέρωση:",
         nextUpdateMobile: "Επόμενη:",
-        dateLabel: "Ημερομηνία:",
+        dateLabel: "Ημέρα:",
+        today: "σήμερα",
+        pillComplete: "Πλήρη δεδομένα",
+        pillIncomplete: "Ελλιπή δεδομένα",
         monthLabel: "Μήνας:",
         tabTotals: "Ημερήσια Ροή",
         tabHourly: "Ωριαία Προφίλ",
@@ -347,7 +358,7 @@ function renderMethodologySection(section, items) {
         return `<li>${leadHtml}${escapeHtml(text)}</li>`;
     }).join('');
     return `<div class="mb-5 last:mb-0">
-        <div class="text-cyan-400 text-xs font-bold uppercase tracking-wide mb-2">${escapeHtml(section.title)}</div>
+        <div class="text-acc-400 text-xs font-bold uppercase tracking-wide mb-2">${escapeHtml(section.title)}</div>
         <ul class="list-disc pl-5 space-y-2 marker:text-slate-500">${li}</ul>
     </div>`;
 }
@@ -367,7 +378,7 @@ function renderMethodology() {
 
     const shortBtn = document.getElementById('modalModeShortBtn');
     const detailedBtn = document.getElementById('modalModeDetailedBtn');
-    const active = 'bg-cyan-500 text-white';
+    const active = 'bg-acc-400 text-slate-900';
     const inactive = 'text-slate-300 hover:text-white';
     if (shortBtn && detailedBtn) {
         shortBtn.className = `flex-1 py-1.5 rounded-md text-sm font-semibold transition ${methodologyMode === 'short' ? active : inactive}`;
@@ -399,8 +410,6 @@ function applyStaticText() {
     document.getElementById('lastUpdateLabelMobile').innerText = t.lastUpdateMobile;
     document.getElementById('nextUpdateLabel').innerText = t.nextUpdate;
     document.getElementById('nextUpdateLabelMobile').innerText = t.nextUpdateMobile;
-    document.getElementById('dateLabel').innerText = t.dateLabel;
-    document.getElementById('monthLabel').innerText = t.monthLabel;
     document.getElementById('btnMethodology').innerText = t.btnMethodology;
     
     document.getElementById('tabBtnTotals').innerText = t.tabTotals;
@@ -439,14 +448,13 @@ function applyStaticText() {
     document.getElementById('modalCloseBtn').innerText = t.modalCloseBtn;
     if (typeof renderMethodology === 'function') renderMethodology();
 
-    // Ενημέρωση των CSS classes για το Language Switcher (mobile full width)
-    if(lang === 'el') {
-        document.getElementById('btnGr').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition";
-        document.getElementById('btnEn').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition";
-    } else {
-        document.getElementById('btnEn').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded bg-indigo-500 text-white transition";
-        document.getElementById('btnGr').className = "flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition";
-    }
+    // GR | EN όπως στο live (D14): ενεργό σε accent με σκούρα γράμματα
+    [['btnGr', 'el'], ['btnEn', 'en']].forEach(([id, l]) => {
+        const on = l === lang;
+        const b = document.getElementById(id);
+        b.className = `flex-1 md:flex-none flex items-center justify-center px-4 rounded transition ${on ? 'bg-acc-400 text-slate-900' : 'text-slate-400 hover:text-white'}`;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
 
     // Οθόνη φόρτωσης: τα βήματα 2…5 παίρνουν τα ονόματα των tabs, με τη σειρά τους
     const L = t.load;
@@ -455,6 +463,7 @@ function applyStaticText() {
     Object.entries(ids).forEach(([id, txt]) => { const el = document.getElementById(id); if (el) el.textContent = txt; });
     document.querySelectorAll('.load-row').forEach(r => { r.querySelector('[data-load-label]').textContent = stepText[r.dataset.step] || ''; });
     updateHeader();
+    if (rawData.length > 0) { fillPickers(); updatePicker(); }
 }
 
 function setLang(lang) {
@@ -630,8 +639,8 @@ function updateArbitrageTab() {
             const itBg = data.transitByDirection.IT_TO_BG;
             const bgIt = data.transitByDirection.BG_TO_IT;
             const rows = [];
-            if (itBg.hours > 0) rows.push(`<div>${t.transitDirItToBg} <span class="text-cyan-300 font-semibold">${fmt(itBg.vol)} MWh</span> <span class="text-slate-500">(${itBg.hours}${t.transitDirHours})</span></div>`);
-            if (bgIt.hours > 0) rows.push(`<div>${t.transitDirBgToIt} <span class="text-cyan-300 font-semibold">${fmt(bgIt.vol)} MWh</span> <span class="text-slate-500">(${bgIt.hours}${t.transitDirHours})</span></div>`);
+            if (itBg.hours > 0) rows.push(`<div>${t.transitDirItToBg} <span class="text-slate-100 font-semibold">${fmt(itBg.vol)} MWh</span> <span class="text-slate-500">(${itBg.hours}${t.transitDirHours})</span></div>`);
+            if (bgIt.hours > 0) rows.push(`<div>${t.transitDirBgToIt} <span class="text-slate-100 font-semibold">${fmt(bgIt.vol)} MWh</span> <span class="text-slate-500">(${bgIt.hours}${t.transitDirHours})</span></div>`);
             dirEl.innerHTML = `<div class="text-slate-400 text-xs font-semibold mb-1">${t.transitDirLabel}</div><div class="space-y-1">${rows.join('')}</div>`;
             dirEl.style.display = 'block';
         } else {
@@ -695,7 +704,7 @@ function updateArbitrageTab() {
         const cfColor = na ? "text-slate-500" : (rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500");
 
         const transitBadge = (data.transitNetting && data.transitHourCount > 0 && (c === 'BG' || c === 'IT'))
-            ? `<span class="text-cyan-400 text-xs" title="${t.transitBadgeTitle}">⇄</span>` : '';
+            ? `<span class="text-slate-300 text-xs" title="${t.transitBadgeTitle}">⇄</span>` : '';
 
         listContainer.insertAdjacentHTML('beforeend', `
             <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm items-center">
@@ -944,28 +953,18 @@ function renderCharts() {
     updateDataNotice(dayData);
 }
 
+// Pill πληρότητας στην κεφαλίδα (D14): σχήμα και τόνοι όπως το pill του live· κρυφό στο MTD.
+const PILL = {
+    green: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400',
+    orange: 'bg-orange-500/10 border-orange-400/40 text-orange-300'
+};
 function updateStatusBadge(dayData) {
-    // Ενημέρωση δυναμικού Status Badge
-    const isComplete = dayData ? dayComplete(dayData) : false;
-    const badge = document.getElementById('dataStatusBadge');
-    const badgeText = document.getElementById('dataStatusText');
-    const badgeDot = document.getElementById('dataStatusDot');
-    
-    if (badge && badgeText && badgeDot) {
-        badge.classList.remove('hidden');
-        badge.classList.add('flex');
-        
-        if (isComplete) {
-            badge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wide mr-1";
-            badgeDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
-            badgeText.innerText = currentLang === 'el' ? "Πλήρη Δεδομένα" : "Complete Data";
-        } else {
-            badge.className = "flex items-center gap-1.5 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-bold tracking-wide mr-1";
-            badgeDot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse";
-            badgeText.innerText = currentLang === 'el' ? "Ελλιπή Δεδομένα" : "Incomplete Data";
-        }
-    }
-
+    const el = document.getElementById('statusPill');
+    if (!el) return;
+    if (!dayData || currentTab === 'mtd') { el.className = 'hidden'; return; }
+    const t = i18n[currentLang], ok = dayComplete(dayData);
+    el.className = `inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-bold ${ok ? PILL.green : PILL.orange}`;
+    el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(ok ? t.pillComplete : t.pillIncomplete)}`;
 }
 
 // Tab «Arbitrage»
@@ -1136,15 +1135,45 @@ async function getJSON(path, bust = false) {
     return r.json();
 }
 
+// Ημερομηνίες στη γλώσσα του επισκέπτη (D14, όπως fmtDate του live)
+function fmtDay(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(i18n[currentLang].locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+function fmtMonth(ym) {
+    const [y, m] = ym.split('-').map(Number);
+    const s = new Intl.DateTimeFormat(i18n[currentLang].locale, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, 1)));
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+function todayAthens() {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Athens' }).format(new Date());   // YYYY-MM-DD
+}
+
+// Γεμίζει τις επιλογές· κρατά την τρέχουσα επιλογή (π.χ. όταν αλλάζει η γλώσσα).
+// Πρώτη φορά: τελευταία ΠΛΗΡΗΣ ημέρα και τελευταίος μήνας.
 function fillPickers() {
+    const dSel = document.getElementById('dateSelect'), mSel = document.getElementById('monthSelect');
+    const keepDay = rawData.some(r => r.Date === dSel.value) ? dSel.value : null;
+    const keepMonth = /^\d{4}-\d{2}$/.test(mSel.value) ? mSel.value : null;
+    const t = i18n[currentLang], today = todayAthens();
     const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
     const byDate = {};
     rawData.forEach(r => { byDate[r.Date] = r; });
-    document.getElementById('dateSelect').innerHTML = dates.map(d => `<option value="${d}">${d}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
-    const latestComplete = dates.find(d => dayComplete(byDate[d])) || dates[0];
-    if (latestComplete) document.getElementById('dateSelect').value = latestComplete;
+    dSel.innerHTML = dates.map(d => `<option value="${d}">${fmtDay(d)}${d === today ? ` (${t.today})` : ''}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
+    dSel.value = keepDay || dates.find(d => dayComplete(byDate[d])) || dates[0] || '';
     const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
-    document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    mSel.innerHTML = months.map(m => `<option value="${m}">${fmtMonth(m)}</option>`).join('');
+    mSel.value = keepMonth || months[0] || '';
+}
+
+// Ένα κουτί: «Ημέρα» στα τρία πρώτα tabs, «Μήνας» στο MTD
+function updatePicker() {
+    const t = i18n[currentLang], mtd = currentTab === 'mtd';
+    const label = document.getElementById('pickerLabel');
+    label.textContent = mtd ? t.monthLabel : t.dateLabel;
+    label.setAttribute('for', mtd ? 'monthSelect' : 'dateSelect');
+    document.getElementById('dateSelect').classList.toggle('hidden', mtd);
+    document.getElementById('monthSelect').classList.toggle('hidden', !mtd);
 }
 
 async function boot() {
@@ -1173,7 +1202,7 @@ async function boot() {
 
         // Βήματα 2…5: ένα ανά tab, με τη σειρά των tabs
         let day = null;
-        await loadStep(2, async () => { fillPickers(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); renderTotalsTab(day); });
+        await loadStep(2, async () => { fillPickers(); updatePicker(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); renderTotalsTab(day); });
         await loadStep(3, async () => { renderHourlyTab(day); });
         await loadStep(4, async () => { renderArbitrageTab(day); });
         await loadStep(5, async () => { renderMTDView(); });
@@ -1186,6 +1215,9 @@ async function boot() {
         setTimeout(() => { ov.style.display = 'none'; }, 500);
     } catch (err) { loadFailed(err); }
 }
+
+document.getElementById('dateSelect').addEventListener('change', renderCharts);
+document.getElementById('monthSelect').addEventListener('change', renderCharts);
 
 // Τα scripts είναι defer, οπότε το Chart.js και το plugin έχουν ήδη φορτώσει εδώ.
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

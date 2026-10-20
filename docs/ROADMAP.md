@@ -13,9 +13,11 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 ## Phase 2: house shell and accent
 
-- Cyan accent across the whole page; no colour per tab (K02)
+- ~~Cyan accent across the whole page; no colour per tab~~ — done in batch 3 (D14)
+- ~~One picker box, dates in the visitor's language, completeness pill in the header; completeness computed in Python~~ — done in batch 3 (D13, D14)
 - ~~New data colours for ISP, Turkey and the Italian price~~ — done in batch 2 (D12)
-- GR | EN segmented switch as on the other pages
+- ~~GR | EN switch as on the other pages~~ — done in batch 3 (D14)
+- One divider between header and tabs on mobile (K11)
 - Methodology modal with boxed X and fixed header / footer (K06)
 
 ## Phase 3: charts
