@@ -219,21 +219,21 @@
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelCashFlow">Daily Cash Flow</p>
+                    <p class="text-xs text-slate-400 font-medium mb-1" id="kpiLabelCashFlow">Daily Cash Flow</p>
                     <p class="text-lg md:text-2xl font-bold transition-colors whitespace-nowrap" id="kpiCashFlowVal">-</p>
                 </div>
                 <div class="order-3 md:order-2 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-yellow-400 text-center">
-                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="kpiLabelImp">Imports (Cost)</p>
+                    <p class="text-xs text-slate-400 font-medium mb-2" id="kpiLabelImp">Imports (Cost)</p>
                     <p class="text-xl font-bold text-yellow-400 whitespace-nowrap" id="kpiImpVol">-</p>
                     <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="kpiImpPrice">-</p>
                 </div>
                 <div class="order-4 md:order-3 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-rose-500 text-center">
-                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="kpiLabelExp">Exports (Income)</p>
+                    <p class="text-xs text-slate-400 font-medium mb-2" id="kpiLabelExp">Exports (Income)</p>
                     <p class="text-xl font-bold text-rose-500 whitespace-nowrap" id="kpiExpVol">-</p>
                     <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="kpiExpPrice">-</p>
                 </div>
                 <div class="order-2 md:order-4 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="kpiLabelStatus">Physical Balance</p>
+                    <p class="text-xs text-slate-400 font-medium mb-1" id="kpiLabelStatus">Physical Balance</p>
                     <p class="text-lg md:text-xl font-bold transition-colors whitespace-nowrap" id="kpiStatusVal">-</p>
                 </div>
             </div>
@@ -248,7 +248,7 @@
                 <div class="relative h-[350px]"><canvas id="arbitrageChart"></canvas></div>
             </div>
             <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
-                <div class="grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-bold uppercase text-center">
+                <div class="hidden md:grid grid-cols-4 gap-4 p-4 bg-slate-800 border-b border-slate-700 text-xs text-slate-400 font-semibold text-center">
                     <div class="text-left pl-2" id="colCountry">Country</div>
                     <div id="colNet">Abs. Net MWh</div>
                     <div id="colValue">Cash Flow (€)</div>
@@ -264,21 +264,21 @@
             <!-- MTD KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
+                    <p class="text-xs text-slate-400 font-medium mb-1" id="mtdLabelCashFlow">MTD Cash Flow</p>
                     <p class="text-lg md:text-2xl font-bold transition-colors whitespace-nowrap" id="mtdCashFlowVal">-</p>
                 </div>
                 <div class="order-3 md:order-2 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-yellow-400 text-center">
-                    <p class="text-xs text-yellow-500 uppercase font-bold mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
+                    <p class="text-xs text-slate-400 font-medium mb-2" id="mtdLabelImp">Total Imports (Cost)</p>
                     <p class="text-xl font-bold text-yellow-400 whitespace-nowrap" id="mtdImpVol">-</p>
                     <p class="text-sm font-semibold text-yellow-500 mt-2 bg-yellow-400/10 py-1 rounded" id="mtdImpPrice">-</p>
                 </div>
                 <div class="order-4 md:order-3 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border-solid md:border-b-4 md:border-b-rose-500 text-center">
-                    <p class="text-xs text-rose-400 uppercase font-bold mb-2" id="mtdLabelExp">Total Exports (Income)</p>
+                    <p class="text-xs text-slate-400 font-medium mb-2" id="mtdLabelExp">Total Exports (Income)</p>
                     <p class="text-xl font-bold text-rose-500 whitespace-nowrap" id="mtdExpVol">-</p>
                     <p class="text-sm font-semibold text-rose-400 mt-2 bg-rose-500/10 py-1 rounded" id="mtdExpPrice">-</p>
                 </div>
                 <div class="order-2 md:order-4 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
-                    <p class="text-xs text-slate-400 uppercase font-bold mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
+                    <p class="text-xs text-slate-400 font-medium mb-2" id="mtdLabelExtremes">Best / Worst Day</p>
                     <div class="flex flex-col gap-1 text-sm font-semibold">
                         <div class="text-emerald-400 bg-emerald-400/10 rounded py-0.5" id="mtdBestDay">-</div>
                         <div class="text-rose-400 bg-rose-500/10 rounded py-0.5" id="mtdWorstDay">-</div>

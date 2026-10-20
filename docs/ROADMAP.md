@@ -24,13 +24,18 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 ## Hub-wide (all repositories in one pass)
 
-- H01 one divider on mobile; H02 short header labels on mobile; H03 Greek capitals written by the page; H04 units outside uppercased labels; convention C01 for titles and casing (see `KNOWN_ISSUES.md`)
+- H01 one divider on mobile; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts — done in batch 7
 
 - ~~Pin Chart.js; remove the unused datalabels plugin~~ (D20)
 - ~~Hour labels `00–01` … `23–24`~~ (D21)
 - ~~Own HTML tooltips with deviation, spreads and hourly cash~~ (D22)
+
+## Mobile and readability — done in batch 8
+
+- ~~Country cards on mobile, "–" for no volume~~ (D23)
+- ~~No all-caps labels~~ (D24)
 
 ## Phase 4: data contract
 

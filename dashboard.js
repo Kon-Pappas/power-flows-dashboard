@@ -221,16 +221,16 @@ const i18n = {
         mcpChartTitle: "Τιμές εκκαθάρισης (MCP)",
 
         kpiLabelCashFlow: "Ημερήσιο ταμείο",
-        kpiLabelExp: "Εξαγωγές (Έσοδο)",
-        kpiLabelImp: "Εισαγωγές (Κόστος)",
+        kpiLabelExp: "Εξαγωγές (έσοδο)",
+        kpiLabelImp: "Εισαγωγές (κόστος)",
         kpiLabelStatus: "Φυσικό ισοζύγιο",
         exporter: "Εξαγωγικό ισοζ.",
         importer: "Εισαγωγικό ισοζ.",
         arbitrageChartTitle: "Ωριαίο SCADA & MCP",
         arbitrageChartSub: "Κλικ σε χώρα για απομόνωση και προβολή της εφαρμοζόμενης τιμής.",
-        colCountry: "Χωρα",
-        colNet: "Εισαγωγές / Εξαγωγές (MWh)",
-        colValue: "Ταμειο (€)",
+        colCountry: "Χώρα",
+        colNet: "Εισαγωγές / εξαγωγές (MWh)",
+        colValue: "Ταμείο (€)",
         colPrice: "€/MWh",
 
         mtdLabelCashFlow: "Σωρευτικό ταμείο μηνός",
@@ -329,38 +329,6 @@ function deviationBlock(isp, scada, unit) {
     return tipRow(T.deviation, fmtN(dev, 0, true), null, { unit }) + tipNote(note);
 }
 
-// ---- Ελληνικά κεφαλαία (D19, hub H03) ----------------------------------------
-// Τα στοιχεία με κλάση «uppercase» τα γράφει η ίδια η σελίδα σε κεφαλαία όταν η γλώσσα είναι ελληνικά:
-// χωρίς τόνους, με διαλυτικά όπου ο τόνος χώριζε δίφθογγο («ρολόι» → «ΡΟΛΟΪ», «άυλο» → «ΑΫΛΟ»).
-// Έτσι το αποτέλεσμα δεν εξαρτάται από το αν ο browser ξέρει τον κανόνα (π.χ. Safari).
-function greekUpper(str) {
-    const TONOS = '\u0301', DIAL = '\u0308';
-    const chars = [...String(str).normalize('NFD')];
-    const out = [];
-    for (let i = 0; i < chars.length; i++) {
-        const c = chars[i];
-        if (c === TONOS) continue;                                   // ο τόνος φεύγει
-        out.push(c);
-        // τονισμένο α/ε/ο/η/υ + ι ή υ που αλλιώς θα διαβαζόταν δίφθογγος → διαλυτικά στο ι/υ
-        if (chars[i + 1] === TONOS && /[αεοηυΑΕΟΗΥ]/.test(c)) {
-            const nx = chars[i + 2];
-            const pairs = { ι: 'αεου', υ: 'αεηο' };
-            const low = c.toLowerCase(), nxl = nx && nx.toLowerCase();
-            if (nxl && pairs[nxl] && pairs[nxl].includes(low) && chars[i + 3] !== DIAL) {
-                out.push(nx, DIAL); i += 2;
-            }
-        }
-    }
-    return out.join('').normalize('NFC').toLocaleUpperCase('el-GR').normalize('NFD').replace(/\u0301/g, '').normalize('NFC');
-}
-function applyGreekCaps(root) {
-    if (currentLang !== 'el') return;
-    (root || document).querySelectorAll('.uppercase').forEach(el => {
-        const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-        let n; while ((n = w.nextNode())) n.nodeValue = greekUpper(n.nodeValue);
-    });
-}
-
 // ---- Methodology modal: content model + renderer (Short / Detailed, per tab) --------
 let methodologyMode = 'short';
 
@@ -370,7 +338,7 @@ const methodologyData = {
         introDetailed: "An independent tool for monitoring and analyzing physical and financial power flows across Greece's electricity interconnections, built and maintained by a single analyst on open data. Figures are estimates and indications, not official statistics.",
         sections: [
             {
-                title: "ALL TABS",
+                title: "All tabs",
                 shortItems: [
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
                     ["Sources:", "ADMIE's SCADA & ISP reports, ENTSO-E day-ahead prices. Updated daily; the last 5 days are re-checked each run to catch late publications."],
@@ -384,21 +352,21 @@ const methodologyData = {
                 ]
             },
             {
-                title: "DAILY ISP vs SCADA",
+                title: "Daily ISP vs SCADA",
                 items: [
                     ["ISP vs SCADA:", "ISP is the day-ahead cross-border schedule; SCADA is what was actually measured. Differences between them are expected and can reflect intraday re-dispatch or last-minute constraint activity."],
                     ["ISP Schedule Selection:", "cross-border totals per country are taken from ADMIE's \"Total Market CBS (+XBID)\" section — the final schedule after intraday adjustments — rather than the day-ahead auction alone."]
                 ]
             },
             {
-                title: "HOURLY PROFILES",
+                title: "Hourly profiles",
                 items: [
                     ["Hourly resolution:", "flows and prices are shown as hourly values; ADMIE's underlying schedule data is quarter-hourly and is averaged to the hour for display."],
                     ["Prices shown:", "Day-Ahead Market Clearing Prices for Greece, Bulgaria and Italy, for context alongside the physical flows."]
                 ]
             },
             {
-                title: "DAILY ARBITRAGE",
+                title: "Daily arbitrage",
                 items: [
                     ["Pricing Logic & Valuation:", "for Albania, North Macedonia and Turkey, flows are valued using the Greek price only. For Bulgaria and Italy, flows are valued using the average of the two domestic prices. This is a notional commercial valuation of the flow, not a formal congestion-rent calculation (flow × price differential, which accrues to the transmission operators, not a market participant)."],
                     ["Sign Convention:", "following ENEX standards, red denotes exports and yellow denotes imports. Exporting energy generates positive cash flow (+); importing represents a cost (–)."],
@@ -406,13 +374,13 @@ const methodologyData = {
                 ]
             },
             {
-                title: "MTD POSITION",
+                title: "MTD position",
                 items: [
                     ["", "Only complete days (SCADA present and usable prices) count toward Month-to-Date totals, Best/Worst Day, and averages. Incomplete days are listed and excluded so they can't distort the monthly picture."]
                 ]
             },
             {
-                title: "LIMITATIONS",
+                title: "Limitations",
                 items: [
                     ["Data:", "SCADA is published as preliminary by ADMIE and may be revised. ISP is a schedule, not a measurement of actual delivery."],
                     ["Pricing:", "the valuation uses a simplified average-price convention, not a formal congestion-rent or bilateral-settlement calculation, and does not reflect any single participant's realized P&L."],
@@ -426,7 +394,7 @@ const methodologyData = {
         introDetailed: "Ένα ανεξάρτητο εργαλείο παρακολούθησης και ανάλυσης φυσικών και οικονομικών ροών ενέργειας στις ελληνικές διασυνδέσεις, που φτιάχνει και συντηρεί ένας αναλυτής, πάνω σε ανοιχτά δεδομένα. Τα στοιχεία είναι εκτιμήσεις και ενδείξεις, όχι επίσημη στατιστική.",
         sections: [
             {
-                title: "ΓΙΑ ΟΛΑ ΤΑ TABS",
+                title: "Για όλα τα tabs",
                 shortItems: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
                     ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
@@ -440,21 +408,21 @@ const methodologyData = {
                 ]
             },
             {
-                title: "ΗΜΕΡΗΣΙΑ ΡΟΗ (ISP vs SCADA)",
+                title: "Ημερήσια ροή (ISP vs SCADA)",
                 items: [
                     ["ISP έναντι SCADA:", "το ISP είναι το προγραμματισμένο διασυνοριακό πρόγραμμα· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσιο αναπρογραμματισμό ή δραστηριότητα περιορισμών της τελευταίας στιγμής."],
                     ["Επιλογή προγράμματος ISP:", "τα σύνολα ανά χώρα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού."]
                 ]
             },
             {
-                title: "ΩΡΙΑΙΑ ΠΡΟΦΙΛ",
+                title: "Ωριαία προφίλ",
                 items: [
                     ["Ωριαία ανάλυση:", "οι ροές και οι τιμές εμφανίζονται ως ωριαίες τιμές· τα υποκείμενα δεδομένα προγράμματος του ΑΔΜΗΕ είναι τεταρτωριαία και υπολογίζεται ο μέσος όρος τους για την ωριαία προβολή."],
                     ["Τιμές που εμφανίζονται:", "Τιμές Εκκαθάρισης Ημερήσιας Αγοράς για Ελλάδα, Βουλγαρία και Ιταλία, ως πλαίσιο δίπλα στις φυσικές ροές."]
                 ]
             },
             {
-                title: "ΗΜΕΡΗΣΙΟ ARBITRAGE",
+                title: "Ημερήσιο arbitrage",
                 items: [
                     ["Λογική τιμολόγησης & αποτίμησης:", "για Αλβανία, Β. Μακεδονία και Τουρκία, η αποτίμηση γίνεται αποκλειστικά με την ελληνική τιμή. Για Βουλγαρία και Ιταλία, με τον μέσο όρο των δύο εγχώριων τιμών. Πρόκειται για ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (ροή × διαφορά τιμών, το οποίο αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς)."],
                     ["Σύμβαση προσήμων:", "σύμφωνα με τα πρότυπα του ENEX, το κόκκινο αντιστοιχεί σε Εξαγωγές και το κίτρινο σε Εισαγωγές. Η εξαγωγή ενέργειας παράγει θετικό ταμείο (+), η εισαγωγή αντιπροσωπεύει κόστος (–)."],
@@ -462,13 +430,13 @@ const methodologyData = {
                 ]
             },
             {
-                title: "ΣΩΡΕΥΤΙΚΗ ΘΕΣΗ (MTD)",
+                title: "Σωρευτική θέση (MTD)",
                 items: [
                     ["", "Μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."]
                 ]
             },
             {
-                title: "ΠΕΡΙΟΡΙΣΜΟΙ",
+                title: "Περιορισμοί",
                 items: [
                     ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
                     ["Τιμολόγηση:", "η αποτίμηση χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι επίσημο υπολογισμό εσόδου συμφόρησης ή διμερούς διακανονισμού, και δεν αντανακλά το πραγματικό P&L κάποιου συγκεκριμένου συμμετέχοντα."],
@@ -490,7 +458,7 @@ function renderMethodologySection(section, items) {
         return `<li${idAttr}>${leadHtml}${escapeHtml(text)}</li>`;
     }).join('');
     return `<div class="mb-5 last:mb-0">
-        <div class="text-acc-400 text-xs font-bold uppercase tracking-wide mb-2">${escapeHtml(section.title)}</div>
+        <div class="text-acc-400 text-sm font-bold mb-2">${escapeHtml(section.title)}</div>
         <ul class="list-disc pl-5 space-y-2 marker:text-slate-500">${li}</ul>
     </div>`;
 }
@@ -507,7 +475,6 @@ function renderMethodology() {
         d.sections.forEach(sec => { html += renderMethodologySection(sec, sec.items); });
     }
     bodyEl.innerHTML = html;
-    applyGreekCaps(bodyEl);
 
     const shortBtn = document.getElementById('modalModeShortBtn');
     const detailedBtn = document.getElementById('modalModeDetailedBtn');
@@ -599,7 +566,6 @@ function applyStaticText() {
     document.querySelectorAll('.load-row').forEach(r => { r.querySelector('[data-load-label]').textContent = stepText[r.dataset.step] || ''; });
     updateHeader();
     if (rawData.length > 0) { fillPickers(); updatePicker(); }
-    applyGreekCaps();
 }
 
 function setLang(lang) {
@@ -822,42 +788,53 @@ function updateArbitrageTab() {
     listContainer.innerHTML = ''; 
     const names = i18n[currentLang].countries;   // ονόματα χωρών στη γλώσσα της σελίδας (K12)
     
-    const na0 = v => (data.hasScada ? v : '-');
+    // D23: πίνακας στο desktop, κάρτα δύο γραμμών ανά χώρα στο κινητό (νούμερα στοιχισμένα δεξιά).
+    // Όπου δεν υπάρχει όγκος, όγκος και τιμή γράφονται «–» (όχι 0 και 0 €/MWh).
+    const dash = '<span class="text-slate-600">–</span>';
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         const rowData = data.summary[c];
         const opacity = (activeCountry && activeCountry !== c) ? "opacity-30" : "opacity-100";
         const bgHover = (activeCountry === c) ? "bg-slate-700/80" : "hover:bg-slate-700/50";
-        
-        const impAvg = rowData.impVol > 0 ? (rowData.impEur / rowData.impVol) : 0;
-        const expAvg = rowData.expVol > 0 ? (rowData.expEur / rowData.expVol) : 0;
-        
-        const impVolFmt = na0(rowData.impVol.toLocaleString('el-GR', {maximumFractionDigits:0}));
-        const expVolFmt = na0(rowData.expVol.toLocaleString('el-GR', {maximumFractionDigits:0}));
-        const impAvgFmt = !data.complete ? '-' : impAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
-        const expAvgFmt = !data.complete ? '-' : expAvg.toLocaleString('el-GR', {maximumFractionDigits:2});
-        
         const na = !data.complete;
-        const cfFmt = na ? t.notAvailable : rowData.netCashFlow > 0 ? `+${rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0})}` : rowData.netCashFlow.toLocaleString('el-GR', {maximumFractionDigits:0});
+
+        const vol = (v) => !data.hasScada ? '–' : (roundsToZero(v) ? dash : fmtN(v));
+        const avg = (eur, v) => (na || roundsToZero(v)) ? (na ? '–' : dash) : fmtN(eur / v, 2);
+        const impVolFmt = vol(rowData.impVol), expVolFmt = vol(rowData.expVol);
+        const impAvgFmt = avg(rowData.impEur, rowData.impVol), expAvgFmt = avg(rowData.expEur, rowData.expVol);
+        const cfFmt = na ? t.notAvailable : fmtN(rowData.netCashFlow, 0, true);
         const cfColor = na ? "text-slate-500" : (rowData.netCashFlow >= 0 ? "text-emerald-400" : "text-fuchsia-500");
 
         const transitBadge = (data.transitNetting && data.transitHourCount > 0 && (c === 'BG' || c === 'IT'))
             ? `<span class="text-slate-300 text-xs" title="${t.transitBadgeTitle}">⇄</span>` : '';
+        const dot = `<span class="w-3 h-3 rounded-full shrink-0" style="background-color: ${countryColors[c]}"></span>`;
+        const unit = (u) => `<span class="text-[11px] font-normal text-slate-500">${u}</span>`;
+        const side = (cls, arrow, v, p, hasVol) => hasVol
+            ? `<div class="text-right ${cls}">${arrow} ${v} ${unit('MWh')}<div class="opacity-90">${p} ${unit('€/MWh')}</div></div>`
+            : `<div class="text-right text-slate-600">${arrow} –</div>`;
 
         listContainer.insertAdjacentHTML('beforeend', `
-            <div onclick="toggleCountrySelection('${c}')" class="grid grid-cols-4 gap-4 p-4 border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover} text-center font-semibold text-sm items-center">
-                <div class="text-left pl-2 text-slate-300 flex items-center gap-2">
-                    <span class="w-3 h-3 rounded-full" style="background-color: ${countryColors[c]}"></span>${names[c]} ${transitBadge}
+            <div onclick="toggleCountrySelection('${c}')" class="border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover}">
+                <div class="hidden md:grid grid-cols-4 gap-4 p-4 text-center font-semibold text-sm items-center">
+                    <div class="text-left pl-2 text-slate-300 flex items-center gap-2">${dot}${names[c]} ${transitBadge}</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="text-yellow-400">↓ ${impVolFmt}</div>
+                        <div class="text-rose-500">↑ ${expVolFmt}</div>
+                    </div>
+                    <div class="${cfColor}">${cfFmt}&nbsp;€</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="text-yellow-400">${impAvgFmt}</div>
+                        <div class="text-rose-500">${expAvgFmt}</div>
+                    </div>
                 </div>
-                <div class="flex flex-col gap-1">
-                    <div class="text-yellow-400" title="Imports">↓ ${impVolFmt}</div>
-                    <div class="text-rose-500" title="Exports">↑ ${expVolFmt}</div>
-                </div>
-                <div class="${cfColor}">
-                    ${cfFmt}&nbsp;€
-                </div>
-                <div class="flex flex-col gap-1">
-                    <div class="text-yellow-400">${impAvgFmt}</div>
-                    <div class="text-rose-500">${expAvgFmt}</div>
+                <div class="md:hidden px-4 py-3">
+                    <div class="flex justify-between items-center gap-3">
+                        <span class="flex items-center gap-2 text-slate-200 font-semibold text-sm whitespace-nowrap">${dot}${names[c]} ${transitBadge}</span>
+                        <span class="${cfColor} font-bold text-sm whitespace-nowrap">${cfFmt}&nbsp;€</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 mt-1.5 text-xs font-semibold" style="font-variant-numeric:tabular-nums">
+                        ${side('text-yellow-400', '↓', impVolFmt, impAvgFmt, data.hasScada && !roundsToZero(rowData.impVol))}
+                        ${side('text-rose-500', '↑', expVolFmt, expAvgFmt, data.hasScada && !roundsToZero(rowData.expVol))}
+                    </div>
                 </div>
             </div>
         `);
