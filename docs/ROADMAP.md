@@ -26,11 +26,11 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 - H01 one divider on mobile; H02 short header labels on mobile; H03 Greek capitals written by the page; H04 units outside uppercased labels; convention C01 for titles and casing (see `KNOWN_ISSUES.md`)
 
-## Phase 3: charts
+## Phase 3: charts — done in batch 7
 
-- Pin Chart.js (K01)
-- Own HTML tooltips (K04)
-- Hour labels `00–01` … `23–24` (K05)
+- ~~Pin Chart.js; remove the unused datalabels plugin~~ (D20)
+- ~~Hour labels `00–01` … `23–24`~~ (D21)
+- ~~Own HTML tooltips with deviation, spreads and hourly cash~~ (D22)
 
 ## Phase 4: data contract
 

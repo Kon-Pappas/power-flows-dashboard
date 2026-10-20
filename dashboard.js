@@ -113,6 +113,11 @@ const i18n = {
         countries: { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" },
         priceCodes: { GR: "GR", BG: "BG", IT: "IT" },
         flowSeries: "{c} Flow (MW)",
+        tip: { hour: "Hour", deviation: "Deviation", greece: "Greece", spread: "Spread", imports: "Imports", exports: "Exports", net: "Net",
+               lessExp: "Fewer exports than scheduled", moreExp: "More exports than scheduled", lessImp: "Fewer imports than scheduled", moreImp: "More imports than scheduled", opposite: "Opposite direction to the schedule",
+               transit: "⇄ Transit hour {a} → {b} through Greece", netted: "⇄ Transit removed: this volume is priced once, on the other country",
+               nettedNet: "⇄ Transit removed: only the net {v} MW is priced",
+               flow: "Flow", applied: "Applied price", hourCash: "Cash flow of the hour", dayCash: "Cash flow of the day", cum: "Cumulative", upTo: "up to {d}" },
         appliedMcp: "Applied MCP (€/MWh)",
         mtdCumLegend: "Cum. Cash Flow (€)",
         mtdNetLegend: "Net GWh",
@@ -188,6 +193,11 @@ const i18n = {
         countries: { AL: "Αλβανία", BG: "Βουλγαρία", IT: "Ιταλία", MK: "Β. Μακεδονία", TR: "Τουρκία" },
         priceCodes: { GR: "ΕΛ", BG: "ΒΓ", IT: "ΙΤ" },
         flowSeries: "Ροή {c} (MW)",
+        tip: { hour: "Ώρα", deviation: "Απόκλιση", greece: "Ελλάδα", spread: "Διαφορά", imports: "Εισαγωγές", exports: "Εξαγωγές", net: "Καθαρό",
+               lessExp: "Λιγότερες εξαγωγές από το πρόγραμμα", moreExp: "Περισσότερες εξαγωγές από το πρόγραμμα", lessImp: "Λιγότερες εισαγωγές από το πρόγραμμα", moreImp: "Περισσότερες εισαγωγές από το πρόγραμμα", opposite: "Αντίθετη κατεύθυνση από το πρόγραμμα",
+               transit: "⇄ Ώρα transit {a} → {b} μέσω Ελλάδας", netted: "⇄ Αφαίρεση transit: ο όγκος τιμολογείται μία φορά, στην άλλη χώρα",
+               nettedNet: "⇄ Αφαίρεση transit: τιμολογείται μόνο το καθαρό {v} MW",
+               flow: "Ροή", applied: "Εφαρμοζόμενη τιμή", hourCash: "Ταμείο ώρας", dayCash: "Ταμείο ημέρας", cum: "Σωρευτικό", upTo: "έως {d}" },
         appliedMcp: "Εφαρμοζόμενη τιμή (€/MWh)",
         mtdCumLegend: "Σωρευτικό ταμείο (€)",
         mtdNetLegend: "Καθαρό GWh",
@@ -249,6 +259,75 @@ const i18n = {
         transitChartSub: "Κίτρινες μπάρες = ώρες transit (το ταμείο αυτού του σκέλους αφαιρέθηκε σήμερα)."
     }
 };
+
+// ---- Γραφήματα: ώρες, αριθμοί, tooltips (D20–D22, όπως live D21/D23/D27) ------
+// Ώρα από τον αριθμό της (H01 → 0), όχι από τη θέση στη λίστα, ώστε μια ημέρα αλλαγής ώρας να μη μετακινεί τις ετικέτες.
+const hourStart = (h) => { const n = parseInt(String(h).replace(/\D/g, ''), 10); return Number.isFinite(n) ? n - 1 : 0; };
+const pad2 = (n) => String(n).padStart(2, '0');
+const hourTick = (h) => pad2(hourStart(h));                                   // άξονας: 00 … 23
+const hourRange = (h) => `${pad2(hourStart(h))}–${pad2(hourStart(h) + 1)}`;   // tooltip: 00–01 … 23–24
+
+// Αριθμοί στη γλώσσα της σελίδας, με το σωστό σύμβολο μείον
+function fmtN(v, dec = 0, signed = false) {
+    if (v === null || v === undefined || Number.isNaN(v)) return '–';
+    return new Intl.NumberFormat(i18n[currentLang].locale, { minimumFractionDigits: dec, maximumFractionDigits: dec, signDisplay: signed ? 'exceptZero' : 'auto' })
+        .format(v).replace('-', '−');
+}
+const roundsToZero = (v, dec = 0) => v === null || v === undefined || Math.abs(v) < 0.5 * Math.pow(10, -dec);
+
+// Δικό μας HTML tooltip (ίδιο με live): μένει πάντα μέσα στην οθόνη
+function htmlTip(build) {
+    return (ctx) => {
+        let el = document.getElementById('chart-tip');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'chart-tip';
+            el.className = 'fixed z-[9000] pointer-events-none rounded-lg border border-slate-600 bg-slate-900/95 shadow-2xl px-4 py-3 min-w-[240px] max-w-[92vw] transition-opacity duration-100';
+            document.body.appendChild(el);
+        }
+        const tt = ctx.tooltip;
+        if (!tt || tt.opacity === 0 || !tt.dataPoints || !tt.dataPoints.length) { el.style.opacity = 0; return; }
+        el.innerHTML = build(tt.dataPoints[0].dataIndex);
+        el.style.opacity = 1;
+        const r = ctx.chart.canvas.getBoundingClientRect();
+        const w = el.offsetWidth, h = el.offsetHeight, gap = 14;
+        let x = r.left + tt.caretX + gap;
+        if (x + w > window.innerWidth - 8) x = r.left + tt.caretX - w - gap;
+        x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+        let y = r.top + ctx.chart.chartArea.top;
+        y = Math.max(8, Math.min(y, window.innerHeight - h - 8));
+        el.style.left = `${x}px`; el.style.top = `${y}px`;
+    };
+}
+const tipOff = (build) => ({ enabled: false, external: htmlTip(build) });
+function hideChartTip() { const el = document.getElementById('chart-tip'); if (el) el.style.opacity = 0; }
+window.addEventListener('scroll', hideChartTip, { passive: true });
+
+const tipHead = (left, right = '', rightColor = '#94a3b8') => `<div class="flex justify-between items-baseline gap-6 mb-2.5">
+    <span class="text-acc-400 font-bold text-sm">${escapeHtml(left)}</span><span class="text-xs font-bold" style="color:${rightColor}">${escapeHtml(right)}</span></div>`;
+const tipRule = '<div class="border-t border-dashed border-white/20 my-2"></div>';
+function tipRow(label, value, color, opts = {}) {
+    const sw = color ? `<span class="w-2.5 h-2.5 rounded-sm shrink-0" style="background:${color}"></span>` : '';
+    return `<div class="grid grid-cols-[1fr_auto] gap-4 py-0.5 ${opts.strong ? 'text-white font-bold' : 'text-slate-300'} text-[13px]">
+        <span class="flex items-center gap-2">${sw}${escapeHtml(label)}</span>
+        <span class="text-right ${opts.strong ? '' : 'text-slate-100'}" style="font-variant-numeric:tabular-nums">${value}${opts.unit ? ` <span class="text-[11px] font-normal text-slate-500">${opts.unit}</span>` : ''}</span></div>`;
+}
+const tipGroup = (title) => `<div class="text-[11px] text-slate-400 mb-0.5">${escapeHtml(title)}</div>`;
+const tipNote = (text) => `<div class="text-[11px] text-slate-400 mt-1.5">${escapeHtml(text)}</div>`;
+const tipSections = (...parts) => parts.filter((x) => x).join(tipRule);
+
+// Απόκλιση SCADA − ISP και τι σημαίνει (αρνητικό = εξαγωγές)
+function deviationBlock(isp, scada, unit) {
+    const T = i18n[currentLang].tip;
+    if (isp === null || isp === undefined || scada === null || scada === undefined) return '';
+    const dev = scada - isp;
+    if (roundsToZero(dev)) return '';
+    let note;
+    if (isp !== 0 && scada !== 0 && Math.sign(isp) !== Math.sign(scada)) note = T.opposite;
+    else if ((isp || scada) < 0) note = dev > 0 ? T.lessExp : T.moreExp;
+    else note = dev > 0 ? T.moreImp : T.lessImp;
+    return tipRow(T.deviation, fmtN(dev, 0, true), null, { unit }) + tipNote(note);
+}
 
 // ---- Ελληνικά κεφαλαία (D19, hub H03) ----------------------------------------
 // Τα στοιχεία με κλάση «uppercase» τα γράφει η ίδια η σελίδα σε κεφαλαία όταν η γλώσσα είναι ελληνικά:
@@ -638,7 +717,7 @@ function processArbitrageData(dayData, transitNetting) {
     let summary = {};
     ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
         const single = aggregateEconomics({ [c]: flows[c] }, { [c]: amount[c] });
-        summary[c] = { ...single, hourlyFlows: flows[c], hourlyPrices: prices[c] };
+        summary[c] = { ...single, hourlyFlows: flows[c], hourlyPrices: prices[c], hourlyAmount: amount[c] };
     });
 
     globalArbitrageData = {
@@ -650,6 +729,7 @@ function processArbitrageData(dayData, transitNetting) {
         transitByDirection: transitByDirection,
         transitDetail: transitDetail,
         hours: dayData.Hourly.map(h => h.Hour),
+        mcpGR: dayData.Hourly.map(h => h.MCP_GR),
         summary: summary,
         expVol: overall.expVol, expEur: overall.expEur, expAvg: overall.expVol > 0 ? (overall.expEur/overall.expVol) : 0,
         impVol: overall.impVol, impEur: overall.impEur, impAvg: overall.impVol > 0 ? (overall.impEur/overall.impVol) : 0,
@@ -811,10 +891,10 @@ function updateArbitrageTab() {
     }
 
     arbitrageChartInstance = new Chart(ctxArb, {
-        data: { labels: data.hours, datasets: datasets },
+        data: { labels: data.hours.map(hourTick), datasets: datasets },
         options: {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-            plugins: { datalabels: { display: false } },
+            plugins: { tooltip: tipOff((i) => arbitrageTip(data, i)) },
             scales: {
                 x: { stacked: true, grid: { display: false } },
                 y: { 
@@ -831,6 +911,38 @@ function updateArbitrageTab() {
             }
         }
     });
+}
+
+// Tooltip του Arbitrage (D22): όλες οι χώρες → εισαγωγές / εξαγωγές / καθαρό, με τη σειρά της στήλης·
+// μία χώρα → ροή, εφαρμοζόμενη τιμή, ταμείο της ώρας. Οι μηδενικές γραμμές δεν εμφανίζονται.
+function arbitrageTip(data, i) {
+    const L = i18n[currentLang], T = L.tip, N = L.countries;
+    const head = tipHead(`${T.hour} ${hourRange(data.hours[i])}`, `${L.priceCodes.GR} ${fmtN(data.mcpGR[i], 2)} €/MWh`, '#3b82f6');
+    const det = data.transitDetail[i];
+    const mark = (c) => (det && (c === 'BG' || c === 'IT')) ? ' ⇄' : '';
+    if (activeCountry) {
+        const c = activeCountry, S = data.summary[c];
+        const f = S.hourlyFlows[i], amt = S.hourlyAmount[i];
+        const cash = f < 0 ? amt : -amt;                      // εξαγωγή = έσοδο (+), εισαγωγή = κόστος (−)
+        let netNote = '';
+        if (data.transitNetting && det && (c === 'BG' || c === 'IT') && f !== 0) {
+            const netVol = Math.abs((data.summary.BG.hourlyFlows[i] || 0) + (data.summary.IT.hourlyFlows[i] || 0));
+            netNote = tipNote(roundsToZero(amt) ? T.netted : T.nettedNet.replace('{v}', fmtN(netVol)));
+        }
+        return head + tipSections(
+            tipRow(`${T.flow} ${N[c]}${mark(c)}`, fmtN(f, 0, true), countryColors[c], { unit: 'MW' }) + tipRow(T.applied, fmtN(S.hourlyPrices[i], 2), '#ffffff', { unit: '€/MWh' }),
+            tipRow(T.hourCash, fmtN(cash, 0, true), null, { unit: '€', strong: true }) + netNote);
+    }
+    const order = ["AL", "BG", "IT", "MK", "TR"];
+    const imp = order.slice().reverse().filter(c => data.summary[c].hourlyFlows[i] > 0 && !roundsToZero(data.summary[c].hourlyFlows[i]));
+    const exp = order.filter(c => data.summary[c].hourlyFlows[i] < 0 && !roundsToZero(data.summary[c].hourlyFlows[i]));
+    const rows = (list) => list.map(c => tipRow(N[c] + mark(c), fmtN(data.summary[c].hourlyFlows[i], 0, true), countryColors[c], { unit: 'MW' })).join('');
+    const net = order.reduce((a, c) => a + (data.summary[c].hourlyFlows[i] || 0), 0);
+    const tnote = det ? tipNote(T.transit.replace('{a}', N[det.dir === 'BG_TO_IT' ? 'BG' : 'IT']).replace('{b}', N[det.dir === 'BG_TO_IT' ? 'IT' : 'BG'])) : '';
+    return head + tipSections(
+        imp.length ? tipGroup(T.imports) + rows(imp) : '',
+        exp.length ? tipGroup(T.exports) + rows(exp) : '',
+        tipRow(T.net, fmtN(net, 0, true), null, { unit: 'MW', strong: true }) + tnote);
 }
 
 function renderMTDTab(selectedMonth) {
@@ -856,6 +968,7 @@ function renderMTDTab(selectedMonth) {
     let dataCumImp = []; 
     let dataCumExp = []; 
     let dataCumNet = [];
+    const dayDates = [], dayCash = [];   // για τα tooltips (D22)
 
     monthData.forEach(day => {
         const d = calculateDayNet(day);
@@ -868,6 +981,7 @@ function renderMTDTab(selectedMonth) {
         totalExpVol += d.expVol; totalImpVol += d.impVol;
 
         labels.push(day.Date.substring(8, 10)); 
+        dayDates.push(day.Date); dayCash.push(d.netCashFlow);
         dataEur.push(cumEur);
         dataCumImp.push(cumImpGwh);
         dataCumExp.push(cumExpGwh);
@@ -919,7 +1033,11 @@ function renderMTDTab(selectedMonth) {
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { datalabels: { display: false } },
+            plugins: { tooltip: tipOff((i) => {
+                const T = i18n[currentLang].tip;
+                return tipHead(fmtDay(dayDates[i])) + tipRow(T.dayCash, fmtN(dayCash[i], 0, true), null, { unit: '€' }) + tipRule
+                    + tipRow(T.cum, fmtN(dataEur[i], 0, true), dataEur[i] >= 0 ? '#10b981' : '#d946ef', { unit: '€', strong: true });
+            }) },
             scales: {
                 x: { grid: { display: false } },
                 y: { 
@@ -965,18 +1083,12 @@ function renderMTDTab(selectedMonth) {
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { 
-                datalabels: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            let val = Math.abs(context.raw); 
-                            return `${label}: ${val.toLocaleString('el-GR', {maximumFractionDigits:1})} GWh`;
-                        }
-                    }
-                }
-            },
+            plugins: { tooltip: tipOff((i) => {
+                const T = i18n[currentLang].tip;
+                return tipHead(T.upTo.replace('{d}', fmtDay(dayDates[i]))) + tipSections(
+                    tipRow(T.imports, fmtN(dataCumImp[i], 1), 'rgba(250, 204, 21, 0.9)', { unit: 'GWh' }) + tipRow(T.exports, fmtN(Math.abs(dataCumExp[i]), 1), 'rgba(244, 63, 94, 0.9)', { unit: 'GWh' }),
+                    tipRow(T.net, fmtN(dataCumNet[i], 1, true), '#ffffff', { unit: 'GWh', strong: true }));
+            }) },
             scales: {
                 x: { stacked: true, grid: { display: false } },
                 y: { 
@@ -1062,8 +1174,13 @@ function renderTotalsTab(dayData) {
                 ]
             },
             options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { datalabels: { display: false } }, 
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { tooltip: tipOff((i) => {
+                    const c = ["AL", "BG", "IT", "MK", "TR"][i];
+                    return tipHead(i18n[currentLang].countries[c]) + tipSections(
+                        tipRow(t.scheduled, fmtN(ispTotals[i]), '#7896c0', { unit: 'MWh' }) + tipRow(t.actual, fmtN(scadaTotals[i]), '#f97316', { unit: 'MWh' }),
+                        deviationBlock(ispTotals[i], scadaTotals[i], 'MWh'));
+                }) },
                 scales: { 
                     x: { grid: { display: false } }, 
                     y: { 
@@ -1097,15 +1214,20 @@ function renderHourlyTab(dayData) {
         flowsChartInstance = new Chart(ctxFlows, {
             type: 'bar',
             data: {
-                labels: hours,
+                labels: hours.map(hourTick),
                 datasets: [
                     { label: currentLang==='el' ? 'Πρόγραμμα ISP' : 'Scheduled ISP', data: ispHourly, backgroundColor: 'rgba(120, 150, 192, 0.9)', borderColor: '#7896c0', borderWidth: 1, borderRadius: 2 },
                     { label: currentLang==='el' ? 'Πραγματικό SCADA' : 'Actual SCADA', data: scadaHourly, backgroundColor: 'rgba(249, 115, 22, 0.9)', borderColor: '#f97316', borderWidth: 1, borderRadius: 2 }
                 ]
             },
             options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { datalabels: { display: false } }, 
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { tooltip: tipOff((i) => {
+                    const L = i18n[currentLang], T = L.tip;
+                    return tipHead(`${T.hour} ${hourRange(hours[i])}`, `${L.priceCodes.GR} ${fmtN(mcpGR[i], 2)} €/MWh`, '#3b82f6') + tipSections(
+                        tipRow(flowsChartInstance.data.datasets[0].label, fmtN(ispHourly[i]), '#7896c0', { unit: 'MW' }) + tipRow(flowsChartInstance.data.datasets[1].label, fmtN(scadaHourly[i]), '#f97316', { unit: 'MW' }),
+                        deviationBlock(ispHourly[i], scadaHourly[i], 'MW'));
+                }) },
                 scales: { 
                     x: { grid: { display: false } }, 
                     y: { 
@@ -1120,14 +1242,20 @@ function renderHourlyTab(dayData) {
         const ctxMCP = document.getElementById('mcpChart').getContext('2d');
         mcpChartInstance = new Chart(ctxMCP, {
             type: 'line',
-            data: { labels: hours, datasets: [
+            data: { labels: hours.map(hourTick), datasets: [
                 { label: `${i18n[currentLang].priceCodes.GR} (€/MWh)`, data: mcpGR, borderColor: '#3b82f6', borderWidth: 2, tension: 0.2 },
                 { label: `${i18n[currentLang].priceCodes.BG} (€/MWh)`, data: mcpBG, borderColor: '#10b981', borderWidth: 2, tension: 0.2 },
                 { label: `${i18n[currentLang].priceCodes.IT} (€/MWh)`, data: mcpIT, borderColor: countryColors.IT, borderWidth: 2, tension: 0.2 }
             ]},
             options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { datalabels: { display: false } },
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { tooltip: tipOff((i) => {
+                    const L = i18n[currentLang], T = L.tip, C = L.priceCodes;
+                    const sp = (a, b) => (a === null || a === undefined || b === null || b === undefined) ? '–' : fmtN(a - b, 2, true);
+                    return tipHead(`${T.hour} ${hourRange(hours[i])}`, '€/MWh') + tipSections(
+                        tipRow(T.greece, fmtN(mcpGR[i], 2), '#3b82f6') + tipRow(L.countries.BG, fmtN(mcpBG[i], 2), '#10b981') + tipRow(L.countries.IT, fmtN(mcpIT[i], 2), countryColors.IT),
+                        tipRow(`${T.spread} ${C.GR} − ${C.BG}`, sp(mcpGR[i], mcpBG[i])) + tipRow(`${T.spread} ${C.GR} − ${C.IT}`, sp(mcpGR[i], mcpIT[i])));
+                }) },
                 scales: {
                     x: { grid: { display: false } },
                     y: {
@@ -1236,9 +1364,14 @@ function updatePicker() {
 async function boot() {
     applyStaticText();
     try {
-        Chart.register(ChartDataLabels);
+        // Βασικές ρυθμίσεις γραφημάτων όπως στο live (D20)
         Chart.defaults.color = '#94a3b8';
         Chart.defaults.borderColor = '#334155';
+        Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+        Chart.defaults.font.size = 12;
+        Chart.defaults.plugins.legend.labels.boxWidth = 12;
+        Chart.defaults.plugins.legend.labels.boxHeight = 12;
+        Chart.defaults.animation.duration = REDUCE_MOTION ? 0 : 400;
 
         // Βήμα 1: πραγματική πρόοδος (2 αρχεία: meta + ροές), με ελάχιστο χρόνο ανάγνωσης
         loadActivate(1);
