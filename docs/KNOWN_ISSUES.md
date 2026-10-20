@@ -4,7 +4,7 @@ Open problems found in the review of 19 October 2026, when the alignment with th
 
 | # | Issue | Why it matters | Plan |
 |---|---|---|---|
-| K03 | All data live in one file, `historical_flows.json` (1.1 MB for 141 days since 1 Jun 2026, ≈8 KB more every day), downloaded whole on every visit | Download time grows every day; large git diffs | Phase 4: one file per day plus `manifest.json` (live-greekpower D15) |
+| K03 | All data live in one file, `historical_flows.json`, downloaded whole on every visit. **Measured 20 Oct 2026:** 142 days = 1.1 MB on disk but **120 KB** actually transferred (GitHub Pages compresses it); ≈7.8 KB per day, so ≈2.8 MB / ≈310 KB after a year | Not a problem today: less than one photo, parsed in milliseconds on a phone. live-greekpower needed the split (D15) because its data are far heavier | Later (see ROADMAP): when the history reaches about a year or loading becomes noticeably slow, one file **per month** plus a manifest |
 | K07 | Daylight-saving days (25 Oct 2026: 25 hours; 28 Mar 2027: 23 hours): how SCADA, ISP and ENTSO-E prices are read on those days has not been checked; the data format assumes 24 hours | A 25th hour could be dropped or shifted, and the completeness rule (24 prices) could mark the day incomplete | Check the 25 Oct 2026 data on 26–27 Oct |
 | K08 | Commit messages are generic and carry no Athens time | Harder to match a commit to a run (live-greekpower D08) | Low priority |
 | K09 | Right after batch 1 is uploaded, `data/meta.json` does not exist until the first run, so the header shows "–" | Cosmetic, one day at most | Resolved by one manual run of the workflow |
@@ -16,8 +16,9 @@ Same structure in every hub page, so a fix here alone would make this page diffe
 
 | # | Issue | Seen in | Proposal |
 |---|---|---|---|
-| H01 | Mobile: two divider lines between the header and the tabs (`header` bottom border + tabs top border `pt-5 mt-2 border-t … md:border-none`). Was K11 here | Flows, live-greekpower (same classes); to check in BESS, Gas-Power, BigHydro | Keep one: drop the tabs' top border on mobile |
-| H02 | Header labels on mobile: Flows uses short labels ("Updated:" / "Next:", "Ενημέρωση:" / "Επόμενη:"); live-greekpower shortens only "Next" | Flows, live-greekpower | Use Flows' short labels everywhere |
+| H01 | Mobile: two divider lines between the header and the tabs (`header` bottom border + tabs top border `pt-5 mt-2 border-t … md:border-none`) | live-greekpower (same classes); to check in BESS, Gas-Power, BigHydro. **Flows fixed as pilot (D25)** | Same change as Flows D25: drop the tabs' top border and spacing on mobile |
+| H02 | Header labels on mobile: Flows uses short labels ("Updated:" / "Next:", "Ενημέρωση:" / "Επόμενη:"); live-greekpower shortens only "Next" | Flows, live-greekpower | Use Flows' short labels everywhere || H05 | Mobile height: the status pill (complete data / live status) sits on its own line under Last / Next update; it could live inside the picker box, next to the date, saving one more line | Flows, live-greekpower (same header) | Owner's idea (20 Oct 2026), kept for the hub-wide pass because it changes the header of every page |
+
 ## Hub conventions
 
 Rules that every hub page should follow; checked in each repository during the hub-wide pass.

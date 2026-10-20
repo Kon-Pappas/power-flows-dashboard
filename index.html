@@ -163,8 +163,9 @@
             </div>
         </header>
 
-        <!-- TABS NAVIGATION (Responsive Grid for Mobile & PC) -->
-        <div class="pt-5 mt-2 border-t border-slate-700/50 md:border-none md:pt-0 md:mt-0">
+        <!-- TABS NAVIGATION (Responsive Grid for Mobile & PC)
+             H01 / D25: μία μόνο γραμμή στο κινητό (αυτή κάτω από την κεφαλίδα)· χωρίς δεύτερη γραμμή και δικό της κενό πάνω από τα tabs -->
+        <div>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-0 md:border-b md:border-slate-800">
                 <button id="tabBtnTotals" onclick="switchTab('totals')" role="tab" class="tab-btn">Daily ISP vs SCADA</button>
                 <button id="tabBtnHourly" onclick="switchTab('hourly')" role="tab" class="tab-btn">Hourly Profiles</button>

@@ -24,7 +24,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 ## Hub-wide (all repositories in one pass)
 
-- H01 one divider on mobile; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
+- H01 one divider on mobile (Flows done as pilot, D25); H05 status pill inside the picker box; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts — done in batch 7
 
@@ -37,10 +37,15 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Country cards on mobile, "–" for no volume~~ (D23)
 - ~~No all-caps labels~~ (D24)
 
-## Phase 4: data contract
+## Data files — later, not urgent
 
-- One file per day plus `manifest.json`; the page downloads only what it shows (K03)
-- Step 1 of the loading overlay then follows several real files
+Measured on 20 Oct 2026 (K03): the single data file transfers as 120 KB today and ≈310 KB after a year. When the history reaches about a year, or loading becomes noticeably slow:
+
+- one file **per month** (`data/months/2026-10.json`) plus a `manifest.json` (list of days and their completeness, last / next update; replaces `meta.json`);
+- the page downloads the manifest and only the months it shows (normally the current one, ≈20–30 KB); MTD needs a whole month anyway, so a monthly file fits it exactly;
+- step 1 of the loading overlay then follows several real files.
+
+Rejected for now: one file per day, as in live-greekpower — far more files and changes for data this light.
 
 ## Checks with a date
 
