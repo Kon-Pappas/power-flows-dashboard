@@ -14,7 +14,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 ## Phase 2: house shell and accent
 
 - Cyan accent across the whole page; no colour per tab (K02)
-- New data colours for ISP, Turkey and the Italian price, so the accent and yellow keep their meaning (K02)
+- ~~New data colours for ISP, Turkey and the Italian price~~ — done in batch 2 (D12)
 - GR | EN segmented switch as on the other pages
 - Methodology modal with boxed X and fixed header / footer (K06)
 

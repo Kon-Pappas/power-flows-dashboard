@@ -383,7 +383,9 @@ function setMethodologyMode(mode) {
 }
 
 // Χρωματική παλέτα χωρίς επικάλυψη με τα KPIs
-const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#14b8a6' };
+// Χρώματα χωρών (D12): ένα χρώμα ανά χώρα σε όλη τη σελίδα· η τιμή της Ιταλίας παίρνει το ίδιο μωβ.
+// Το ISP είναι steel blue #7896c0 (όχι cyan: το cyan είναι το accent, D02).
+const countryColors = { AL: '#3b82f6', BG: '#f97316', IT: '#a855f7', MK: '#6366f1', TR: '#f9a8d4' };
 
 // Όλα τα σταθερά κείμενα της σελίδας στη γλώσσα currentLang (και της οθόνης φόρτωσης).
 function applyStaticText() {
@@ -999,7 +1001,7 @@ function renderTotalsTab(dayData) {
             data: {
                 labels: currentLang === 'el' ? ["Αλβανία", "Βουλγαρία", "Ιταλία", "Β. Μακεδονία", "Τουρκία"] : countries,
                 datasets: [
-                    { label: t.scheduled, data: ispTotals, backgroundColor: 'rgba(6, 182, 212, 0.9)', borderColor: '#06b6d4', borderWidth: 1, borderRadius: 4 },
+                    { label: t.scheduled, data: ispTotals, backgroundColor: 'rgba(120, 150, 192, 0.9)', borderColor: '#7896c0', borderWidth: 1, borderRadius: 4 },
                     { label: t.actual, data: scadaTotals, backgroundColor: 'rgba(249, 115, 22, 0.9)', borderColor: '#f97316', borderWidth: 1, borderRadius: 4 }
                 ]
             },
@@ -1041,7 +1043,7 @@ function renderHourlyTab(dayData) {
             data: {
                 labels: hours,
                 datasets: [
-                    { label: currentLang==='el' ? 'Πρόγραμμα ISP' : 'Scheduled ISP', data: ispHourly, backgroundColor: 'rgba(6, 182, 212, 0.9)', borderColor: '#06b6d4', borderWidth: 1, borderRadius: 2 },
+                    { label: currentLang==='el' ? 'Πρόγραμμα ISP' : 'Scheduled ISP', data: ispHourly, backgroundColor: 'rgba(120, 150, 192, 0.9)', borderColor: '#7896c0', borderWidth: 1, borderRadius: 2 },
                     { label: currentLang==='el' ? 'Πραγματικό SCADA' : 'Actual SCADA', data: scadaHourly, backgroundColor: 'rgba(249, 115, 22, 0.9)', borderColor: '#f97316', borderWidth: 1, borderRadius: 2 }
                 ]
             },
@@ -1065,7 +1067,7 @@ function renderHourlyTab(dayData) {
             data: { labels: hours, datasets: [
                 { label: 'GR (€/MWh)', data: mcpGR, borderColor: '#3b82f6', borderWidth: 2, tension: 0.2 },
                 { label: 'BG (€/MWh)', data: mcpBG, borderColor: '#10b981', borderWidth: 2, tension: 0.2 },
-                { label: 'IT (€/MWh)', data: mcpIT, borderColor: '#eab308', borderWidth: 2, tension: 0.2 }
+                { label: 'IT (€/MWh)', data: mcpIT, borderColor: countryColors.IT, borderWidth: 2, tension: 0.2 }
             ]},
             options: { 
                 responsive: true, maintainAspectRatio: false, 
