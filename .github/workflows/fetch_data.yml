@@ -38,6 +38,9 @@ jobs:
       - name: Check hour handling (23 / 24 / 25-hour days, D26; no network)
         run: python scripts/test_dst_days.py
 
+      - name: Check the interconnection analysis (D34; no network)
+        run: python scripts/test_analysis.py
+
       - name: Run Python script
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
@@ -52,5 +55,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Fetcher"
-          git add data/historical_flows.json data/meta.json
+          git add data/historical_flows.json data/meta.json data/analysis.json
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update power flows data" && git push)
