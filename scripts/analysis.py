@@ -21,12 +21,14 @@ from pathlib import Path
 COUNTRIES = ["AL", "BG", "IT", "MK", "TR"]
 COUPLED = ["BG", "IT"]
 ZERO_MW = 1.0              # μηδενική ροή: |ροή| < 1 MW
-USUAL_DAYS = 30            # «σύνηθες όριο» = P95 των τελευταίων 30 ημερών, ίδια κατεύθυνση
+USUAL_DAYS = 30            # «παρατηρούμενο όριο» (D35) = P95 της ΠΡΟΓΡΑΜΜΑΤΙΣΜΕΝΗΣ ροής, ίδια κατεύθυνση, 30 ημέρες
 USUAL_PCT = 95
 DEV_PCT = 90               # «εξαιρετική απόκλιση» από το πρόγραμμα: πάνω από το P90 των 30 ημερών
 MIN_HISTORY_NEW_MAX = 30   # νέο μέγιστο μόνο αφού υπάρχουν τουλάχιστον 30 ημέρες πριν
 FIRST_DEC_DAYS = 7         # «πρώτη αποσύζευξη μετά από Ν ημέρες πλήρους σύζευξης»
-MINOR_SPREAD = 1.0         # παράθυρο με μέγιστη διαφορά < 1 €/MWh = «μικρό»: μετράει στα στατιστικά, όχι στο κείμενο
+SIG_SPREAD = 1.0           # D35: ώρα με μέση διαφορά < 1 €/MWh στα αποσυζευγμένα τέταρτα = συζευγμένη για στατιστικά
+                           # και κείμενα (στην ΕΛ–ΙΤ μένει σχεδόν πάντα μια διαφορά λίγων λεπτών). Τα δεδομένα κρατούν
+                           # την ακριβή μέτρηση (0,01 €/MWh).
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -99,6 +101,11 @@ def prices_known(day, c):
     return all(h.get("CPL_" + c) is not None for h in day["Hourly"]) and len(day["Hourly"]) > 0
 
 
+def is_dec(cpl, spr):
+    """Ουσιαστική αποσύζευξη (D35): αποσυζευγμένα τέταρτα ΚΑΙ μέση διαφορά ≥ 1 €/MWh."""
+    return cpl is not None and cpl < 4 and spr is not None and abs(spr) >= SIG_SPREAD
+
+
 def direction(spr):
     """SPR = ΕΛ − γείτονας. Αρνητικό: η Ελλάδα φθηνότερη → ροή προς τον γείτονα ('to_n')."""
     return "to_n" if spr < 0 else "to_gr"
@@ -109,7 +116,7 @@ def windows(day, c):
     out, cur = [], None
     for i, h in enumerate(day["Hourly"]):
         cpl, spr = h.get("CPL_" + c), h.get("SPR_" + c)
-        if cpl is None or cpl >= 4:
+        if not is_dec(cpl, spr):
             cur = None
             continue
         d = direction(spr)
@@ -127,7 +134,6 @@ def windows(day, c):
         w["avg_spread"] = r2(sum(s * f for s, f in w["_s"]) / tot if tot else 0)
         w["max_spread"] = r2(max(s for s, _ in w.pop("_s")))
         w["hours"] = r2(w["hours"])
-        w["minor"] = w["max_spread"] < MINOR_SPREAD
     return out
 
 
@@ -163,38 +169,41 @@ def day_facts(day, history):
             facts.append({"type": "coupled_all_day", "line": c, "score": 5})
         else:
             f = {"type": "decoupled", "line": c, "windows": ws, "hours": r2(sum(w["hours"] for w in ws)),
-                 "max_spread": max(w["max_spread"] for w in ws), "measured": measured,
-                 "minor_only": all(w["minor"] for w in ws), "line_zero": is_zero_day(day, c)}
+                 "max_spread": max(w["max_spread"] for w in ws), "measured": measured, "line_zero": is_zero_day(day, c)}
             score = 20
             if measured:
-                rent = mwh = 0.0
-                peak = {"to_n": 0.0, "to_gr": 0.0}
+                main = max(ws, key=lambda w: w["hours"])["dir"]
+                sign = -1 if main == "to_n" else 1          # προς γείτονα = εξαγωγή = αρνητική ροή
+                rent = sched_mwh = act_mwh = 0.0
+                sched_peak = act_peak = 0.0
                 against_h, against_mwh = 0, 0.0
                 for h in day["Hourly"]:
                     cpl, spr = h.get("CPL_" + c), h.get("SPR_" + c)
-                    if cpl is None or cpl >= 4:
+                    if not is_dec(cpl, spr):
                         continue
                     frac, d = (4 - cpl) / 4, direction(spr)
-                    sched = h.get("ISP_" + c)
+                    sched, meas = h.get("ISP_" + c), h.get("SCADA_" + c)
                     if sched is not None:
-                        rent += abs(sched) * abs(spr) * frac
-                        mwh += abs(sched) * frac
-                        if (d == "to_n" and sched < 0) or (d == "to_gr" and sched > 0):
-                            peak[d] = max(peak[d], abs(sched))
-                    meas = h.get("SCADA_" + c)
-                    if meas is not None and abs(meas) >= ZERO_MW and ((d == "to_n" and meas > 0) or (d == "to_gr" and meas < 0)):
-                        against_h += 1
-                        against_mwh += abs(meas)
-                main = max([w for w in ws if not w["minor"]] or ws, key=lambda w: w["hours"])["dir"]
-                usual = usual_limit(history, c, main)
-                f.update({"rent_eur": r0(rent), "mwh": r0(mwh), "main_dir": main, "peak_mw": r0(peak[main]),
-                          "usual_mw": r0(usual), "pct_of_usual": r0(100 * peak[main] / usual) if usual else None})
+                        rent += abs(sched) * abs(spr) * frac          # έσοδο συμφόρησης: με το ΠΡΟΓΡΑΜΜΑ (εκχωρημένη ροή)
+                        if d == main and sign * sched > 0:
+                            sched_mwh += sign * sched * frac
+                            sched_peak = max(sched_peak, sign * sched)
+                    if meas is not None:
+                        if d == main and sign * meas > 0:
+                            act_mwh += sign * meas * frac
+                            act_peak = max(act_peak, sign * meas)
+                        if abs(meas) >= ZERO_MW and ((d == "to_n" and meas > 0) or (d == "to_gr" and meas < 0)):
+                            against_h += 1
+                            against_mwh += abs(meas)
+                limit = usual_limit(history, c, main)
+                f.update({"main_dir": main, "rent_eur": r0(rent),
+                          "sched_peak_mw": r0(sched_peak), "act_peak_mw": r0(act_peak),
+                          "sched_mwh": r0(sched_mwh), "act_mwh": r0(act_mwh),
+                          "limit_mw": r0(limit), "pct_of_limit": r0(100 * sched_peak / limit) if limit else None})
                 score += min(rent / 1000, 80)
                 if against_h:
                     facts.append({"type": "against", "line": c, "hours": against_h, "mwh": r0(against_mwh),
                                   "score": 30 + 3 * against_h})
-            if f["minor_only"]:
-                score = 3                     # μόνο μικρές διαφορές: σχεδόν σαν συζευγμένη
             f["score"] = r2(score)
             facts.append(f)
             # πρώτη αποσύζευξη μετά από Ν ημέρες πλήρους σύζευξης
@@ -275,13 +284,13 @@ def saturation_monthly(days):
             if not prices_known(day, c):
                 continue
             m = out[c].setdefault(day["Date"][:7], {"hours": 0, "dec_hours": 0.0, "to_n_hours": 0.0, "to_gr_hours": 0.0,
-                                                     "mwh_to_n": 0.0, "mwh_to_gr": 0.0, "rent_eur": 0.0,
-                                                     "_spread": 0.0, "against_hours": 0, "days": 0})
+                                                     "mwh_to_n": 0.0, "mwh_to_gr": 0.0, "act_mwh_to_n": 0.0, "act_mwh_to_gr": 0.0,
+                                                     "rent_eur": 0.0, "_spread": 0.0, "against_hours": 0, "days": 0})
             m["days"] += 1
             for h in day["Hourly"]:
                 cpl, spr = h.get("CPL_" + c), h.get("SPR_" + c)
                 m["hours"] += 1
-                if cpl is None or cpl >= 4:
+                if not is_dec(cpl, spr):
                     continue
                 frac, d = (4 - cpl) / 4, direction(spr)
                 m["dec_hours"] += frac
@@ -295,15 +304,20 @@ def saturation_monthly(days):
                     elif d == "to_gr" and sched > 0:
                         m["mwh_to_gr"] += sched * frac
                 meas = h.get("SCADA_" + c)
-                if meas is not None and abs(meas) >= ZERO_MW and ((d == "to_n" and meas > 0) or (d == "to_gr" and meas < 0)):
-                    m["against_hours"] += 1
+                if meas is not None:
+                    if d == "to_n" and meas < 0:
+                        m["act_mwh_to_n"] += -meas * frac
+                    elif d == "to_gr" and meas > 0:
+                        m["act_mwh_to_gr"] += meas * frac
+                    if abs(meas) >= ZERO_MW and ((d == "to_n" and meas > 0) or (d == "to_gr" and meas < 0)):
+                        m["against_hours"] += 1
     for c in COUPLED:
         for m in out[c].values():
             m["avg_spread"] = r2(m.pop("_spread") / m["dec_hours"]) if m["dec_hours"] else 0.0
             m["dec_pct"] = r2(100 * m["dec_hours"] / m["hours"]) if m["hours"] else None
             for k in ("dec_hours", "to_n_hours", "to_gr_hours"):
                 m[k] = r2(m[k])
-            for k in ("mwh_to_n", "mwh_to_gr", "rent_eur"):
+            for k in ("mwh_to_n", "mwh_to_gr", "act_mwh_to_n", "act_mwh_to_gr", "rent_eur"):
                 m[k] = r0(m[k])
     return out
 
@@ -350,7 +364,9 @@ def build(days):
         facts[d["Date"]] = day_facts(d, days[:i])
     return {
         "generated": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
-        "params": {"zero_mw": ZERO_MW, "coupling_eur": 0.01, "usual_days": USUAL_DAYS, "usual_pct": USUAL_PCT,
+        "params": {"zero_mw": ZERO_MW, "coupling_eur": 0.01, "significant_spread_eur": SIG_SPREAD,
+                   "observed_limit": f"P{USUAL_PCT} of the scheduled flow, same direction, last {USUAL_DAYS} days",
+                   "usual_days": USUAL_DAYS, "usual_pct": USUAL_PCT,
                    "deviation_pct": DEV_PCT, "price_rule": "AL/MK/TR: GR price; BG/IT: mean of GR and neighbour (D11)"},
         "countries": COUNTRIES, "coupled": COUPLED,
         "cash": {"daily": cash_daily, "monthly": cash_monthly},

@@ -76,7 +76,11 @@ dec = next(f for f in f39 if f["type"] == "decoupled" and f["line"] == "BG")
 w = dec["windows"][0]
 check("παράθυρο ΕΛ–ΒΓ 06:00–08:00 προς Βουλγαρία", (w["from"], w["to"], w["dir"]) == ("06:00", "08:00", "to_n") and len(dec["windows"]) == 1, str(w))
 check("έσοδο συμφόρησης = 2 ώρες × 600 MW × 30 € = 36.000 €", dec["rent_eur"] == 36000, str(dec["rent_eur"]))
-check("αιχμή 600 MW, σύνηθες 500 MW (P95 30 ημερών) → 120%", (dec["peak_mw"], dec["usual_mw"], dec["pct_of_usual"]) == (600, 500, 120), str((dec["peak_mw"], dec["usual_mw"], dec["pct_of_usual"])))
+check("αιχμή προγράμματος 600 MW, παρατηρούμενο όριο 500 MW (P95 30 ημερών) → 120%",
+      (dec["sched_peak_mw"], dec["limit_mw"], dec["pct_of_limit"]) == (600, 500, 120), str((dec["sched_peak_mw"], dec["limit_mw"], dec["pct_of_limit"])))
+check("πρόγραμμα έναντι πραγματικής (D35): 600 / 500 MW, 1.200 / 1.000 MWh στις ώρες κορεσμού",
+      (dec["sched_peak_mw"], dec["act_peak_mw"], dec["sched_mwh"], dec["act_mwh"]) == (600, 500, 1200, 1000),
+      str((dec["sched_peak_mw"], dec["act_peak_mw"], dec["sched_mwh"], dec["act_mwh"])))
 check("πρώτη αποσύζευξη μετά από 7 ημέρες πλήρους σύζευξης", any(f["type"] == "first_decoupling" for f in f39))
 check("τα γεγονότα είναι ταξινομημένα κατά βαθμό", [f["score"] for f in f39] == sorted((f["score"] for f in f39), reverse=True))
 
@@ -97,10 +101,12 @@ check("ταμείο ΑΛ ημέρας = +240.000 €", out["cash"]["daily"]["202
 check("ταμείο ΤΡ ημέρας = −120.000 € (εισαγωγή 50 MW)", out["cash"]["daily"]["2026-09-15"]["TR"]["net"] == -120000)
 check("χωρίς μέτρηση η ημέρα δεν μπαίνει στο ταμείο", "2026-10-11" not in out["cash"]["daily"])
 
-# 8. Μικρές διαφορές
+# 8. Μικρές διαφορές (D35): κάτω από 1 €/MWh = συζευγμένη για στατιστικά και κείμενα
 mini = A.build([make_day("2026-09-01"), make_day("2026-09-02", bg_dec=(5,), spread=-0.5)])
-m = next(f for f in mini["days"]["2026-09-02"] if f["type"] == "decoupled")
-check("διαφορά 0,5 €/MWh: παράθυρο «μικρό», χαμηλός βαθμός", m["minor_only"] and m["score"] == 3, str(m["score"]))
+f2 = mini["days"]["2026-09-02"]
+check("διαφορά 0,5 €/MWh: «συζευγμένη όλο το 24ωρο», καμία αποσύζευξη", any(f["type"] == "coupled_all_day" and f["line"] == "BG" for f in f2)
+      and not any(f["type"] == "decoupled" for f in f2))
+check("διαφορά 0,5 €/MWh: δεν μετρά στον μηνιαίο κορεσμό", mini["saturation"]["BG"]["2026-09"]["dec_hours"] == 0)
 
 # 9. Η μορφή του αρχείου: λίστες ανά ημέρα (Market) → ίδιο αποτέλεσμα με τα ωριαία πεδία
 src = make_day("2026-09-03", bg_dec=(6, 7))
