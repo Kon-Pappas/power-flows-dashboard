@@ -45,6 +45,9 @@ jobs:
           END_DATE: ${{ inputs.end_date }}
         run: python scripts/update_flows.py
 
+      - name: Data size (information only, D32)
+        run: python scripts/data_size.py || true
+
       - name: Commit and push changes
         run: |
           git config --local user.email "action@github.com"
