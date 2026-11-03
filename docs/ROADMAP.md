@@ -49,7 +49,8 @@ Rejected for now: one file per day, as in live-greekpower — far more files and
 
 ## Checks with a date
 
-- 26–27 Oct 2026: verify the 25-hour day of 25 Oct (K07)
+- ~~Verify the 25-hour day of 25 Oct (K07)~~: it was cut to 24 hours; fixed in batch 10 (D26). After the upload: fetch 25 Oct again (Actions → Run workflow, start and end 2026-10-25)
+- Clock alignment of SCADA and prices (K11): measure before deciding
 
 ## Later
 

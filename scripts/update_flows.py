@@ -71,17 +71,27 @@ def http_get(url, headers=None, tries=3, what=""):
 # ---------------------------------------------------------------------------
 # ENTSO-E
 # ---------------------------------------------------------------------------
+# Η ημέρα της αγοράς (SDAC) ορίζεται σε ώρα CET/CEST (Βρυξέλλες). Οι ημέρες αλλαγής ώρας έχουν
+# 23 (τελευταία Κυριακή Μαρτίου) ή 25 ώρες (τελευταία Κυριακή Οκτωβρίου)· ίδια ημερομηνία και για την Ελλάδα (D26).
+MARKET_TZ = ZoneInfo("Europe/Brussels")
+
+
+def day_window_utc(date_str):
+    """(start_utc, end_utc, n_hours) της ημέρας αγοράς· naive UTC datetimes, όπως τα χρησιμοποιεί ο κώδικας ENTSO-E."""
+    d = datetime.strptime(date_str, "%Y-%m-%d")
+    nxt = d + timedelta(days=1)
+    start = datetime(d.year, d.month, d.day, tzinfo=MARKET_TZ).astimezone(timezone.utc).replace(tzinfo=None)
+    end = datetime(nxt.year, nxt.month, nxt.day, tzinfo=MARKET_TZ).astimezone(timezone.utc).replace(tzinfo=None)
+    return start, end, int(round((end - start).total_seconds() / 3600))
+
+
+def hours_in_day(date_str):
+    return day_window_utc(date_str)[2]
+
+
 def get_entsoe_period(date_str):
-    dt = datetime.strptime(date_str, "%Y-%m-%d")
-    march = datetime(dt.year, 3, 31)
-    dst_start = march - timedelta(days=(march.weekday() + 1) % 7)
-    october = datetime(dt.year, 10, 31)
-    dst_end = october - timedelta(days=(october.weekday() + 1) % 7)
-    is_dst = dst_start <= dt < dst_end
-    start_hour = 22 if is_dst else 23
-    start_utc = (dt - timedelta(days=1)).replace(hour=start_hour, minute=0, second=0)
-    end_utc = dt.replace(hour=start_hour, minute=0, second=0)
-    return start_utc.strftime("%Y%m%d%H00"), end_utc.strftime("%Y%m%d%H00")
+    start, end, _ = day_window_utc(date_str)
+    return start.strftime("%Y%m%d%H00"), end.strftime("%Y%m%d%H00")
 
 
 def parse_entsoe_time(txt):
@@ -92,8 +102,10 @@ def parse_entsoe_time(txt):
 
 
 def fetch_entsoe_mcp(date_str, country_code):
-    """Επιστρέφει λίστα 24 τιμών. Όπου λείπει τιμή -> None (όχι 0)."""
-    empty = [None] * 24
+    """Επιστρέφει λίστα με μία τιμή ανά ώρα της ημέρας (23, 24 ή 25). Όπου λείπει τιμή -> None (όχι 0)."""
+    n_hours = hours_in_day(date_str)
+    n_q = n_hours * 4
+    empty = [None] * n_hours
     if not ENTSOE_TOKEN:
         log(f"   ! MCP {country_code}: δεν υπάρχει ENTSOE_TOKEN")
         return empty
@@ -115,7 +127,7 @@ def fetch_entsoe_mcp(date_str, country_code):
 
         root = ET.fromstring(res.text)
         ns = {'ns': root.tag.split('}')[0].strip('{')}
-        quarters = [None] * 96
+        quarters = [None] * n_q
 
         for ts in root.findall('ns:TimeSeries', ns):
             business_type = ts.find('ns:businessType', ns)
@@ -161,17 +173,17 @@ def fetch_entsoe_mcp(date_str, country_code):
                 diff_minutes = int((point_time - target_start_utc).total_seconds() // 60)
                 if step_min == 15:
                     idx = diff_minutes // 15
-                    if 0 <= idx < 96:
+                    if 0 <= idx < n_q:
                         quarters[idx] = last_price
                 else:
-                    if 0 <= diff_minutes < 24 * 60:
+                    if 0 <= diff_minutes < n_hours * 60:
                         start_idx = (diff_minutes // 60) * 4
                         for i in range(4):
                             if quarters[start_idx + i] is None:
                                 quarters[start_idx + i] = last_price
 
         hourly = []
-        for h in range(24):
+        for h in range(n_hours):
             q_slice = quarters[h * 4: h * 4 + 4]
             valid = [q for q in q_slice if q is not None]
             # Ώρα θεωρείται έγκυρη ΜΟΝΟ αν έχουμε και τα 4 τεταρτάωρα
@@ -179,7 +191,7 @@ def fetch_entsoe_mcp(date_str, country_code):
 
         missing = sum(1 for v in hourly if v is None)
         if missing:
-            log(f"   ! MCP {country_code}: λείπουν {missing} από 24 ώρες")
+            log(f"   ! MCP {country_code}: λείπουν {missing} από {n_hours} ώρες")
         return hourly
     except Exception as e:
         log(f"   ! MCP {country_code}: σφάλμα ανάγνωσης ({type(e).__name__})")
@@ -264,15 +276,54 @@ def extract_isp_country_totals(df):
     return totals, None
 
 
-def extract_hourly_vals(df, keyword, col_index):
-    """24 ωριαίες τιμές μιας γραμμής. None αν δεν βρεθεί η γραμμή."""
+def find_header_cols(df, marker):
+    """Η γραμμή επικεφαλίδας που περιέχει το marker ('SUM' / 'TOTAL'): (λίστα κελιών, στήλη του marker)."""
+    for idx in range(len(df)):
+        cells = [str(c).strip().upper() for c in df.iloc[idx].tolist()]
+        if marker in cells:
+            return df.iloc[idx].tolist(), cells.index(marker)
+    return None, None
+
+
+def scada_hour_cols(df, n_hours):
+    """Οι στήλες των ωρών του SCADA, με τη σειρά (D26). Από την επικεφαλίδα: οι αριθμοί 1…25 πριν από τη στήλη SUM,
+    που δεν διαβάζεται ποτέ ως ώρα. Χωρίς επικεφαλίδα: οι n_hours στήλες μετά το όνομα (στήλη 2 και μετά)."""
+    header, sum_col = find_header_cols(df, "SUM")
+    cols = []
+    if header is not None:
+        for c, v in enumerate(header[:sum_col]):
+            try:
+                n = float(v)
+            except (TypeError, ValueError):
+                continue
+            if n.is_integer() and 1 <= n <= 25:
+                cols.append(c)
+    if len(cols) != n_hours:
+        if header is not None:
+            log(f"   ! SCADA: η επικεφαλίδα έχει {len(cols)} ώρες, η ημέρα {n_hours}· χρησιμοποιούνται οι {n_hours} στήλες μετά το όνομα")
+        cols = list(range(2, 2 + n_hours))
+    return cols
+
+
+def extract_hourly_vals(df, keyword, col_index, hour_cols):
+    """Μία τιμή ανά ώρα της ημέρας για μια γραμμή. None αν δεν βρεθεί η γραμμή."""
     try:
         row = df[df[col_index].astype(str).str.contains(keyword, case=False, na=False)]
         if row.empty:
             return None
-        return np.nan_to_num(row.iloc[0, 2:26].values.astype(float))
+        return np.nan_to_num(row.iloc[0, hour_cols].values.astype(float))
     except Exception:
         return None
+
+
+def isp_quarter_cols(df, n_hours):
+    """Οι στήλες των τεταρτάωρων του ISP (D26): από τη στήλη 1 μέχρι πριν από τη στήλη TOTAL, αν υπάρχει
+    επικεφαλίδα και δίνει n_hours × 4 τεταρτάωρα· αλλιώς οι n_hours × 4 στήλες μετά το όνομα."""
+    n_q = n_hours * 4
+    _, total_col = find_header_cols(df, "TOTAL")
+    if total_col is not None and total_col - 1 == n_q:
+        return list(range(1, total_col))
+    return list(range(1, 1 + n_q))
 
 
 def read_excel_safe(fileobj, what):
@@ -320,7 +371,7 @@ def log_layout(df):
         pass
 
 
-def none_list(n=24):
+def none_list(n):
     return [None] * n
 
 
@@ -332,24 +383,26 @@ def to_list(arr):
 # Επεξεργασία μιας ημέρας
 # ---------------------------------------------------------------------------
 def process_day(date_str):
-    log(f"Επεξεργασία: {date_str}")
+    n_hours = hours_in_day(date_str)
+    log(f"Επεξεργασία: {date_str}" + ("" if n_hours == 24 else f"  (ημέρα αλλαγής ώρας: {n_hours} ώρες)"))
 
     # ---- SCADA -------------------------------------------------------------
     scada_totals = {c: None for c in COUNTRIES}
-    scada_net_h = none_list()
-    scada_country_h = {code: none_list() for _, _, code, _ in COUNTRY_MAP}
+    scada_net_h = none_list(n_hours)
+    scada_country_h = {code: none_list(n_hours) for _, _, code, _ in COUNTRY_MAP}
 
     scada_file = fetch_admie_excel(date_str, "SystemRealizationSCADA")
     if scada_file:
         sheets = read_excel_safe(scada_file, "SCADA")
         df = pick_sheet(sheets, 1, "EXPORTS-IMPORTS", "SCADA")
         if df is not None:
+            hour_cols = scada_hour_cols(df, n_hours)
             tot, hourly, ok = {}, {}, True
             for name, kw, code, _ in COUNTRY_MAP:
                 imp_t = extract_last_col_val(df, kw + "_IMP", 1)
                 exp_t = extract_last_col_val(df, kw + "_EXP", 1)
-                imp_h = extract_hourly_vals(df, kw + "_IMP", 1)
-                exp_h = extract_hourly_vals(df, kw + "_EXP", 1)
+                imp_h = extract_hourly_vals(df, kw + "_IMP", 1, hour_cols)
+                exp_h = extract_hourly_vals(df, kw + "_EXP", 1, hour_cols)
                 if None in (imp_t, exp_t) or imp_h is None or exp_h is None:
                     ok = False
                     log(f"   ! SCADA: δεν βρέθηκαν γραμμές για {name}")
@@ -361,13 +414,18 @@ def process_day(date_str):
             net_vals = None
             if not net_row.empty:
                 try:
-                    net_vals = np.nan_to_num(net_row.iloc[0, 2:26].values.astype(float)) * -1
+                    net_vals = np.nan_to_num(net_row.iloc[0, hour_cols].values.astype(float)) * -1
                 except Exception:
                     net_vals = None
             if net_vals is None:
                 ok = False
                 log("   ! SCADA: δεν βρέθηκε η γραμμή EXPORTS-IMPORTS")
             if ok:
+                # Έλεγχος: το άθροισμα των ωρών πρέπει να είναι το ημερήσιο σύνολο του αρχείου
+                h_sum = float(sum(sum(hourly[c]) for c in hourly))
+                t_sum = float(sum(tot.values()))
+                if abs(h_sum - t_sum) > 2:
+                    log(f"   ! SCADA: άθροισμα ωρών {h_sum:.0f} ≠ ημερήσιο σύνολο {t_sum:.0f} MWh")
                 scada_totals = tot
                 scada_net_h = to_list(net_vals)
                 scada_country_h = {code: to_list(hourly[code]) for code in hourly}
@@ -376,7 +434,7 @@ def process_day(date_str):
 
     # ---- ISP ---------------------------------------------------------------
     isp_totals = {c: None for c in COUNTRIES}
-    isp_net_h = none_list()
+    isp_net_h = none_list(n_hours)
 
     isp_file = fetch_admie_excel(date_str, "ISP2ISPResults")
     if isp_file:
@@ -394,8 +452,9 @@ def process_day(date_str):
             try:
                 cbs_row = df[df[0] == 'Net CBS Schedules']
                 if not cbs_row.empty:
-                    vals_96 = np.nan_to_num(cbs_row.iloc[0, 1:97].values.astype(float))
-                    isp_net_h = to_list(vals_96.reshape(24, 4).mean(axis=1) * -1)
+                    q_cols = isp_quarter_cols(df, n_hours)
+                    vals_q = np.nan_to_num(cbs_row.iloc[0, q_cols].values.astype(float))
+                    isp_net_h = to_list(vals_q.reshape(n_hours, 4).mean(axis=1) * -1)
                 else:
                     log("   ! ISP: δεν βρέθηκε η γραμμή Net CBS Schedules")
             except Exception as e:
@@ -413,7 +472,7 @@ def process_day(date_str):
         "Totals": {"SCADA": scada_totals, "ISP": isp_totals},
         "Hourly": [],
     }
-    for hour in range(24):
+    for hour in range(n_hours):
         row = {
             "Hour": f"H{hour + 1:02d}",
             "SCADA_Net": scada_net_h[hour],
@@ -459,17 +518,19 @@ def prices_plausible(vals):
 
 def scada_ok(day):
     t = day["Totals"]["SCADA"]
-    return all(t.get(c) is not None for c in COUNTRIES) and n_valid(series(day, "SCADA_Net")) == 24
+    return all(t.get(c) is not None for c in COUNTRIES) and n_valid(series(day, "SCADA_Net")) == len(day["Hourly"])
 
 
 def isp_ok(day):
     t = day["Totals"]["ISP"]
-    return all(t.get(c) is not None for c in COUNTRIES) and n_valid(series(day, "ISP_Net")) == 24
+    return all(t.get(c) is not None for c in COUNTRIES) and n_valid(series(day, "ISP_Net")) == len(day["Hourly"])
 
 
-def price_series_ok(vals):
-    """24 τιμές, χωρίς κενά, το πολύ MAX_ZERO_PRICE_HOURS μηδενικά (D10)."""
-    if len(vals) != 24 or any(v is None or (isinstance(v, float) and math.isnan(v)) for v in vals):
+def price_series_ok(vals, n_hours=None):
+    """Μία τιμή για κάθε ώρα της ημέρας (23, 24 ή 25), χωρίς κενά, το πολύ MAX_ZERO_PRICE_HOURS μηδενικά (D10, D26)."""
+    if n_hours is None:
+        n_hours = len(vals)
+    if n_hours not in (23, 24, 25) or len(vals) != n_hours or any(v is None or (isinstance(v, float) and math.isnan(v)) for v in vals):
         return False
     return sum(1 for v in vals if v == 0) <= MAX_ZERO_PRICE_HOURS
 
@@ -479,10 +540,13 @@ def day_complete(day):
     όταν υπάρχει ροή προς αυτές. Η σελίδα διαβάζει μόνο το Flags.complete."""
     f = day.get("Flags") or {}
     scada = f["scada"] if isinstance(f.get("scada"), bool) else scada_ok(day)
-    if not scada or not price_series_ok(series(day, "MCP_GR")):
+    n = hours_in_day(day["Date"])
+    if len(day.get("Hourly", [])) != n:
+        return False                                  # π.χ. 25ωρη ημέρα αποθηκευμένη με 24 ώρες (πριν το D26)
+    if not scada or not price_series_ok(series(day, "MCP_GR"), n):
         return False
     for c in ("BG", "IT"):
-        if any_nonzero(series(day, f"SCADA_{c}")) and not price_series_ok(series(day, f"MCP_{c}")):
+        if any_nonzero(series(day, f"SCADA_{c}")) and not price_series_ok(series(day, f"MCP_{c}"), n):
             return False
     return True
 
@@ -511,13 +575,14 @@ def merge_with_old(new, old):
     """Δεν αφήνουμε μια αποτυχημένη λήψη να σβήσει σωστά παλιά δεδομένα."""
     d = new["Date"]
 
-    if not scada_ok(new) and old_scada_good(old):
+    same_hours = len(old.get("Hourly", [])) == len(new["Hourly"])
+    if not scada_ok(new) and old_scada_good(old) and same_hours:
         log(f"   → {d}: κρατάω τα προηγούμενα SCADA (η νέα λήψη απέτυχε)")
         new["Totals"]["SCADA"] = old["Totals"]["SCADA"]
         for f in SCADA_FIELDS:
             set_series(new, f, series(old, f))
 
-    if not isp_ok(new) and old_isp_good(old):
+    if not isp_ok(new) and old_isp_good(old) and same_hours:
         log(f"   → {d}: κρατάω τα προηγούμενα ISP (η νέα λήψη απέτυχε)")
         new["Totals"]["ISP"] = old["Totals"]["ISP"]
         for f in ISP_FIELDS:
@@ -525,7 +590,9 @@ def merge_with_old(new, old):
 
     for f in MCP_FIELDS:
         new_s, old_s = series(new, f), series(old, f)
-        if n_valid(new_s) < 24 and prices_plausible(old_s) and n_valid(old_s) > n_valid(new_s):
+        if len(old_s) != len(new_s):
+            continue                                  # παλιά εγγραφή με άλλο πλήθος ωρών: δεν ανακατεύεται
+        if n_valid(new_s) < len(new_s) and prices_plausible(old_s) and n_valid(old_s) > n_valid(new_s):
             log(f"   → {d}: κρατάω τις προηγούμενες τιμές {f} (η νέα λήψη ήταν ελλιπής)")
             set_series(new, f, old_s)
 
@@ -607,5 +674,6 @@ if __name__ == "__main__":
     log("--- Σύνοψη ---")
     for d in dates_to_fetch:
         fl = by_date[d]["Flags"]
-        status = "OK" if (fl["scada"] and fl["isp"] and min(fl["mcp_gr"], fl["mcp_bg"], fl["mcp_it"]) == 24) else "ΕΛΛΙΠΕΣ"
+        nh = len(by_date[d]["Hourly"])
+        status = "OK" if (fl["scada"] and fl["isp"] and min(fl["mcp_gr"], fl["mcp_bg"], fl["mcp_it"]) == nh) else "ΕΛΛΙΠΕΣ"
         log(f"{d}: {status}  SCADA={fl['scada']} ISP={fl['isp']} MCP(GR/BG/IT)={fl['mcp_gr']}/{fl['mcp_bg']}/{fl['mcp_it']}")

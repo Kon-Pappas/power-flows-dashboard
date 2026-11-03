@@ -21,7 +21,7 @@ let globalArbitrageData = {};
 const MAX_ZERO_PRICE_HOURS = 12;
 
 function priceSeriesOk(arr) {
-    if (!arr || arr.length !== 24) return false;
+    if (!arr || arr.length < 23 || arr.length > 25) return false;   // ημέρες 23 / 24 / 25 ωρών (D26)
     if (arr.some(v => v === null || v === undefined || Number.isNaN(v))) return false;
     return arr.filter(v => v === 0).length <= MAX_ZERO_PRICE_HOURS;
 }
