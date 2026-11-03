@@ -93,16 +93,18 @@ for d, n in DAYS.items():
 
 # 4. SCADA + ISP
 def scada_df(n):
-    head = [None, None] + list(range(1, n + 1)) + ["SUM"]
+    # Όπως το πραγματικό αρχείο (3 Νοε 2026): ΠΑΝΤΑ 25 στήλες ωρών, όσες περισσεύουν κενές
+    pad = [None] * (25 - n)
+    head = [None, None] + list(range(1, 26)) + ["SUM"]
     rows = [head]
     net = [0.0] * n
     for k, (_, kw, _, _) in enumerate(U.COUNTRY_MAP):
         imp = [10.0 * (k + 1) + h for h in range(n)]
         exp = [float(h) for h in range(n)]
-        rows.append([None, kw + "_IMP"] + imp + [sum(imp)])
-        rows.append([None, kw + "_EXP"] + exp + [sum(exp)])
+        rows.append([None, kw + "_IMP"] + imp + pad + [sum(imp)])
+        rows.append([None, kw + "_EXP"] + exp + pad + [sum(exp)])
         net = [a + (i - e) for a, i, e in zip(net, imp, exp)]
-    rows.append([None, "EXPORTS-IMPORTS"] + [-v for v in net] + [-sum(net)])
+    rows.append([None, "EXPORTS-IMPORTS"] + [-v for v in net] + pad + [-sum(net)])
     return pd.DataFrame(rows)
 
 
@@ -123,12 +125,14 @@ def isp_df(n):
 
 
 days = {}
+logs = []
 for d, n in DAYS.items():
     sheets = {"SCADA": {"S": scada_df(n)}, "ISP": {"I": isp_df(n)}}
     prices = [50.0 + h for h in range(n)]
     with mock.patch.object(U, "fetch_admie_excel", lambda ds, cat: cat), \
          mock.patch.object(U, "read_excel_safe", lambda f, what: sheets[what]), \
-         mock.patch.object(U, "fetch_entsoe_mcp", lambda ds, c: list(prices)):
+         mock.patch.object(U, "fetch_entsoe_mcp", lambda ds, c: list(prices)), \
+         mock.patch.object(U, "log", lambda m: logs.append(m)):
         day = U.process_day(d)
     days[d] = day
     H = day["Hourly"]
@@ -143,6 +147,8 @@ for d, n in DAYS.items():
     hi, ti = sum(h["ISP_Net"] for h in H), sum(day["Totals"]["ISP"].values())
     check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών", abs(hi - ti) < 0.01, f"{hi:.0f} / {ti:.0f}")
 
+check("επικεφαλίδα SCADA με 25 στήλες σε ημέρες 23 / 24 ωρών: καμία προειδοποίηση (D28)", not any("SCADA" in m for m in logs), str([m for m in logs if "SCADA" in m]))
+
 # 5. πληρότητα
 for d, n in DAYS.items():
     day = days[d]
@@ -156,5 +162,19 @@ check("25 Οκτ αποθηκευμένη με 24 ώρες (πριν το D26): 
 new25 = {**days["2026-10-25"], "Hourly": [dict(h, MCP_GR=None) for h in days["2026-10-25"]["Hourly"]]}
 merged = U.merge_with_old(new25, old25)
 check("συγχώνευση 25 με 24 ώρες: δεν ανακατεύονται", len(merged["Hourly"]) == 25 and all(h["MCP_GR"] is None for h in merged["Hourly"]))
+
+# 7. ημερομηνίες χειροκίνητης εκτέλεσης (D28): κενό END_DATE = μέχρι σήμερα
+def run_dates(start, end):
+    with mock.patch.dict(os.environ, {"START_DATE": start, "END_DATE": end}), mock.patch.object(U, "log", lambda m: None):
+        return U.dates_from_env()
+
+
+today = datetime.now(U.ATHENS).strftime("%Y-%m-%d")
+r = run_dates("2026-10-28", "")
+check("START_DATE χωρίς END_DATE: από την START μέχρι σήμερα", r[0] == "2026-10-28" and r[-1] == today, f"{r[0]} … {r[-1]} ({len(r)} ημέρες)")
+r = run_dates("2026-10-28", "2026-10-30")
+check("START και END: ακριβώς το διάστημα", r == ["2026-10-28", "2026-10-29", "2026-10-30"])
+r = run_dates("", "2026-10-30")
+check("END_DATE χωρίς START_DATE: κανονική εκτέλεση 5 ημερών", len(r) == 5)
 
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

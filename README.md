@@ -30,7 +30,7 @@ Days with missing SCADA data or prices are marked ⚠ in the date picker and wit
 
 Before every fetch the workflow runs `scripts/test_dst_days.py`, an offline check that days of 23, 24 and 25 hours are read correctly; if it fails, nothing is fetched or written.
 
-A run for a date range can be started by hand: *Actions → Daily Power Flows Fetcher → Run workflow*, with a start and end date. The workflow needs the repository secret `ENTSOE_TOKEN`.
+A run for a date range can be started by hand: *Actions → Daily Power Flows Fetcher → Run workflow*, with a start date and, optionally, an end date (empty = up to today). The workflow needs the repository secret `ENTSOE_TOKEN`.
 
 ## Repository layout
 

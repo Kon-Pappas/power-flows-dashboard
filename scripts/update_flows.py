@@ -313,8 +313,9 @@ def find_header_cols(df, marker):
 
 
 def scada_hour_cols(df, n_hours):
-    """Οι στήλες των ωρών του SCADA, με τη σειρά (D26). Από την επικεφαλίδα: οι αριθμοί 1…25 πριν από τη στήλη SUM,
-    που δεν διαβάζεται ποτέ ως ώρα. Χωρίς επικεφαλίδα: οι n_hours στήλες μετά το όνομα (στήλη 2 και μετά)."""
+    """Οι στήλες των ωρών του SCADA, με τη σειρά (D26, D28). Από την επικεφαλίδα: οι αριθμοί 1…25 πριν από τη στήλη SUM,
+    που δεν διαβάζεται ποτέ ως ώρα· το αρχείο έχει ΠΑΝΤΑ 25 στήλες ωρών (η 25η κενή στις κανονικές ημέρες), οπότε
+    κρατούνται οι πρώτες n_hours. Χωρίς επικεφαλίδα: οι n_hours στήλες μετά το όνομα (στήλη 2 και μετά)."""
     header, sum_col = find_header_cols(df, "SUM")
     cols = []
     if header is not None:
@@ -325,11 +326,17 @@ def scada_hour_cols(df, n_hours):
                 continue
             if n.is_integer() and 1 <= n <= 25:
                 cols.append(c)
-    if len(cols) != n_hours:
-        if header is not None:
-            log(f"   ! SCADA: η επικεφαλίδα έχει {len(cols)} ώρες, η ημέρα {n_hours}· χρησιμοποιούνται οι {n_hours} στήλες μετά το όνομα")
-        cols = list(range(2, 2 + n_hours))
-    return cols
+    if len(cols) >= n_hours:
+        extra = cols[n_hours:]
+        if extra:
+            hdr_row = next(i for i in range(len(df)) if "SUM" in [str(c).strip().upper() for c in df.iloc[i].tolist()])
+            vals = pd.to_numeric(df.iloc[hdr_row + 1:, extra].stack(), errors="coerce").dropna()
+            if (vals != 0).any():
+                log(f"   ! SCADA: οι στήλες ωρών πέρα από την {n_hours}η έχουν τιμές· κρατούνται οι πρώτες {n_hours}")
+        return cols[:n_hours]
+    if header is not None:
+        log(f"   ! SCADA: η επικεφαλίδα έχει {len(cols)} ώρες, η ημέρα {n_hours}· χρησιμοποιούνται οι {n_hours} στήλες μετά το όνομα")
+    return list(range(2, 2 + n_hours))
 
 
 def extract_hourly_vals(df, keyword, col_index, hour_cols):
@@ -673,9 +680,17 @@ def write_meta(now_utc):
     log(f"meta.json: fetched={meta['fetched']} next_update={meta['next_update']}")
 
 
-if __name__ == "__main__":
-    start_env = os.environ.get("START_DATE")
-    end_env = os.environ.get("END_DATE")
+def dates_from_env():
+    """Οι ημέρες της εκτέλεσης (D28): START_DATE … END_DATE· κενό END_DATE = μέχρι σήμερα (Αθήνα)·
+    χωρίς START_DATE = κανονική εκτέλεση, οι τελευταίες 5 ημέρες."""
+    start_env = (os.environ.get("START_DATE") or "").strip()
+    end_env = (os.environ.get("END_DATE") or "").strip()
+    if start_env and not end_env:
+        end_env = datetime.now(ATHENS).strftime("%Y-%m-%d")        # D28: κενό END_DATE = μέχρι σήμερα
+        log(f"--- Δεν δόθηκε END_DATE: έως σήμερα ({end_env}) ---")
+    elif end_env and not start_env:
+        log("--- Δόθηκε END_DATE χωρίς START_DATE: αγνοείται, κανονική εκτέλεση ---")
+        end_env = ""
 
     if start_env and end_env:
         start_dt = datetime.strptime(start_env, "%Y-%m-%d")
@@ -686,6 +701,11 @@ if __name__ == "__main__":
     else:
         dates_to_fetch = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(4, -1, -1)]
         log("--- Κανονική εκτέλεση (τελευταίες 5 ημέρες) ---")
+    return dates_to_fetch
+
+
+if __name__ == "__main__":
+    dates_to_fetch = dates_from_env()
 
     json_path = "data/historical_flows.json"
     all_data = load_existing(json_path)
