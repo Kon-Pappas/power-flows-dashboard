@@ -113,6 +113,7 @@ const i18n = {
         countries: { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey" },
         priceCodes: { GR: "GR", BG: "BG", IT: "IT" },
         flowSeries: "{c} Flow (MW)",
+        axisHour: "Greek time",
         tip: { hour: "Hour", deviation: "Deviation", greece: "Greece", spread: "Spread", imports: "Imports", exports: "Exports", net: "Net",
                lessExp: "Fewer exports than scheduled", moreExp: "More exports than scheduled", lessImp: "Fewer imports than scheduled", moreImp: "More imports than scheduled", opposite: "Opposite direction to the schedule",
                transit: "⇄ Transit hour {a} → {b} through Greece", netted: "⇄ Transit removed: this volume is priced once, on the other country",
@@ -197,6 +198,7 @@ const i18n = {
         countries: { AL: "Αλβανία", BG: "Βουλγαρία", IT: "Ιταλία", MK: "Β. Μακεδονία", TR: "Τουρκία" },
         priceCodes: { GR: "ΕΛ", BG: "ΒΓ", IT: "ΙΤ" },
         flowSeries: "Ροή {c} (MW)",
+        axisHour: "Ώρα Ελλάδας",
         tip: { hour: "Ώρα", deviation: "Απόκλιση", greece: "Ελλάδα", spread: "Διαφορά", imports: "Εισαγωγές", exports: "Εξαγωγές", net: "Καθαρό",
                lessExp: "Λιγότερες εξαγωγές από το πρόγραμμα", moreExp: "Περισσότερες εξαγωγές από το πρόγραμμα", lessImp: "Λιγότερες εισαγωγές από το πρόγραμμα", moreImp: "Περισσότερες εισαγωγές από το πρόγραμμα", opposite: "Αντίθετη κατεύθυνση από το πρόγραμμα",
                transit: "⇄ Ώρα transit {a} → {b} μέσω Ελλάδας", netted: "⇄ Αφαίρεση transit: ο όγκος τιμολογείται μία φορά, στην άλλη χώρα",
@@ -349,11 +351,13 @@ const methodologyData = {
                 title: "All tabs",
                 shortItems: [
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
+                    ["Clock:", "every hourly figure is in Greek time. Prices and the ISP schedule, which the market publishes in Central European Time (one hour behind), are shifted by one hour so that each hour shows the measured flow, the schedule and the price of the same real hour; hour 00–01 takes the last market hour of the previous day."],
                     ["Sources:", "ADMIE's SCADA & ISP reports, ENTSO-E day-ahead prices. Updated daily; the last 5 days are re-checked each run to catch late publications."],
                     ["Pending data:", "a day without SCADA yet is marked ⚠ and excluded from Month-to-Date totals until complete."]
                 ],
                 items: [
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
+                    ["Clock:", "every hourly figure is in Greek time. Prices and the ISP schedule, which the market publishes in Central European Time (one hour behind), are shifted by one hour so that each hour shows the measured flow, the schedule and the price of the same real hour; hour 00–01 takes the last market hour of the previous day."],
                     ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) from ENTSO-E."],
                     ["Updates:", "daily via a scheduled job. The last 5 days are re-checked on every run to catch late publications and corrections."],
                     ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates.", "m-complete"]
@@ -405,11 +409,13 @@ const methodologyData = {
                 title: "Για όλα τα tabs",
                 shortItems: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
+                    ["Ώρα:", "όλα τα ωριαία στοιχεία είναι σε ώρα Ελλάδας. Οι τιμές και το πρόγραμμα ISP, που η αγορά δίνει σε ώρα Κεντρικής Ευρώπης (μία ώρα πίσω), μετατοπίζονται κατά μία ώρα, ώστε κάθε ώρα να δείχνει τη μετρημένη ροή, το πρόγραμμα και την τιμή της ίδιας πραγματικής ώρας· η ώρα 00–01 παίρνει την τελευταία ώρα αγοράς της προηγούμενης ημέρας."],
                     ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
                     ["Εκκρεμή δεδομένα:", "μια ημέρα χωρίς SCADA ακόμα σημειώνεται με ⚠ και εξαιρείται από τα μηνιαία σύνολα μέχρι να ολοκληρωθεί."]
                 ],
                 items: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
+                    ["Ώρα:", "όλα τα ωριαία στοιχεία είναι σε ώρα Ελλάδας. Οι τιμές και το πρόγραμμα ISP, που η αγορά δίνει σε ώρα Κεντρικής Ευρώπης (μία ώρα πίσω), μετατοπίζονται κατά μία ώρα, ώστε κάθε ώρα να δείχνει τη μετρημένη ροή, το πρόγραμμα και την τιμή της ίδιας πραγματικής ώρας· η ώρα 00–01 παίρνει την τελευταία ώρα αγοράς της προηγούμενης ημέρας."],
                     ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) από το ENTSO-E."],
                     ["Ενημερώσεις:", "καθημερινά μέσω προγραμματισμένης διαδικασίας. Οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις και διορθώσεις."],
                     ["Πληρότητα δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν.", "m-complete"]
@@ -901,7 +907,7 @@ function updateArbitrageTab() {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
             plugins: { tooltip: tipOff((i) => arbitrageTip(data, i)) },
             scales: {
-                x: { stacked: true, grid: { display: false } },
+                x: { stacked: true, grid: { display: false }, title: { display: true, text: i18n[currentLang].axisHour, color: '#64748b', font: { size: 11 } } },
                 y: { 
                     type: 'linear', display: true, position: 'left', stacked: true, 
                     grid: { color: ctx => ctx.tick.value===0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value===0 ? 2 : 1 },
@@ -1237,7 +1243,7 @@ function renderHourlyTab(dayData) {
                         deviationBlock(ispHourly[i], scadaHourly[i], 'MW'));
                 }) },
                 scales: { 
-                    x: { grid: { display: false } }, 
+                    x: { grid: { display: false }, title: { display: true, text: i18n[currentLang].axisHour, color: '#64748b', font: { size: 11 } } }, 
                     y: { 
                         grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255, 255, 255, 0.6)' : '#334155', lineWidth: ctx => ctx.tick.value === 0 ? 2 : 1 },
                         title: { display: window.innerWidth < 768, text: 'MW', font: { style: 'italic', size: 11 }, color: '#64748b' },
@@ -1265,7 +1271,7 @@ function renderHourlyTab(dayData) {
                         tipRow(`${T.spread} ${C.GR} − ${C.BG}`, sp(mcpGR[i], mcpBG[i])) + tipRow(`${T.spread} ${C.GR} − ${C.IT}`, sp(mcpGR[i], mcpIT[i])));
                 }) },
                 scales: {
-                    x: { grid: { display: false } },
+                    x: { grid: { display: false }, title: { display: true, text: i18n[currentLang].axisHour, color: '#64748b', font: { size: 11 } } },
                     y: {
                         grid: { color: '#334155' },
                         title: { display: window.innerWidth < 768, text: '€/MWh', font: { style: 'italic', size: 11 }, color: '#64748b' },

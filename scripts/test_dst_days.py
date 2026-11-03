@@ -67,14 +67,18 @@ check("730 ημέρες 2026–2027: η περίοδος ENTSO-E ίδια με �
 
 
 # 3. ENTSO-E
-def entsoe_xml(date_str, n_q, skip=()):
-    s, e, _ = U.day_window_utc(date_str)
-    pts = "".join(f"<Point><position>{p}</position><price.amount>{p}</price.amount></Point>"
-                  for p in range(1, n_q + 1) if p not in skip)
-    return (f'<Publication_MarketDocument xmlns="urn:x"><TimeSeries><businessType>A62</businessType>'
-            f'<currency_Unit.name>EUR</currency_Unit.name><Period><timeInterval><start>{s:%Y-%m-%dT%H:%MZ}</start>'
-            f'<end>{e:%Y-%m-%dT%H:%MZ}</end></timeInterval><resolution>PT15M</resolution>{pts}</Period></TimeSeries>'
-            f'</Publication_MarketDocument>')
+def entsoe_period(date_str, base, skip=()):
+    s_, e_, n = U.day_window_utc(date_str)
+    pts = "".join(f"<Point><position>{p}</position><price.amount>{base + p}</price.amount></Point>"
+                  for p in range(1, n * 4 + 1) if p not in skip)
+    return (f'<TimeSeries><businessType>A62</businessType><currency_Unit.name>EUR</currency_Unit.name><Period><timeInterval>'
+            f'<start>{s_:%Y-%m-%dT%H:%MZ}</start><end>{e_:%Y-%m-%dT%H:%MZ}</end></timeInterval><resolution>PT15M</resolution>{pts}</Period></TimeSeries>')
+
+
+def entsoe_xml(date_str, skip=()):
+    """Δύο ημέρες αγοράς: χθες τιμές 500+θέση, σήμερα τιμές = θέση (D33)."""
+    return ('<Publication_MarketDocument xmlns="urn:x">' + entsoe_period(U.prev_day(date_str), 500)
+            + entsoe_period(date_str, 0, skip) + '</Publication_MarketDocument>')
 
 
 class Res:
@@ -83,12 +87,14 @@ class Res:
 
 
 for d, n in DAYS.items():
-    with mock.patch.object(U, "ENTSOE_TOKEN", "x"), mock.patch.object(U, "http_get", lambda *a, **k: Res(entsoe_xml(d, n * 4, skip=(6, 7)))):
+    with mock.patch.object(U, "ENTSOE_TOKEN", "x"), mock.patch.object(U, "http_get", lambda *a, **k: Res(entsoe_xml(d, skip=(6, 7)))):
         h = U.fetch_entsoe_mcp(d, "GR")
-    exp_last = sum(range(n * 4 - 3, n * 4 + 1)) / 4
-    check(f"ENTSO-E {d}: {n} ωριαίες τιμές, η τελευταία ώρα = μέσος των τελευταίων 4 τεταρτάωρων",
-          len(h) == n and None not in h and h[-1] == round(exp_last, 2), f"τελευταία {h[-1]}")
-    check(f"ENTSO-E {d}: σημεία που λείπουν (A03) παίρνουν την προηγούμενη τιμή", h[1] == round((5 + 5 + 5 + 8) / 4, 2), f"ώρα 2 = {h[1]}")
+    n_prev = U.hours_in_day(U.prev_day(d))
+    first = round(500 + sum(range(n_prev * 4 - 3, n_prev * 4 + 1)) / 4, 2)            # χθεσινή τελευταία ώρα αγοράς
+    last = round(sum(range((n - 2) * 4 + 1, (n - 1) * 4 + 1)) / 4, 2)                   # σημερινή ώρα αγοράς n−1
+    check(f"ENTSO-E {d}: {n} τιμές σε ώρα Ελλάδας· η 00–01 = η χθεσινή 23–24 CET (D33)",
+          len(h) == n and None not in h and h[0] == first and h[-1] == last, f"πρώτη {h[0]}, τελευταία {h[-1]}")
+    check(f"ENTSO-E {d}: σημεία που λείπουν (A03) παίρνουν την προηγούμενη τιμή", h[2] == round((5 + 5 + 5 + 8) / 4, 2), f"ώρα 2 = {h[2]}")
 
 
 # 4. SCADA + ISP
@@ -110,13 +116,13 @@ def scada_df(n):
     return pd.DataFrame(rows)
 
 
-def isp_df(n):
+def isp_df(n, tag=0):
     n_q = n * 4
     rows = [["Label"] + [f"Q{i}" for i in range(1, n_q + 1)] + ["TOTAL"],
             ["Total Market CBS (+XBID)"] + [None] * (n_q + 1)]
     country_q = []
     for k, (_, _, _, kw) in enumerate(U.COUNTRY_MAP):
-        q = [-(10.0 * (k + 1) + i // 4) for i in range(n_q)]          # MW ανά τεταρτάωρο
+        q = [-(10.0 * (k + 1) + i // 4 + tag) for i in range(n_q)]    # MW ανά τεταρτάωρο (tag: 100 για τη χθεσινή ημέρα)
         country_q.append(q)
         rows.append([kw] + q + [sum(q) / 4])                            # MWh
     rows.append(["Net Border Deviations"] + [None] * (n_q + 1))
@@ -129,10 +135,13 @@ def isp_df(n):
 days = {}
 logs = []
 for d, n in DAYS.items():
-    sheets = {"SCADA": {"S": scada_df(n)}, "ISP": {"I": isp_df(n)}}
+    pd_ = U.prev_day(d)
+    files = {("SCADA", d): {"S": scada_df(n)}, ("ISP", d): {"I": isp_df(n)},
+             ("ISP", pd_): {"I": isp_df(U.hours_in_day(pd_), tag=100)}}
     prices = [50.0 + h for h in range(n)]
-    with mock.patch.object(U, "fetch_admie_excel", lambda ds, cat: cat), \
-         mock.patch.object(U, "read_excel_safe", lambda f, what: sheets[what]), \
+    U.ISP_CACHE.clear()
+    with mock.patch.object(U, "fetch_admie_excel", lambda ds, cat: ("ISP" if cat.startswith("ISP") else "SCADA", ds)), \
+         mock.patch.object(U, "read_excel_safe", lambda f, what: files[f]), \
          mock.patch.object(U, "fetch_entsoe_mcp", lambda ds, c: list(prices)), \
          mock.patch.object(U, "log", lambda m: logs.append(m)):
         day = U.process_day(d)
@@ -143,11 +152,16 @@ for d, n in DAYS.items():
     ts = sum(day["Totals"]["SCADA"].values())
     check(f"{d}: SCADA άθροισμα ωρών = ημερήσιο σύνολο", abs(hs - ts) < 0.01, f"{hs:.0f} / {ts:.0f}")
     check(f"{d}: η στήλη SUM δεν διαβάστηκε ως ώρα", all(abs(h["SCADA_Net"]) < 1000 for h in H))
-    exp_last = sum(10.0 * (k + 1) + (n - 1) for k in range(len(U.COUNTRY_MAP)))
-    check(f"{d}: ISP {n} ώρες, η TOTAL δεν διαβάστηκε ως τεταρτάωρο",
-          len(H) == n and H[-1]["ISP_Net"] == exp_last and all(h["ISP_Net"] < 1000 for h in H), f"τελευταία {H[-1]['ISP_Net']}")
+    K = len(U.COUNTRY_MAP)
+    n_prev = U.hours_in_day(pd_)
+    exp_first = sum(10.0 * (k + 1) + (n_prev - 1) + 100 for k in range(K))          # χθεσινή τελευταία ώρα αγοράς
+    exp_second = sum(10.0 * (k + 1) + 0 for k in range(K))                          # σημερινή πρώτη ώρα αγοράς
+    exp_last = sum(10.0 * (k + 1) + (n - 2) for k in range(K))                      # σημερινή ώρα αγοράς n−1
+    check(f"{d}: ISP {n} ώρες σε ώρα Ελλάδας (D33): 00–01 = χθεσινή 23–24 CET, μετά η σημερινή από 00:00 CET",
+          len(H) == n and H[0]["ISP_Net"] == exp_first and H[1]["ISP_Net"] == exp_second and H[-1]["ISP_Net"] == exp_last
+          and all(h["ISP_Net"] < 1000 for h in H), f"{H[0]['ISP_Net']} / {H[1]['ISP_Net']} / {H[-1]['ISP_Net']}")
     hi, ti = sum(h["ISP_Net"] for h in H), sum(day["Totals"]["ISP"].values())
-    check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών", abs(hi - ti) < 0.01, f"{hi:.0f} / {ti:.0f}")
+    check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών (ίδιο 24ωρο με το SCADA, D33)", abs(hi - ti) < 0.05, f"{hi:.0f} / {ti:.0f}")
 
 check("επικεφαλίδα SCADA με 25 στήλες σε ημέρες 23 / 24 ωρών: καμία προειδοποίηση (D28)", not any("SCADA" in m for m in logs), str([m for m in logs if "SCADA" in m]))
 
@@ -160,6 +174,20 @@ with mock.patch.object(U, "log", lambda m: logs2.append(m)):
     used = [kw.upper() + sfx for _, kw, _, _ in U.COUNTRY_MAP for sfx in ("_IMP", "_EXP")] + ["EXPORTS-IMPORTS"]
     cols = U.scada_hour_cols(df_bad, 24, used)
 check("τιμή στη 25η στήλη γραμμής που διαβάζουμε: προειδοποίηση (D31)", len(cols) == 24 and any("πέρα από" in m for m in logs2), str(logs2))
+
+# μνήμη ISP (D33): δύο συνεχόμενες ημέρες → 3 αρχεία ISP, όχι 4
+calls = []
+def fake_fetch(ds, cat):
+    calls.append((cat, ds))
+    return ("ISP" if cat.startswith("ISP") else "SCADA", ds)
+F2 = {("ISP", x): {"I": isp_df(U.hours_in_day(x))} for x in ("2026-10-28", "2026-10-29", "2026-10-30")}
+F2.update({("SCADA", x): {"S": scada_df(24)} for x in ("2026-10-29", "2026-10-30")})
+U.ISP_CACHE.clear()
+with mock.patch.object(U, "fetch_admie_excel", fake_fetch), mock.patch.object(U, "read_excel_safe", lambda f, what: F2[f]), \
+     mock.patch.object(U, "fetch_entsoe_mcp", lambda ds, c: [50.0] * 24), mock.patch.object(U, "log", lambda m: None):
+    U.process_day("2026-10-29"); U.process_day("2026-10-30")
+n_isp = sum(1 for c, _ in calls if c.startswith("ISP"))
+check("δύο συνεχόμενες ημέρες: 3 λήψεις ISP (η κοινή μία φορά)", n_isp == 3, f"{n_isp} λήψεις")
 
 # 5. πληρότητα
 for d, n in DAYS.items():

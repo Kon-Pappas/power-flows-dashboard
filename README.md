@@ -16,6 +16,8 @@ Public dashboard of Greece's cross-border electricity flows: scheduled (ISP) ver
 
 Days with missing SCADA data or prices are marked ⚠ in the date picker and with an *Incomplete data* badge; their cash flow is not shown.
 
+All hourly figures are in **Greek time**: prices and the ISP schedule, published by the market in Central European Time, are shifted by one hour to match the SCADA measurements.
+
 ## Data sources
 
 - **IPTO / ADMIE**: SCADA (actual flows) and ISP (scheduled flows), daily files.

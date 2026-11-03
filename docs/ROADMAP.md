@@ -24,7 +24,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 ## Hub-wide (all repositories in one pass)
 
-- H06 mobile secondary box, which includes H01 (no divider) and H05 (pill in the box): Flows done (D29), BESS done, live-greekpower to do; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
+- H07 market vs SCADA clock (Flows done, D33); H06 mobile secondary box, which includes H01 (no divider) and H05 (pill in the box): Flows done (D29), BESS done, live-greekpower to do; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts — done in batch 7
 
@@ -56,7 +56,7 @@ Rejected for now: one file per day, as in live-greekpower — far more files and
 
 - ~~Verify the 25-hour day of 25 Oct (K07)~~: it was cut to 24 hours; fixed in batch 10 (D26). After the upload: fetch 25 Oct again (Actions → Run workflow, start and end 2026-10-25)
 - After batch 12: fetch the whole history again so the hourly ISP of past days leaves out Crete (D27): Actions → Run workflow, start 2026-06-01, end empty (= today, D28); ≈15–40 s per day, roughly 1 hour. Not around 07:02, when the daily run starts
-- Clock alignment of SCADA and prices (K11): measure before deciding
+- ~~Clock alignment of SCADA and prices (K11)~~: measured and fixed in batch 15 (D33). After the upload: fetch the history again, month by month as on 3 Nov 2026 (2026-06-01 … 2026-10-31 in five runs; November follows with the daily runs)
 
 ## Later
 

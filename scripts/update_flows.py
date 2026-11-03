@@ -89,6 +89,21 @@ def hours_in_day(date_str):
     return day_window_utc(date_str)[2]
 
 
+def athens_window_utc(date_str):
+    """(start_utc, end_utc, n_hours) της ημέρας σε ώρα Ελλάδας (D33). Όλα τα ωριαία αποθηκεύονται σε αυτό το 24ωρο:
+    ώρα 00–01 Ελλάδας = 23:00–24:00 CET της προηγούμενης ημέρας αγοράς. Ίδιο πλήθος ωρών με την ημέρα αγοράς
+    (η αλλαγή ώρας γίνεται την ίδια στιγμή σε Ελλάδα και Βρυξέλλες)."""
+    d = datetime.strptime(date_str, "%Y-%m-%d")
+    nxt = d + timedelta(days=1)
+    start = datetime(d.year, d.month, d.day, tzinfo=ATHENS).astimezone(timezone.utc).replace(tzinfo=None)
+    end = datetime(nxt.year, nxt.month, nxt.day, tzinfo=ATHENS).astimezone(timezone.utc).replace(tzinfo=None)
+    return start, end, int(round((end - start).total_seconds() / 3600))
+
+
+def prev_day(date_str):
+    return (datetime.strptime(date_str, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
+
+
 def get_entsoe_period(date_str):
     start, end, _ = day_window_utc(date_str)
     return start.strftime("%Y%m%d%H00"), end.strftime("%Y%m%d%H00")
@@ -102,16 +117,18 @@ def parse_entsoe_time(txt):
 
 
 def fetch_entsoe_mcp(date_str, country_code):
-    """Επιστρέφει λίστα με μία τιμή ανά ώρα της ημέρας (23, 24 ή 25). Όπου λείπει τιμή -> None (όχι 0)."""
-    n_hours = hours_in_day(date_str)
+    """Μία τιμή ανά ώρα της ημέρας σε ώρα ΕΛΛΑΔΑΣ (23, 24 ή 25· D33). Όπου λείπει τιμή -> None (όχι 0).
+    Η αγορά δίνει τιμές ανά ημέρα CET· ζητούνται δύο ημέρες αγοράς (χθες και σήμερα) και κρατιούνται οι θέσεις
+    από τα μεσάνυχτα Ελλάδας (= 23:00 CET χθες) για n_hours ώρες."""
+    target_start_utc, _, n_hours = athens_window_utc(date_str)
     n_q = n_hours * 4
     empty = [None] * n_hours
     if not ENTSOE_TOKEN:
         log(f"   ! MCP {country_code}: δεν υπάρχει ENTSOE_TOKEN")
         return empty
     domain = ENTSOE_DOMAINS[country_code]
-    periodStart, periodEnd = get_entsoe_period(date_str)
-    target_start_utc = datetime.strptime(periodStart, "%Y%m%d%H00")
+    periodStart = get_entsoe_period(prev_day(date_str))[0]
+    periodEnd = get_entsoe_period(date_str)[1]
 
     url = (f"https://web-api.tp.entsoe.eu/api?securityToken={ENTSOE_TOKEN}&documentType=A44"
            f"&in_Domain={domain}&out_Domain={domain}&periodStart={periodStart}&periodEnd={periodEnd}")
@@ -276,11 +293,11 @@ def extract_isp_country_totals(df):
     return totals, None
 
 
-def extract_isp_country_hourly(df, n_hours, totals):
-    """Ωριαίο καθαρό ISP από τις ΙΔΙΕΣ γραμμές χωρών με τα σύνολα ('Total Market CBS (+XBID)'), D27.
+def extract_isp_country_quarters(df, n_hours, totals):
+    """Τα τεταρτάωρα (MW) κάθε χώρας από τις ΙΔΙΕΣ γραμμές με τα σύνολα ('Total Market CBS (+XBID)'), D27.
     Η γραμμή 'Net CBS Schedules' περιλαμβάνει και τη ροή προς Κρήτη (AC + DC, ≈ 280 MW), που ΔΕΝ είναι
-    διασυνοριακή ροή· εδώ μένει έξω, όπως στα σύνολα και στο SCADA. Τα τεταρτάωρα είναι MW, η τελευταία
-    στήλη MWh: κάθε χώρα ελέγχεται ότι Σ(τεταρτάωρα)/4 = σύνολο. Επιστρέφει (λίστα n_hours, None) ή (None, λόγος)."""
+    διασυνοριακή ροή· εδώ μένει έξω, όπως στα σύνολα και στο SCADA. Κάθε χώρα ελέγχεται ότι
+    Σ(τεταρτάωρα)/4 = σύνολο (MWh). Επιστρέφει ({χώρα: τεταρτάωρα}, None) ή (None, λόγος). Ρολόι: ημέρα αγοράς (CET)."""
     headers = df.index[df[0].astype(str) == ISP_CBS_SECTION].tolist()
     if not headers or totals is None:
         return None, "δεν υπάρχουν σύνολα χωρών από την ενότητα 'Total Market CBS (+XBID)'"
@@ -289,7 +306,7 @@ def extract_isp_country_hourly(df, n_hours, totals):
     end = min(end_candidates.min(), start + 10) if len(end_candidates) else start + 10
     window = df.iloc[start:end]
     q_cols = isp_quarter_cols(df, n_hours)
-    net_q = np.zeros(n_hours * 4)
+    out = {}
     for name, _, _, kw in COUNTRY_MAP:
         match = window[window[0].astype(str).str.contains(kw, case=False, na=False)]
         if match.empty:
@@ -299,8 +316,34 @@ def extract_isp_country_hourly(df, n_hours, totals):
         tot = totals.get(name)
         if tot is None or abs(mwh - tot) > max(2.0, 0.01 * abs(tot)):
             return None, f"{name}: Σ τεταρτάωρων/4 = {mwh:.0f} ≠ σύνολο {tot} MWh"
-        net_q += q
-    return to_list(net_q.reshape(n_hours, 4).mean(axis=1) * -1), None
+        out[name] = q
+    return out, None
+
+
+ISP_CACHE = {}
+
+
+def isp_market_day(date_str):
+    """Το ISP μιας ημέρας αγοράς (CET), μία λήψη ανά τρέξιμο: τεταρτάωρα ανά χώρα (χωρίς Κρήτη) ή, εφεδρικά,
+    η γραμμή Net CBS Schedules (με Κρήτη). Επιστρέφει dict ή None αν δεν υπάρχει αρχείο."""
+    if date_str in ISP_CACHE:
+        return ISP_CACHE[date_str]
+    out = None
+    n = hours_in_day(date_str)
+    f = fetch_admie_excel(date_str, "ISP2ISPResults")
+    if f:
+        sheets = read_excel_safe(f, "ISP")
+        df = pick_sheet(sheets, 0, "Net CBS Schedules", "ISP")
+        if df is not None:
+            totals, err = extract_isp_country_totals(df)
+            cq, why = extract_isp_country_quarters(df, n, totals)
+            net_q = None
+            cbs_row = df[df[0] == 'Net CBS Schedules']
+            if not cbs_row.empty:
+                net_q = np.nan_to_num(cbs_row.iloc[0, isp_quarter_cols(df, n)].values.astype(float))
+            out = {"n": n, "country_q": cq, "why": why or err, "net_q": net_q}
+    ISP_CACHE[date_str] = out
+    return out
 
 
 def find_header_cols(df, marker):
@@ -473,39 +516,28 @@ def process_day(date_str):
             else:
                 log("   ! SCADA: η ημέρα καταχωρείται ως ΜΗ ΔΙΑΘΕΣΙΜΗ (κενή)")
 
-    # ---- ISP ---------------------------------------------------------------
+    # ---- ISP (σε ώρα Ελλάδας, D33) -------------------------------------------
+    # Ώρα 00–01 Ελλάδας = η τελευταία ώρα της προηγούμενης ημέρας αγοράς· οι υπόλοιπες = οι πρώτες n−1 ώρες
+    # της σημερινής. Τα σύνολα ανά χώρα είναι το άθροισμα αυτών των ωρών, ίδιο 24ωρο με το SCADA.
     isp_totals = {c: None for c in COUNTRIES}
     isp_net_h = none_list(n_hours)
-
-    isp_file = fetch_admie_excel(date_str, "ISP2ISPResults")
-    if isp_file:
-        sheets = read_excel_safe(isp_file, "ISP")
-        df = pick_sheet(sheets, 0, "Net CBS Schedules", "ISP")
-        if df is not None:
-            totals, err = extract_isp_country_totals(df)
-            if totals is not None:
-                isp_totals = totals
-            else:
-                log(f"   ! ISP: {err} — καταφεύγω στην παλιά μέθοδο (λιγότερο ακριβής όταν υπήρξε ενδοημερήσιο trading)")
-                for name, _, _, kw in COUNTRY_MAP:
-                    v = extract_last_col_val(df, kw, 0)
-                    isp_totals[name] = None if v is None else v * -1
-            try:
-                hourly, why = extract_isp_country_hourly(df, n_hours, totals)
-                if hourly is not None:
-                    isp_net_h = hourly
-                else:
-                    # Εφεδρικά: η γραμμή Net CBS Schedules, που περιλαμβάνει και τη ροή προς Κρήτη (D27)
-                    log(f"   ! ISP ωριαίο από τις χώρες: {why} — χρησιμοποιείται η Net CBS Schedules (ΜΕ τη ροή προς Κρήτη)")
-                    cbs_row = df[df[0] == 'Net CBS Schedules']
-                    if not cbs_row.empty:
-                        q_cols = isp_quarter_cols(df, n_hours)
-                        vals_q = np.nan_to_num(cbs_row.iloc[0, q_cols].values.astype(float))
-                        isp_net_h = to_list(vals_q.reshape(n_hours, 4).mean(axis=1) * -1)
-                    else:
-                        log("   ! ISP: δεν βρέθηκε η γραμμή Net CBS Schedules")
-            except Exception as e:
-                log(f"   ! ISP: σφάλμα ωριαίου ({type(e).__name__})")
+    cur, prv = isp_market_day(date_str), isp_market_day(prev_day(date_str))
+    k = (n_hours - 1) * 4
+    if cur and prv and cur["country_q"] and prv["country_q"]:
+        net = np.zeros(n_hours)
+        for name in COUNTRIES:
+            q = np.concatenate([prv["country_q"][name][-4:], cur["country_q"][name][:k]])
+            h = q.reshape(n_hours, 4).mean(axis=1) * -1
+            isp_totals[name] = float(round(h.sum(), 2))
+            net += h
+        isp_net_h = to_list(net)
+    elif cur and prv and cur["net_q"] is not None and prv["net_q"] is not None:
+        why = (cur["why"] if not cur["country_q"] else prv["why"])
+        log(f"   ! ISP ωριαίο από τις χώρες: {why} — χρησιμοποιείται η Net CBS Schedules (ΜΕ τη ροή προς Κρήτη), χωρίς σύνολα χωρών")
+        q = np.concatenate([prv["net_q"][-4:], cur["net_q"][:k]])
+        isp_net_h = to_list(q.reshape(n_hours, 4).mean(axis=1) * -1)
+    else:
+        log("   ! ISP: λείπει το αρχείο της ημέρας ή της προηγούμενης (χρειάζονται και τα δύο για την ώρα Ελλάδας)")
 
     # ---- Τιμές -------------------------------------------------------------
     mcp = {
