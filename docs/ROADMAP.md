@@ -24,7 +24,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 ## Hub-wide (all repositories in one pass)
 
-- H01 one divider on mobile (Flows done as pilot, D25); H05 status pill inside the picker box; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
+- H06 mobile secondary box, which includes H01 (no divider) and H05 (pill in the box): Flows done (D29), BESS done, live-greekpower to do; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
 
 ## Phase 3: charts — done in batch 7
 
@@ -36,6 +36,11 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 - ~~Country cards on mobile, "–" for no volume~~ (D23)
 - ~~No all-caps labels~~ (D24)
+
+## Mobile header (H06) — done in batch 13
+
+- ~~Secondary box, pill inside, tabs 2 + 2, no divider, up-arrow~~ (D29)
+- ~~Methodology: Detailed opens at the tab's section; new title~~ (D30)
 
 ## Data files — later, not urgent
 

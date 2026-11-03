@@ -105,6 +105,8 @@ def scada_df(n):
         rows.append([None, kw + "_EXP"] + exp + pad + [sum(exp)])
         net = [a + (i - e) for a, i, e in zip(net, imp, exp)]
     rows.append([None, "EXPORTS-IMPORTS"] + [-v for v in net] + pad + [-sum(net)])
+    # Όπως το πραγματικό αρχείο από 18 Ιουν 2026: άλλη γραμμή με τιμή και στη 25η στήλη (δεν τη διαβάζουμε)
+    rows.append([None, "OTHER_LINE"] + [1.0] * 25 + [25.0])
     return pd.DataFrame(rows)
 
 
@@ -148,6 +150,16 @@ for d, n in DAYS.items():
     check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών", abs(hi - ti) < 0.01, f"{hi:.0f} / {ti:.0f}")
 
 check("επικεφαλίδα SCADA με 25 στήλες σε ημέρες 23 / 24 ωρών: καμία προειδοποίηση (D28)", not any("SCADA" in m for m in logs), str([m for m in logs if "SCADA" in m]))
+
+# η 25η στήλη έχει τιμή σε γραμμή που ΔΙΑΒΑΖΟΥΜΕ: πρέπει να προειδοποιήσει (D31)
+df_bad = scada_df(24)
+imp_row = df_bad.index[df_bad[1] == U.COUNTRY_MAP[0][1] + "_IMP"][0]
+df_bad.iloc[imp_row, 2 + 24] = 99.0
+logs2 = []
+with mock.patch.object(U, "log", lambda m: logs2.append(m)):
+    used = [kw.upper() + sfx for _, kw, _, _ in U.COUNTRY_MAP for sfx in ("_IMP", "_EXP")] + ["EXPORTS-IMPORTS"]
+    cols = U.scada_hour_cols(df_bad, 24, used)
+check("τιμή στη 25η στήλη γραμμής που διαβάζουμε: προειδοποίηση (D31)", len(cols) == 24 and any("πέρα από" in m for m in logs2), str(logs2))
 
 # 5. πληρότητα
 for d, n in DAYS.items():

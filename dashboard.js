@@ -126,6 +126,10 @@ const i18n = {
         transitInfoBtn: "How transit removal works",
         pillComplete: "Complete data",
         pillIncomplete: "Incomplete data",
+        pillCompleteShort: "Complete",
+        pillIncompleteShort: "Incomplete",
+        btnMethodologyShort: "Methodology",
+        toTop: "Back to top",
         monthLabel: "Month:",
         tabTotals: "Daily ISP vs SCADA",
         tabHourly: "Hourly Profiles",
@@ -160,7 +164,7 @@ const i18n = {
         mtdChartTitleCash: "Cumulative Financial Position (€)",
         mtdChartTitleVol: "Cumulative Physical Volume (GWh) - Gross & Net",
 
-        modalTitle: "Methodology & Core Assumptions",
+        modalTitle: "Methodology, assumptions and limitations",
         modalModeShort: "Short",
         modalModeDetailed: "Detailed",
         modalCloseBtn: "Close",
@@ -206,6 +210,10 @@ const i18n = {
         transitInfoBtn: "Πώς λειτουργεί η αφαίρεση transit",
         pillComplete: "Πλήρη δεδομένα",
         pillIncomplete: "Ελλιπή δεδομένα",
+        pillCompleteShort: "Πλήρη",
+        pillIncompleteShort: "Ελλιπή",
+        btnMethodologyShort: "Μεθοδολογία",
+        toTop: "Επάνω",
         monthLabel: "Μήνας:",
         tabTotals: "Ημερήσια ροή",
         tabHourly: "Ωριαία προφίλ",
@@ -240,7 +248,7 @@ const i18n = {
         mtdChartTitleCash: "Σωρευτική οικονομική θέση (€)",
         mtdChartTitleVol: "Σωρευτικός φυσικός όγκος (GWh) – ακαθάριστος & καθαρός",
 
-        modalTitle: "Μεθοδολογία & παραδοχές",
+        modalTitle: "Μεθοδολογία, παραδοχές και περιορισμοί",
         modalModeShort: "Σύντομη",
         modalModeDetailed: "Αναλυτική",
         modalCloseBtn: "Κλείσιμο",
@@ -457,7 +465,8 @@ function renderMethodologySection(section, items) {
         const idAttr = anchor ? ` id="${anchor}" class="scroll-mt-4"` : '';
         return `<li${idAttr}>${leadHtml}${escapeHtml(text)}</li>`;
     }).join('');
-    return `<div class="mb-5 last:mb-0">
+    const idAttr = section._id ? ` id="${section._id}"` : '';
+    return `<div class="mb-5 last:mb-0"${idAttr}>
         <div class="text-acc-400 text-sm font-bold mb-2">${escapeHtml(section.title)}</div>
         <ul class="list-disc pl-5 space-y-2 marker:text-slate-500">${li}</ul>
     </div>`;
@@ -472,7 +481,7 @@ function renderMethodology() {
     if (methodologyMode === 'short') {
         html += renderMethodologySection(d.sections[0], d.sections[0].shortItems);
     } else {
-        d.sections.forEach(sec => { html += renderMethodologySection(sec, sec.items); });
+        d.sections.forEach((sec, i) => { html += renderMethodologySection({ ...sec, _id: `msec-${i}` }, sec.items); });
     }
     bodyEl.innerHTML = html;
 
@@ -486,11 +495,28 @@ function renderMethodology() {
     }
 }
 
+// Η ενότητα της Αναλυτικής για κάθε tab (D30): η σειρά των ενοτήτων είναι ίδια σε ελληνικά και αγγλικά
+const METHOD_SECTION_OF_TAB = { totals: 1, hourly: 2, arbitrage: 3, mtd: 4 };
+
+// Μετακινεί το σώμα του παραθύρου ώστε το στοιχείο να είναι στην κορυφή του, αμέσως (χωρίς χρονοκαθυστέρηση)
+function scrollModalTo(el) {
+    const body = document.getElementById('modalBody');
+    if (!body || !el) return;
+    // offsetTop μέσα στο σώμα (που είναι relative): δεν επηρεάζεται από την κίνηση ανοίγματος (scale) του παραθύρου
+    let y = 0, n = el;
+    while (n && n !== body) { y += n.offsetTop; n = n.offsetParent; }
+    body.scrollTop = Math.max(0, y - 8);
+}
+
 function setMethodologyMode(mode) {
     methodologyMode = mode;
     const bodyEl = document.getElementById('modalBody');
     if (bodyEl) bodyEl.scrollTop = 0;
     renderMethodology();
+    // D30: η «Αναλυτική» ανοίγει κατευθείαν στην ενότητα του tab που βλέπει ο επισκέπτης
+    if (mode === 'detailed' && typeof currentTab !== 'undefined') {
+        scrollModalTo(document.getElementById(`msec-${METHOD_SECTION_OF_TAB[currentTab]}`));
+    }
 }
 
 // Χρωματική παλέτα χωρίς επικάλυψη με τα KPIs
@@ -511,6 +537,8 @@ function applyStaticText() {
     document.getElementById('nextUpdateLabel').innerText = t.nextUpdate;
     document.getElementById('nextUpdateLabelMobile').innerText = t.nextUpdateMobile;
     document.getElementById('btnMethodology').innerText = t.btnMethodology;
+    document.getElementById('btnMethodologyShort').innerText = t.btnMethodologyShort;
+    const tt = document.getElementById('toTopBtn'); if (tt) { tt.setAttribute('aria-label', t.toTop); tt.title = t.toTop; }
     
     document.getElementById('tabBtnTotals').innerText = t.tabTotals;
     document.getElementById('tabBtnHourly').innerText = t.tabHourly;
@@ -1105,12 +1133,15 @@ const PILL = {
     orange: 'bg-orange-500/10 border-orange-400/40 text-orange-300'
 };
 function updateStatusBadge(dayData) {
-    const el = document.getElementById('statusPill');
-    if (!el) return;
-    if (!dayData || currentTab === 'mtd') { el.className = 'hidden'; return; }
-    const t = i18n[currentLang], ok = dayComplete(dayData);
-    el.className = `inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-bold ${ok ? PILL.green : PILL.orange}`;
-    el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(ok ? t.pillComplete : t.pillIncomplete)}`;
+    // Desktop: pill στην κεφαλίδα (D14)· κινητό: μικρό pill μέσα στο κουτί ημέρας (D29, H05)
+    const head = document.getElementById('statusPill'), box = document.getElementById('statusPillBox');
+    if (!head || !box) return;
+    if (!dayData || currentTab === 'mtd') { head.className = 'hidden'; box.className = 'hidden'; return; }
+    const t = i18n[currentLang], ok = dayComplete(dayData), tone = ok ? PILL.green : PILL.orange;
+    head.className = `hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-bold ${tone}`;
+    head.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(ok ? t.pillComplete : t.pillIncomplete)}`;
+    box.className = `md:hidden shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-bold ${tone}`;
+    box.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-current shrink-0"></span>${escapeHtml(ok ? t.pillCompleteShort : t.pillIncompleteShort)}`;
 }
 
 // Tab «Arbitrage»
@@ -1385,6 +1416,29 @@ async function boot() {
 
 document.getElementById('dateSelect').addEventListener('change', renderCharts);
 document.getElementById('monthSelect').addEventListener('change', renderCharts);
+
+// ---- Κουμπί «επάνω» (κινητό, D29 / BESS D72) ----
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: REDUCE_MOTION ? 'auto' : 'smooth' });
+}
+(function initToTop() {
+    const btn = document.getElementById('toTopBtn');
+    const first = document.querySelector('[role="tab"]');
+    const nav = first && first.parentElement;
+    if (!btn || !nav) return;
+    let ticking = false;
+    const update = () => {
+        ticking = false;
+        const show = nav.getBoundingClientRect().bottom < 0;      // τα tabs έχουν περάσει πάνω από την οθόνη
+        btn.classList.toggle('opacity-0', !show);
+        btn.classList.toggle('pointer-events-none', !show);
+        btn.tabIndex = show ? 0 : -1;
+        btn.setAttribute('aria-hidden', show ? 'false' : 'true');
+    };
+    window.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+})();
 
 // Τα scripts είναι defer, οπότε το Chart.js και το plugin έχουν ήδη φορτώσει εδώ.
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

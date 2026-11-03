@@ -16,8 +16,9 @@ Same structure in every hub page, so a fix here alone would make this page diffe
 
 | # | Issue | Seen in | Proposal |
 |---|---|---|---|
-| H01 | Mobile: two divider lines between the header and the tabs (`header` bottom border + tabs top border `pt-5 mt-2 border-t … md:border-none`) | live-greekpower (same classes); to check in BESS, Gas-Power, BigHydro. **Flows fixed as pilot (D25)** | Same change as Flows D25: drop the tabs' top border and spacing on mobile |
+| H01 | Mobile: divider lines between the header and the tabs | live-greekpower; **Flows: none on mobile (D29, which supersedes D25)**; BESS done (its D71) | Covered by H06 |
 | H02 | Header labels on mobile: Flows uses short labels ("Updated:" / "Next:", "Ενημέρωση:" / "Επόμενη:"); live-greekpower shortens only "Next" | Flows, live-greekpower | Use Flows' short labels everywhere || H05 | Mobile height: the status pill (complete data / live status) sits on its own line under Last / Next update; it could live inside the picker box, next to the date, saving one more line | Flows, live-greekpower (same header) | Owner's idea (20 Oct 2026), kept for the hub-wide pass because it changes the header of every page |
+| H06 | **Mobile secondary box** (playbook): day / month with the completeness pill inside, Methodology + GR \| EN in one row, dark wells on a lighter panel, tabs as the main filled buttons (two-line labels), no divider, 12 px gaps, up-arrow button, Methodology opening at the tab's section. Includes H05 (pill inside the picker box) | **Flows ✓ (D29, D30)**; BESS ✓ (D71–D75); live-greekpower: to do | Same structure on every page |
 
 ## Hub conventions
 

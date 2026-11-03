@@ -22,7 +22,7 @@
         @media (prefers-reduced-motion: reduce) { #loading-overlay *, #loading-overlay *::before, #loading-overlay *::after { transition: none !important; animation: none !important; } }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 flex flex-col justify-between relative">
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 max-md:pb-20 md:p-8 flex flex-col justify-between relative">
 
     <!-- Loading overlay (D03, όπως live-greekpower D47 / BigHydro): όλα τα βήματα ορατά από την αρχή, αχνά·
          κάθε βήμα «ανάβει», κάνει τη δουλειά του και ΜΕΤΑ η μπάρα γεμίζει ομαλά. Το 1ο ακολουθεί την πραγματική λήψη. -->
@@ -72,6 +72,13 @@
         </div>
     </div>
 
+    <!-- ΚΟΥΜΠΙ «ΕΠΑΝΩ» (μόνο κινητό, D29 / BESS D72): όταν τα tabs βγουν από την οθόνη -->
+    <button type="button" id="toTopBtn" onclick="scrollToTop()" aria-label="Back to top" title="Back to top" tabindex="-1" aria-hidden="true"
+        class="md:hidden fixed right-4 z-40 w-12 h-12 rounded-full bg-slate-800/95 border border-slate-600 text-acc-300 shadow-lg shadow-black/40 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-200 hover:bg-slate-700"
+        style="bottom: calc(1rem + env(safe-area-inset-bottom, 0px));">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
+    </button>
+
     <!-- Methodology Modal -->
     <div id="methodologyModal" class="fixed inset-0 z-[9998] bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center px-4 transition-opacity duration-300 opacity-0" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="bg-slate-800 border border-slate-700 rounded-xl shadow-2xl w-full max-w-2xl transform transition-transform duration-300 scale-95 flex flex-col max-h-[85vh]" id="modalContent">
@@ -95,7 +102,7 @@
                 </div>
             </div>
 
-            <div class="p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto flex-1 scroll-thin" id="modalBody"></div>
+            <div class="relative p-6 pt-4 text-sm text-slate-300 leading-relaxed overflow-y-auto flex-1 scroll-thin" id="modalBody"></div>
             
             <div class="p-4 border-t border-slate-700 flex justify-end shrink-0">
                 <button type="button" onclick="toggleModal(false)" class="px-4 py-2 border border-slate-600 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-lg transition" id="modalCloseBtn">Close</button>
@@ -103,11 +110,12 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto space-y-6 w-full">
+    <div class="max-w-7xl mx-auto space-y-3 md:space-y-6 w-full">
         
         <!-- Header -->
-        <header class="border-b border-slate-700 pb-4">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <!-- D29 (H06): στο κινητό χωρίς γραμμή κάτω από την κεφαλίδα· κενά 12 px -->
+        <header class="md:border-b border-slate-700 pb-0 md:pb-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
                 
                 <!-- ΑΡΙΣΤΕΡΗ ΣΤΗΛΗ -->
                 <div class="flex flex-col items-start w-full md:w-auto">
@@ -123,39 +131,42 @@
                     <div class="flex items-center gap-3">
                         <h1 class="text-3xl font-bold text-acc-400" id="mainTitle">Greek Power Flows Analytics</h1>
                     </div>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-400 mt-2" id="updateTimesRow">
+                    <div class="flex flex-nowrap md:flex-wrap items-center gap-x-3 max-[340px]:gap-x-1.5 md:gap-x-4 gap-y-2 whitespace-nowrap text-[11px] md:text-xs text-slate-400 mt-2" id="updateTimesRow">
                         <div><span class="hidden md:inline" id="lastUpdateLabel">Last Update:</span><span class="md:hidden" id="lastUpdateLabelMobile">Updated:</span> <strong id="lastUpdateVal" class="text-acc-300">–</strong></div>
+                        <span class="md:hidden text-slate-600">·</span>
                         <div><span class="hidden md:inline" id="nextUpdateLabel">Next Update:</span><span class="md:hidden" id="nextUpdateLabelMobile">Next:</span> <strong id="nextUpdateVal" class="text-slate-200">–</strong></div>
                         <!-- Πληρότητα της επιλεγμένης ημέρας (D14, θέση και σχήμα όπως το pill του live) -->
                         <span id="statusPill" class="hidden"></span>
                     </div>
                 </div>
                 
-                <!-- ΔΕΞΙΑ ΣΤΗΛΗ (Controls) -->
-                <div class="flex flex-col md:items-end w-full md:w-auto mt-4 md:mt-0 gap-3">
+                <!-- ΔΕΞΙΑ ΣΤΗΛΗ (Controls)· στο κινητό ένα κουτί δευτερευόντων (D29, H06): πάνελ με περίγραμμα, μέσα σκούρα «πηγάδια» -->
+                <div id="ctrlBox" class="flex flex-col items-stretch md:items-end w-full md:w-auto gap-2 md:gap-3 max-md:bg-slate-800/45 max-md:border max-md:border-slate-600/50 max-md:rounded-xl max-md:p-2">
                     
                     <!-- ΓΡΑΜΜΗ 1 (PC) / ΠΑΝΩ (Mobile): Date/Month Pickers -->
-                    <div class="w-full md:w-auto flex flex-col md:flex-row gap-3 order-1">
+                    <div class="w-full md:w-auto flex flex-col md:flex-row gap-3">
                         <!-- Ένα κουτί επιλογής (D14, όπως live): «Ημέρα» στα τρία πρώτα tabs, «Μήνας» στο MTD -->
-                        <div id="pickerBox" class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700 shadow-sm h-12 md:h-10 pl-3 pr-1">
-                            <label for="dateSelect" class="text-xs text-slate-300 font-medium whitespace-nowrap" id="pickerLabel">Date:</label>
-                            <select id="dateSelect" class="bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none border border-slate-700 focus:border-acc-400 transition cursor-pointer w-full md:w-auto"><option>–</option></select>
-                            <select id="monthSelect" class="hidden bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none border border-slate-700 focus:border-acc-400 transition cursor-pointer w-full md:w-auto"><option>–</option></select>
+                        <div id="pickerBox" class="w-full md:w-auto flex items-center justify-between md:justify-end gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700 shadow-sm max-md:shadow-none max-md:bg-slate-950/70 max-md:border-slate-700/60 h-10 pl-3 pr-1">
+                            <label for="dateSelect" class="max-[340px]:hidden text-xs text-slate-300 font-medium whitespace-nowrap" id="pickerLabel">Date:</label>
+                            <select id="dateSelect" class="bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none border border-slate-700 focus:border-acc-400 transition cursor-pointer min-w-0 flex-1 md:flex-none md:w-auto truncate"><option>–</option></select>
+                            <select id="monthSelect" class="hidden bg-slate-900 text-slate-200 text-sm font-semibold rounded p-1 outline-none border border-slate-700 focus:border-acc-400 transition cursor-pointer min-w-0 flex-1 md:flex-none md:w-auto truncate"><option>–</option></select>
+                            <!-- Pill πληρότητας μέσα στο κουτί, μόνο στο κινητό (D29, H05) -->
+                            <span id="statusPillBox" class="hidden"></span>
                         </div>
                     </div>
 
                     <!-- ΓΡΑΜΜΗ 2 (PC) / ΚΑΤΩ (Mobile): Methodology & Language -->
-                    <div class="w-full md:w-auto flex flex-col-reverse md:flex-row gap-3 order-2">
+                    <div class="w-full md:w-auto flex gap-2 md:gap-3">
                         <!-- Methodology Button -->
-                        <button type="button" id="btnMethodologyWrap" onclick="openMethodology()" class="w-full md:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 text-xs text-slate-300 transition shadow-sm h-12 md:h-10">
+                        <button type="button" id="btnMethodologyWrap" onclick="openMethodology()" class="flex-1 md:flex-none md:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 max-md:bg-slate-950/70 max-md:border-slate-700/60 max-md:shadow-none rounded-lg px-4 text-xs text-slate-300 transition shadow-sm h-12 md:h-10">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
-                            <span id="btnMethodology">Methodology & Assumptions</span>
+                            <span id="btnMethodology" class="hidden md:inline">Methodology & Assumptions</span><span id="btnMethodologyShort" class="md:hidden">Methodology</span>
                         </button>
 
                         <!-- Lang Switcher -->
-                        <div class="w-full md:w-auto flex gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1 text-xs font-bold shadow-sm h-12 md:h-10">
-                            <button onclick="setLang('el')" id="btnGr" class="flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition">GR</button>
-                            <button onclick="setLang('en')" id="btnEn" class="flex-1 md:flex-none flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition">EN</button>
+                        <div class="shrink-0 flex gap-1 bg-slate-800 border border-slate-700 max-md:bg-slate-950/70 max-md:border-slate-700/60 max-md:shadow-none rounded-lg p-1 text-xs font-bold shadow-sm h-10">
+                            <button onclick="setLang('el')" id="btnGr" class="flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition">GR</button>
+                            <button onclick="setLang('en')" id="btnEn" class="flex items-center justify-center px-4 rounded text-slate-400 hover:text-white transition">EN</button>
                         </div>
                     </div>
                 </div>
@@ -348,7 +359,7 @@
             if (anchor && typeof methodologyMode !== 'undefined') methodologyMode = 'detailed';
             toggleModal(true);
             document.getElementById('modalBody').scrollTop = 0;
-            if (anchor) setTimeout(() => { const el = document.getElementById(anchor); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 320);
+            if (anchor) scrollModalTo(document.getElementById(anchor));   // άμεσα (D30)
         }
 
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleModal(false); });
@@ -360,7 +371,8 @@
 
         // Tabs όπως στο live (D14): ένα accent για όλα τα tabs, χωρίς ειδικό χρώμα για το MTD
         var currentTab = 'totals';
-        const TAB_BASE = 'tab-btn flex items-center justify-center text-xs md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-nowrap px-2 border md:border-0 md:border-b-2 cursor-pointer ';
+        // D29 (H06): στο κινητό η ετικέτα μπορεί να πιάσει δύο γραμμές· ποτέ οριζόντια κύλιση
+        const TAB_BASE = 'tab-btn flex items-center justify-center text-xs max-[340px]:text-[11px] md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-normal md:whitespace-nowrap leading-tight text-center px-2 max-[340px]:px-1 border md:border-0 md:border-b-2 cursor-pointer ';
         const TAB_ON = 'bg-acc-400 text-slate-900 border-acc-400 md:bg-transparent md:text-acc-400 md:border-b-acc-400';
         const TAB_OFF = 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:text-acc-200';
         const TABS = { totals: ['tabBtnTotals', 'viewTotals'], hourly: ['tabBtnHourly', 'viewHourly'], arbitrage: ['tabBtnArbitrage', 'viewArbitrage'], mtd: ['tabBtnMTD', 'viewMTD'] };

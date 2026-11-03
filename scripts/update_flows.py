@@ -312,7 +312,7 @@ def find_header_cols(df, marker):
     return None, None
 
 
-def scada_hour_cols(df, n_hours):
+def scada_hour_cols(df, n_hours, used_labels=None):
     """Οι στήλες των ωρών του SCADA, με τη σειρά (D26, D28). Από την επικεφαλίδα: οι αριθμοί 1…25 πριν από τη στήλη SUM,
     που δεν διαβάζεται ποτέ ως ώρα· το αρχείο έχει ΠΑΝΤΑ 25 στήλες ωρών (η 25η κενή στις κανονικές ημέρες), οπότε
     κρατούνται οι πρώτες n_hours. Χωρίς επικεφαλίδα: οι n_hours στήλες μετά το όνομα (στήλη 2 και μετά)."""
@@ -330,7 +330,13 @@ def scada_hour_cols(df, n_hours):
         extra = cols[n_hours:]
         if extra:
             hdr_row = next(i for i in range(len(df)) if "SUM" in [str(c).strip().upper() for c in df.iloc[i].tolist()])
-            vals = pd.to_numeric(df.iloc[hdr_row + 1:, extra].stack(), errors="coerce").dropna()
+            rows = df.iloc[hdr_row + 1:]
+            if used_labels:
+                # D31: μόνο οι γραμμές που διαβάζουμε (εισαγωγές / εξαγωγές ανά χώρα, EXPORTS-IMPORTS)·
+                # από τις 18 Ιουν 2026 το αρχείο έχει κι άλλες γραμμές με τιμή στη 25η στήλη
+                lab = rows[1].astype(str).str.upper()
+                rows = rows[lab.apply(lambda v: any(k in v for k in used_labels))]
+            vals = pd.to_numeric(rows.iloc[:, extra].stack(), errors="coerce").dropna()
             if (vals != 0).any():
                 log(f"   ! SCADA: οι στήλες ωρών πέρα από την {n_hours}η έχουν τιμές· κρατούνται οι πρώτες {n_hours}")
         return cols[:n_hours]
@@ -430,7 +436,8 @@ def process_day(date_str):
         sheets = read_excel_safe(scada_file, "SCADA")
         df = pick_sheet(sheets, 1, "EXPORTS-IMPORTS", "SCADA")
         if df is not None:
-            hour_cols = scada_hour_cols(df, n_hours)
+            used = [kw.upper() + sfx for _, kw, _, _ in COUNTRY_MAP for sfx in ("_IMP", "_EXP")] + ["EXPORTS-IMPORTS"]
+            hour_cols = scada_hour_cols(df, n_hours, used)
             tot, hourly, ok = {}, {}, True
             for name, kw, code, _ in COUNTRY_MAP:
                 imp_t = extract_last_col_val(df, kw + "_IMP", 1)
@@ -711,7 +718,10 @@ if __name__ == "__main__":
     all_data = load_existing(json_path)
     by_date = {x["Date"]: x for x in all_data}
 
-    for d in dates_to_fetch:
+    day_delay = float(os.environ.get("DAY_DELAY_SECONDS", "2"))     # D31: ευγένεια προς ΑΔΜΗΕ / ENTSO-E, όπως στο BESS
+    for i, d in enumerate(dates_to_fetch):
+        if i:
+            time.sleep(day_delay)
         new_day = process_day(d)
         if d in by_date:
             new_day = merge_with_old(new_day, by_date[d])
