@@ -50,6 +50,7 @@ Rejected for now: one file per day, as in live-greekpower — far more files and
 ## Checks with a date
 
 - ~~Verify the 25-hour day of 25 Oct (K07)~~: it was cut to 24 hours; fixed in batch 10 (D26). After the upload: fetch 25 Oct again (Actions → Run workflow, start and end 2026-10-25)
+- After batch 11: fetch the whole history again so the hourly ISP of past days leaves out Crete (D27): Actions → Run workflow, start 2026-06-01, end today; ≈15 s per day, ≈40 min. Not around 07:02, when the daily run starts
 - Clock alignment of SCADA and prices (K11): measure before deciding
 
 ## Later

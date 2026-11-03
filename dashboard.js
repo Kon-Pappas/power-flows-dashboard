@@ -340,12 +340,12 @@ const methodologyData = {
             {
                 title: "All tabs",
                 shortItems: [
-                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
+                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
                     ["Sources:", "ADMIE's SCADA & ISP reports, ENTSO-E day-ahead prices. Updated daily; the last 5 days are re-checked each run to catch late publications."],
                     ["Pending data:", "a day without SCADA yet is marked ⚠ and excluded from Month-to-Date totals until complete."]
                 ],
                 items: [
-                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey."],
+                    ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
                     ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) from ENTSO-E."],
                     ["Updates:", "daily via a scheduled job. The last 5 days are re-checked on every run to catch late publications and corrections."],
                     ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates.", "m-complete"]
@@ -355,7 +355,7 @@ const methodologyData = {
                 title: "Daily ISP vs SCADA",
                 items: [
                     ["ISP vs SCADA:", "ISP is the day-ahead cross-border schedule; SCADA is what was actually measured. Differences between them are expected and can reflect intraday re-dispatch or last-minute constraint activity."],
-                    ["ISP Schedule Selection:", "cross-border totals per country are taken from ADMIE's \"Total Market CBS (+XBID)\" section — the final schedule after intraday adjustments — rather than the day-ahead auction alone."]
+                    ["ISP Schedule Selection:", "cross-border totals per country, and the hourly schedule, are taken from ADMIE's \"Total Market CBS (+XBID)\" section — the final schedule after intraday adjustments — rather than the day-ahead auction alone. The flow to Crete, which ADMIE's net schedule line includes, is left out, as in the SCADA figures."]
                 ]
             },
             {
@@ -396,12 +396,12 @@ const methodologyData = {
             {
                 title: "Για όλα τα tabs",
                 shortItems: [
-                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
+                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
                     ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
                     ["Εκκρεμή δεδομένα:", "μια ημέρα χωρίς SCADA ακόμα σημειώνεται με ⚠ και εξαιρείται από τα μηνιαία σύνολα μέχρι να ολοκληρωθεί."]
                 ],
                 items: [
-                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία."],
+                    ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
                     ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) από το ENTSO-E."],
                     ["Ενημερώσεις:", "καθημερινά μέσω προγραμματισμένης διαδικασίας. Οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις και διορθώσεις."],
                     ["Πληρότητα δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν.", "m-complete"]
@@ -411,7 +411,7 @@ const methodologyData = {
                 title: "Ημερήσια ροή (ISP vs SCADA)",
                 items: [
                     ["ISP έναντι SCADA:", "το ISP είναι το προγραμματισμένο διασυνοριακό πρόγραμμα· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσιο αναπρογραμματισμό ή δραστηριότητα περιορισμών της τελευταίας στιγμής."],
-                    ["Επιλογή προγράμματος ISP:", "τα σύνολα ανά χώρα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού."]
+                    ["Επιλογή προγράμματος ISP:", "τα σύνολα ανά χώρα και το ωριαίο πρόγραμμα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού. Η ροή προς Κρήτη, που περιλαμβάνεται στη γραμμή καθαρού προγράμματος του ΑΔΜΗΕ, μένει έξω, όπως και στο SCADA."]
                 ]
             },
             {

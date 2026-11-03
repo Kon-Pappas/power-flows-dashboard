@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Έλεγχος των ημερών αλλαγής ώρας (D26), χωρίς δίκτυο: όλες οι λήψεις αντικαθίστανται με αρχεία ίδιας δομής.
+"""Έλεγχος των ημερών αλλαγής ώρας (D26) και του ωριαίου ISP χωρίς Κρήτη (D27), χωρίς δίκτυο: όλες οι λήψεις αντικαθίστανται με αρχεία ίδιας δομής.
 Τρέξε από τη ρίζα του repo:  python3 scripts/test_dst_days.py
 
 Ελέγχει:
@@ -110,11 +110,15 @@ def isp_df(n):
     n_q = n * 4
     rows = [["Label"] + [f"Q{i}" for i in range(1, n_q + 1)] + ["TOTAL"],
             ["Total Market CBS (+XBID)"] + [None] * (n_q + 1)]
-    for _, _, _, kw in U.COUNTRY_MAP:
-        rows.append([kw] + [-1.0] * n_q + [-n])
+    country_q = []
+    for k, (_, _, _, kw) in enumerate(U.COUNTRY_MAP):
+        q = [-(10.0 * (k + 1) + i // 4) for i in range(n_q)]          # MW ανά τεταρτάωρο
+        country_q.append(q)
+        rows.append([kw] + q + [sum(q) / 4])                            # MWh
     rows.append(["Net Border Deviations"] + [None] * (n_q + 1))
-    q = [-(100.0 + i // 4) for i in range(n_q)]
-    rows.append(["Net CBS Schedules"] + q + [99999.0])
+    crete = [-280.0] * n_q                                              # ροή προς Κρήτη: μόνο στη Net CBS
+    net = [sum(c[i] for c in country_q) + crete[i] for i in range(n_q)]
+    rows.append(["Net CBS Schedules"] + net + [99999.0])
     return pd.DataFrame(rows)
 
 
@@ -133,8 +137,11 @@ for d, n in DAYS.items():
     ts = sum(day["Totals"]["SCADA"].values())
     check(f"{d}: SCADA άθροισμα ωρών = ημερήσιο σύνολο", abs(hs - ts) < 0.01, f"{hs:.0f} / {ts:.0f}")
     check(f"{d}: η στήλη SUM δεν διαβάστηκε ως ώρα", all(abs(h["SCADA_Net"]) < 1000 for h in H))
+    exp_last = sum(10.0 * (k + 1) + (n - 1) for k in range(len(U.COUNTRY_MAP)))
     check(f"{d}: ISP {n} ώρες, η TOTAL δεν διαβάστηκε ως τεταρτάωρο",
-          len(H) == n and H[-1]["ISP_Net"] == 100.0 + n - 1 and all(h["ISP_Net"] < 1000 for h in H), f"τελευταία {H[-1]['ISP_Net']}")
+          len(H) == n and H[-1]["ISP_Net"] == exp_last and all(h["ISP_Net"] < 1000 for h in H), f"τελευταία {H[-1]['ISP_Net']}")
+    hi, ti = sum(h["ISP_Net"] for h in H), sum(day["Totals"]["ISP"].values())
+    check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών", abs(hi - ti) < 0.01, f"{hi:.0f} / {ti:.0f}")
 
 # 5. πληρότητα
 for d, n in DAYS.items():

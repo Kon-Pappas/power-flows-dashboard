@@ -276,6 +276,33 @@ def extract_isp_country_totals(df):
     return totals, None
 
 
+def extract_isp_country_hourly(df, n_hours, totals):
+    """Ωριαίο καθαρό ISP από τις ΙΔΙΕΣ γραμμές χωρών με τα σύνολα ('Total Market CBS (+XBID)'), D27.
+    Η γραμμή 'Net CBS Schedules' περιλαμβάνει και τη ροή προς Κρήτη (AC + DC, ≈ 280 MW), που ΔΕΝ είναι
+    διασυνοριακή ροή· εδώ μένει έξω, όπως στα σύνολα και στο SCADA. Τα τεταρτάωρα είναι MW, η τελευταία
+    στήλη MWh: κάθε χώρα ελέγχεται ότι Σ(τεταρτάωρα)/4 = σύνολο. Επιστρέφει (λίστα n_hours, None) ή (None, λόγος)."""
+    headers = df.index[df[0].astype(str) == ISP_CBS_SECTION].tolist()
+    if not headers or totals is None:
+        return None, "δεν υπάρχουν σύνολα χωρών από την ενότητα 'Total Market CBS (+XBID)'"
+    start = headers[0] + 1
+    end_candidates = df.index[(df.index > headers[0]) & (df[0].astype(str).isin(ISP_CBS_SECTION_END_LABELS))]
+    end = min(end_candidates.min(), start + 10) if len(end_candidates) else start + 10
+    window = df.iloc[start:end]
+    q_cols = isp_quarter_cols(df, n_hours)
+    net_q = np.zeros(n_hours * 4)
+    for name, _, _, kw in COUNTRY_MAP:
+        match = window[window[0].astype(str).str.contains(kw, case=False, na=False)]
+        if match.empty:
+            return None, f"δεν βρέθηκε η {name}"
+        q = np.nan_to_num(match.iloc[0, q_cols].values.astype(float))
+        mwh = float(q.sum()) / 4 * -1
+        tot = totals.get(name)
+        if tot is None or abs(mwh - tot) > max(2.0, 0.01 * abs(tot)):
+            return None, f"{name}: Σ τεταρτάωρων/4 = {mwh:.0f} ≠ σύνολο {tot} MWh"
+        net_q += q
+    return to_list(net_q.reshape(n_hours, 4).mean(axis=1) * -1), None
+
+
 def find_header_cols(df, marker):
     """Η γραμμή επικεφαλίδας που περιέχει το marker ('SUM' / 'TOTAL'): (λίστα κελιών, στήλη του marker)."""
     for idx in range(len(df)):
@@ -450,13 +477,19 @@ def process_day(date_str):
                     v = extract_last_col_val(df, kw, 0)
                     isp_totals[name] = None if v is None else v * -1
             try:
-                cbs_row = df[df[0] == 'Net CBS Schedules']
-                if not cbs_row.empty:
-                    q_cols = isp_quarter_cols(df, n_hours)
-                    vals_q = np.nan_to_num(cbs_row.iloc[0, q_cols].values.astype(float))
-                    isp_net_h = to_list(vals_q.reshape(n_hours, 4).mean(axis=1) * -1)
+                hourly, why = extract_isp_country_hourly(df, n_hours, totals)
+                if hourly is not None:
+                    isp_net_h = hourly
                 else:
-                    log("   ! ISP: δεν βρέθηκε η γραμμή Net CBS Schedules")
+                    # Εφεδρικά: η γραμμή Net CBS Schedules, που περιλαμβάνει και τη ροή προς Κρήτη (D27)
+                    log(f"   ! ISP ωριαίο από τις χώρες: {why} — χρησιμοποιείται η Net CBS Schedules (ΜΕ τη ροή προς Κρήτη)")
+                    cbs_row = df[df[0] == 'Net CBS Schedules']
+                    if not cbs_row.empty:
+                        q_cols = isp_quarter_cols(df, n_hours)
+                        vals_q = np.nan_to_num(cbs_row.iloc[0, q_cols].values.astype(float))
+                        isp_net_h = to_list(vals_q.reshape(n_hours, 4).mean(axis=1) * -1)
+                    else:
+                        log("   ! ISP: δεν βρέθηκε η γραμμή Net CBS Schedules")
             except Exception as e:
                 log(f"   ! ISP: σφάλμα ωριαίου ({type(e).__name__})")
 
