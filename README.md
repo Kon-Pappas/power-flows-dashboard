@@ -29,10 +29,11 @@ All hourly figures are in **Greek time**: prices and the ISP schedule, published
 
 - `data/historical_flows.json`: all days, newest first;
 - `data/meta.json`: time of the run and of the next scheduled run, shown in the page header.
+- `data/analysis.json`: the interconnection analysis built from the whole history (cash per country, line status, saturation of the Bulgaria and Italy lines, line ceilings, facts of each day); see `docs/DECISIONS.md`, D34.
 
 After every fetch the workflow prints the size of the data file (`scripts/data_size.py`; you can also run it yourself: `python3 scripts/data_size.py`).
 
-Before every fetch the workflow runs `scripts/test_dst_days.py`, an offline check that days of 23, 24 and 25 hours are read correctly; if it fails, nothing is fetched or written.
+Before every fetch the workflow runs two offline checks, `scripts/test_dst_days.py` (days of 23, 24 and 25 hours, Greek time, Crete) and `scripts/test_analysis.py` (the interconnection analysis); if it fails, nothing is fetched or written.
 
 A run for a date range can be started by hand: *Actions → Daily Power Flows Fetcher → Run workflow*, with a start date and, optionally, an end date (empty = up to today). The workflow needs the repository secret `ENTSOE_TOKEN`.
 

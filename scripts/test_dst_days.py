@@ -160,6 +160,11 @@ for d, n in DAYS.items():
     check(f"{d}: ISP {n} ώρες σε ώρα Ελλάδας (D33): 00–01 = χθεσινή 23–24 CET, μετά η σημερινή από 00:00 CET",
           len(H) == n and H[0]["ISP_Net"] == exp_first and H[1]["ISP_Net"] == exp_second and H[-1]["ISP_Net"] == exp_last
           and all(h["ISP_Net"] < 1000 for h in H), f"{H[0]['ISP_Net']} / {H[1]['ISP_Net']} / {H[-1]['ISP_Net']}")
+    k_bg = next(i for i, (_, _, code, _) in enumerate(U.COUNTRY_MAP) if code == "BG")
+    exp_bg0 = 10.0 * (k_bg + 1) + (n_prev - 1) + 100
+    check(f"{d}: πρόγραμμα ανά ώρα ΒΓ / ΙΤ αποθηκεύεται, ίδια ευθυγράμμιση (D34)",
+          all(len(day["Market"][c][k]) == n for c in ("BG", "IT") for k in ("isp", "cpl", "spr")) and day["Market"]["BG"]["isp"][0] == exp_bg0,
+          f"Market.BG.isp[0] = {day['Market']['BG']['isp'][0]}")
     hi, ti = sum(h["ISP_Net"] for h in H), sum(day["Totals"]["ISP"].values())
     check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών (ίδιο 24ωρο με το SCADA, D33)", abs(hi - ti) < 0.05, f"{hi:.0f} / {ti:.0f}")
 

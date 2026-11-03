@@ -4,7 +4,7 @@ Open problems found in the review of 19 October 2026, when the alignment with th
 
 | # | Issue | Why it matters | Plan |
 |---|---|---|---|
-| K03 | All data live in one file, `historical_flows.json`, downloaded whole on every first visit (later visits get a 304, D32). Measured by `scripts/data_size.py` (run by the workflow after each fetch): **3 Nov 2026: 147.6 KB gzip, ≈0.87 KB/day, the 250 KB limit about 118 days away (early March 2027)** | Not a problem today; it becomes one in spring 2027 | Before the limit: one file per month plus a manifest (ROADMAP, "Data files"); watch the number in the workflow log |
+| K03 | All data live in one file, `historical_flows.json`, downloaded whole on every first visit (later visits get a 304, D32). Measured by `scripts/data_size.py` (workflow log). **3 Nov 2026:** 147.6 KB gzip with indentation; written one day per line (D34) ≈130 KB; with the D34 fields after the history is fetched again **≈163 KB, limit in ≈83 days (late January 2027)** | It becomes a problem in early 2027 | **Monthly files plus a manifest, planned for December 2026 – January 2027** (ROADMAP, "Data files") |
 | K08 | Commit messages are generic and carry no Athens time | Harder to match a commit to a run (live-greekpower D08) | Low priority |
 | K09 | Right after batch 1 is uploaded, `data/meta.json` does not exist until the first run, so the header shows "–" | Cosmetic, one day at most | Resolved by one manual run of the workflow |
 | K10 | The page keeps the old completeness rule as a fallback for days without `Flags.complete` (D13) | Two definitions exist until every day has the flag; after the first run following batch 3 the fallback is never used | Remove with the data contract (Phase 4) |

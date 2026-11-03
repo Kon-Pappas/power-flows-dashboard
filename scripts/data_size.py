@@ -31,9 +31,9 @@ def main():
     gz_kb = len(gzip.compress(raw, 6)) / 1024
     gz_ratio = gz_kb / raw_kb if raw_kb else 0
 
-    # Ρυθμός: μέσο μέγεθος ανά ημέρα των τελευταίων 30 ημερών, όπως γράφεται στο αρχείο (indent=2)
+    # Ρυθμός: μέσο μέγεθος ανά ημέρα των τελευταίων 30 ημερών, όπως γράφεται στο αρχείο
     recent = sorted(data, key=lambda d: d["Date"])[-RECENT_DAYS:]
-    per_day_raw_kb = sum(len(json.dumps(d, indent=2).encode()) for d in recent) / max(len(recent), 1) / 1024
+    per_day_raw_kb = sum(len(compact(d)) for d in recent) / max(len(recent), 1) / 1024    # μία ημέρα ανά γραμμή (D34)
     per_day_gz_kb = per_day_raw_kb * gz_ratio
     over = gz_kb >= GZIP_LIMIT_KB
     days_left = None if over else int((GZIP_LIMIT_KB - gz_kb) / max(per_day_gz_kb, 0.01))

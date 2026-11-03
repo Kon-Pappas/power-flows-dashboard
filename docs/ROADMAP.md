@@ -42,9 +42,17 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Secondary box, pill inside, tabs 2 + 2, no divider, up-arrow~~ (D29)
 - ~~Methodology: Detailed opens at the tab's section; new title~~ (D30)
 
-## Data files — before March 2027
+## Interconnection analysis (owner's decisions, 3 Nov 2026)
 
-Measured by `scripts/data_size.py` (K03, D32): 147.6 KB gzip on 3 Nov 2026, growing ≈0.87 KB/day; the 250 KB limit is about 118 days away (**early March 2027**). Plan the change for February 2027:
+- ~~Batch 16 — data layer: hourly schedule per country (BG, IT), coupling per quarter-hour, `data/analysis.json` (cash per country, line status, saturation, ceilings, daily facts)~~ (D34). After the upload: fetch the history again, month by month (2026-06 … 2026-10) and once with start 2026-11-01, end empty
+- Review of the daily texts: the owner reads the generated sentences of the last 30 days as an editor before they go online
+- Batch 17 — tab "Per country" (cash per country by month / week, trend) and the line-status alert (zero flow / restart, streak and total)
+- Batch 18 — tab "Saturation": first the daily card "The day of the interconnections" (Today: final day-ahead prices only; Yesterday: windows, flow against the usual limit, congestion rent (estimate), unusual events; 3–5 sentences by score; any day from the picker), then the monthly saturation and the ceilings
+- Later: real capacity from ENTSO-E (offered transfer capacity per border and hour) replacing the "usual limit"; an afternoon run (≈14:30) for "Tomorrow"; a "copy text" button
+
+## Data files — before February 2027 (plan for December 2026 – January 2027)
+
+Measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
 
 - one file **per month** (`data/months/2026-10.json`) plus a `manifest.json` (list of days and their completeness, last / next update; replaces `meta.json`);
 - the page downloads the manifest and only the months it shows (normally the current one, ≈20–30 KB); MTD needs a whole month anyway, so a monthly file fits it exactly;

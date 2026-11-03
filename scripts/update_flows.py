@@ -116,6 +116,10 @@ def parse_entsoe_time(txt):
     return datetime.strptime(txt[:19], "%Y-%m-%dT%H:%M:%S")
 
 
+# Τεταρτάωρα τιμών ανά (ημέρα, χώρα), σε ώρα Ελλάδας: για τη σύζευξη ανά τέταρτο (D34)
+MCP_QUARTERS = {}
+
+
 def fetch_entsoe_mcp(date_str, country_code):
     """Μία τιμή ανά ώρα της ημέρας σε ώρα ΕΛΛΑΔΑΣ (23, 24 ή 25· D33). Όπου λείπει τιμή -> None (όχι 0).
     Η αγορά δίνει τιμές ανά ημέρα CET· ζητούνται δύο ημέρες αγοράς (χθες και σήμερα) και κρατιούνται οι θέσεις
@@ -209,6 +213,7 @@ def fetch_entsoe_mcp(date_str, country_code):
         missing = sum(1 for v in hourly if v is None)
         if missing:
             log(f"   ! MCP {country_code}: λείπουν {missing} από {n_hours} ώρες")
+        MCP_QUARTERS[(date_str, country_code)] = quarters
         return hourly
     except Exception as e:
         log(f"   ! MCP {country_code}: σφάλμα ανάγνωσης ({type(e).__name__})")
@@ -458,6 +463,28 @@ def none_list(n):
     return [None] * n
 
 
+# Διασυνδέσεις με σύζευξη αγορών (SDAC): μόνο εκεί έχει νόημα ο κορεσμός με βάση τις τιμές (D34)
+COUPLED_CODES = ("BG", "IT")
+COUPLING_EUR = 0.01          # |ΕΛ − γείτονας| < 0,01 €/MWh = συζευγμένο τέταρτο
+
+
+def coupling_by_hour(q_gr, q_x, n_hours):
+    """Για κάθε ώρα: (συζευγμένα τέταρτα 0–4, μέση διαφορά ΕΛ − γείτονας στα ΑΠΟσυζευγμένα τέταρτα, €/MWh).
+    Αρνητική διαφορά = η Ελλάδα φθηνότερη (αναμενόμενη ροή προς τον γείτονα). (None, None) αν λείπει τιμή."""
+    out = []
+    for h in range(n_hours):
+        if not q_gr or not q_x:
+            out.append((None, None))
+            continue
+        g, x = q_gr[h * 4: h * 4 + 4], q_x[h * 4: h * 4 + 4]
+        if len(g) < 4 or len(x) < 4 or any(v is None for v in g + x):
+            out.append((None, None))
+            continue
+        dec = [a - b for a, b in zip(g, x) if abs(a - b) >= COUPLING_EUR]
+        out.append((4 - len(dec), round(sum(dec) / len(dec), 2) if dec else 0.0))
+    return out
+
+
 def to_list(arr):
     return [None if v is None else float(round(float(v), 2)) for v in arr]
 
@@ -521,15 +548,20 @@ def process_day(date_str):
     # της σημερινής. Τα σύνολα ανά χώρα είναι το άθροισμα αυτών των ωρών, ίδιο 24ωρο με το SCADA.
     isp_totals = {c: None for c in COUNTRIES}
     isp_net_h = none_list(n_hours)
+    isp_country_h = {code: none_list(n_hours) for code in COUPLED_CODES}
     cur, prv = isp_market_day(date_str), isp_market_day(prev_day(date_str))
     k = (n_hours - 1) * 4
+    isp_country_h = {code: none_list(n_hours) for code in COUPLED_CODES}
     if cur and prv and cur["country_q"] and prv["country_q"]:
         net = np.zeros(n_hours)
+        name_to_code = {name: code for name, _, code, _ in COUNTRY_MAP}
         for name in COUNTRIES:
             q = np.concatenate([prv["country_q"][name][-4:], cur["country_q"][name][:k]])
             h = q.reshape(n_hours, 4).mean(axis=1) * -1
             isp_totals[name] = float(round(h.sum(), 2))
             net += h
+            if name_to_code[name] in isp_country_h:
+                isp_country_h[name_to_code[name]] = to_list(h)       # D34: πρόγραμμα ανά ώρα για ΒΓ / ΙΤ
         isp_net_h = to_list(net)
     elif cur and prv and cur["net_q"] is not None and prv["net_q"] is not None:
         why = (cur["why"] if not cur["country_q"] else prv["why"])
@@ -551,6 +583,8 @@ def process_day(date_str):
         "Totals": {"SCADA": scada_totals, "ISP": isp_totals},
         "Hourly": [],
     }
+    coupling = {c: coupling_by_hour(MCP_QUARTERS.get((date_str, "GR")), MCP_QUARTERS.get((date_str, c)), n_hours)
+                for c in COUPLED_CODES}
     for hour in range(n_hours):
         row = {
             "Hour": f"H{hour + 1:02d}",
@@ -563,6 +597,11 @@ def process_day(date_str):
         for _, _, code, _ in COUNTRY_MAP:
             row["SCADA_" + code] = scada_country_h[code][hour]
         day["Hourly"].append(row)
+    # D34: πρόγραμμα ανά ώρα και σύζευξη ΒΓ / ΙΤ, ως λίστες ανά ημέρα (μικρότερο αρχείο από πεδία σε κάθε ώρα).
+    # isp: προγραμματισμένη ροή (MW, + εισαγωγή)· cpl: συζευγμένα τέταρτα 0–4· spr: μέση διαφορά ΕΛ − γείτονας
+    # στα αποσυζευγμένα τέταρτα (€/MWh, − = Ελλάδα φθηνότερη). Όλα σε ώρα Ελλάδας.
+    day["Market"] = {c: {"isp": isp_country_h[c], "cpl": [v[0] for v in coupling[c]], "spr": [v[1] for v in coupling[c]]}
+                     for c in COUPLED_CODES}
 
     day["Flags"] = compute_flags(day)
     return day
@@ -687,9 +726,13 @@ def load_existing(json_path):
 
 
 def save_atomic(json_path, data):
+    """Ατομική εγγραφή. Λίστα ημερών → μία ημέρα ανά γραμμή, χωρίς κενά (D34: ≈ −25 % gzip, ευανάγνωστο diff ανά ημέρα)."""
     tmp = json_path + ".tmp"
     with open(tmp, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2)
+        if isinstance(data, list):
+            f.write("[\n" + ",\n".join(json.dumps(x, ensure_ascii=False, separators=(",", ":")) for x in data) + "\n]\n")
+        else:
+            json.dump(data, f, indent=2)
     os.replace(tmp, json_path)
 
 
@@ -765,6 +808,13 @@ if __name__ == "__main__":
         day.setdefault("Flags", {})["complete"] = day_complete(day)
     save_atomic(json_path, result)
     write_meta(datetime.now(timezone.utc))
+
+    # Ανάλυση διασυνδέσεων (D34) από όλο το ιστορικό → data/analysis.json. Αν αποτύχει, τα δεδομένα μένουν σωστά.
+    try:
+        import analysis
+        analysis.main()
+    except Exception as e:
+        log(f"   ! analysis.json: δεν ενημερώθηκε ({type(e).__name__}: {e})")
 
     log("--- Σύνοψη ---")
     for d in dates_to_fetch:
