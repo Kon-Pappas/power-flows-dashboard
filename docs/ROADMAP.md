@@ -42,9 +42,9 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Secondary box, pill inside, tabs 2 + 2, no divider, up-arrow~~ (D29)
 - ~~Methodology: Detailed opens at the tab's section; new title~~ (D30)
 
-## Data files — later, not urgent
+## Data files — before March 2027
 
-Measured on 20 Oct 2026 (K03): the single data file transfers as 120 KB today and ≈310 KB after a year. When the history reaches about a year, or loading becomes noticeably slow:
+Measured by `scripts/data_size.py` (K03, D32): 147.6 KB gzip on 3 Nov 2026, growing ≈0.87 KB/day; the 250 KB limit is about 118 days away (**early March 2027**). Plan the change for February 2027:
 
 - one file **per month** (`data/months/2026-10.json`) plus a `manifest.json` (list of days and their completeness, last / next update; replaces `meta.json`);
 - the page downloads the manifest and only the months it shows (normally the current one, ≈20–30 KB); MTD needs a whole month anyway, so a monthly file fits it exactly;

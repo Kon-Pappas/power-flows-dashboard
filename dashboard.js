@@ -1321,9 +1321,12 @@ function loadFailed(err) {
     el.classList.remove('hidden');
 }
 
-// Λήψη JSON. Το meta.json αλλάζει κάθε μέρα, οπότε παίρνει cache-busting.
-async function getJSON(path, bust = false) {
-    const r = await fetch(path + (bust ? `?v=${Date.now()}` : ''));
+// Λήψη JSON (D32, όπως BESS D53 / live D54). «no-cache»: ο browser ρωτά τον server αν το αρχείο άλλαξε (ETag)·
+// αν όχι, χρησιμοποιεί το αντίγραφο που έχει (απάντηση 304, λίγα bytes)· αν ναι, κατεβάζει το νέο.
+// Πριν: το meta.json κατέβαινε ολόκληρο κάθε φορά (?v=<ώρα>) και τα δεδομένα μπορούσαν να δείχνουν
+// έως 10 λεπτά το παλιό αντίγραφο μετά την ενημέρωση των 07:02.
+async function getJSON(path) {
+    const r = await fetch(path, { cache: 'no-cache' });
     if (!r.ok) throw new Error(`${path}: HTTP ${r.status}`);
     return r.json();
 }
@@ -1385,7 +1388,7 @@ async function boot() {
         loadActivate(1);
         const t0 = Date.now();
         const files = [
-            getJSON('data/meta.json', true).catch((e) => { console.warn('meta.json', e); return null; }),   // όχι κρίσιμο
+            getJSON('data/meta.json').catch((e) => { console.warn('meta.json', e); return null; }),   // όχι κρίσιμο
             getJSON('data/historical_flows.json')
         ];
         let done = 0;
