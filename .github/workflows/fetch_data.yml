@@ -35,6 +35,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas requests openpyxl xlrd
 
+      - name: Check hour handling (23 / 24 / 25-hour days, D26; no network)
+        run: python scripts/test_dst_days.py
+
       - name: Run Python script
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
