@@ -138,10 +138,32 @@ const i18n = {
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
         tabCountry: "By country",
+        tabSat: "Saturation",
+        sat: { dayTitle: "The day of the interconnections",
+               subMeasured: "{d} · market prices, schedule (ADMIE ISP) and measured flow (SCADA)",
+               subPrices: "{d} · final day-ahead prices only; the measured flow arrives tomorrow",
+               none: "No notable events.", noData: "The analysis could not be loaded; the other tabs work normally.",
+               monthTitle: "Saturation by month", monthSub: "Share of hours with a price difference of at least 1 €/MWh (market coupling broken)",
+               month: "Month", pct: "Saturated", dirs: "Hours to {n} / to Greece", mwh: "MWh scheduled / measured", rent: "Congestion rent",
+               ceilTitle: "Line ceilings", ceilSub: "Highest measured hourly flow per direction, with the 99th percentile; when the two almost coincide, the line keeps reaching its limit",
+               imp: "Imports", exp: "Exports", p99: "P99" },
+        sent: { coupled: "{L}: coupled all day.",
+                dec1: "{L}: decoupled {w} ({h}), with Greece {cheap} by {avg} €/MWh on average (up to {max}).",
+                other: " Opposite direction {w}.", cheaper: "cheaper", dearer: "more expensive",
+                dec2: "Schedule to {to} up to {sp} MW{lim}; measured flow up to {ap} MW. Energy in the saturated hours: {sm} MWh scheduled, {am} MWh measured. Congestion rent (estimate): {rent}.",
+                limIn: " ({p}% of the observed limit)", limOver: " ({p}% above the observed limit)",
+                against: "{L}: {n} with flow against the price ({mwh} MWh).",
+                newMax: "{L}: new period high for {dir}, {mw} MW at {h} (previous {prev} MW).", exp: "exports", imp: "imports",
+                firstDec: "{L}: first decoupling after {n} days of full coupling.",
+                maxSpread: "{L}: largest price difference of the month so far, {s} €/MWh.",
+                deviation: "Total flow deviated from the schedule by {mw} MW per hour on average, above the usual for the last 30 days ({p90} MW).",
+                h1: "1 hour", hn: "{n} hours", q1: "1 quarter-hour", qn: "{n} quarter-hours", many: "in {n} windows, from {a} to {b}",
+                to: { BG: "Bulgaria", IT: "Italy", gr: "Greece" } },
         lineCodes: { AL: "GR–AL", BG: "GR–BG", IT: "GR–IT", MK: "GR–MK", TR: "GR–TR" },
         zero: { day: "Zero flow all day · period {from} – {to} ({n})", dayOngoing: "Zero flow all day · since {from}, ongoing ({n} to {to})",
                 restart: "Flow resumed at {h}, after {n} at zero ({from} – {to})", month: "{line}: {n} at zero this month ({ranges})",
-                period: "{n} at zero in the period", start: " (start of the data)", d1: "1 day", dn: "{n} days" },
+                period: "{n} at zero in the period", start: " (start of the data)", d1: "1 day", dn: "{n} days",
+                pending: "zero flow since {from}, ongoing (last measurement {to})" },
         ctry: { totalsTitle: "Net cash flow by country", sub: "{from} – {to} · {days} complete days · exports minus imports, measured flow × price",
                 chartTitle: "Cash flow over time", month: "Month", week: "Week", all: "All", net: "Net", days: "{n} days",
                 tableTitle: "Volumes and average prices", exports: "Exports", imports: "Imports", cash: "Cash flow",
@@ -232,10 +254,32 @@ const i18n = {
         tabArbitrage: "Ημερήσιο Arbitrage",
         tabMTD: "Σωρευτική θέση",
         tabCountry: "Ανά χώρα",
+        tabSat: "Κορεσμός",
+        sat: { dayTitle: "Η ημέρα των διασυνδέσεων",
+               subMeasured: "{d} · τιμές αγοράς, πρόγραμμα (ISP ΑΔΜΗΕ) και μετρημένη ροή (SCADA)",
+               subPrices: "{d} · μόνο οι οριστικές τιμές της αγοράς επόμενης ημέρας· η μετρημένη ροή έρχεται αύριο",
+               none: "Κανένα αξιοσημείωτο γεγονός.", noData: "Η ανάλυση δεν φορτώθηκε· τα υπόλοιπα tabs λειτουργούν κανονικά.",
+               monthTitle: "Κορεσμός ανά μήνα", monthSub: "Ποσοστό ωρών με διαφορά τιμής από 1 €/MWh και πάνω (αποσύζευξη αγορών)",
+               month: "Μήνας", pct: "Κορεσμός", dirs: "Ώρες προς {n} / προς Ελλάδα", mwh: "MWh πρόγραμμα / μετρημένα", rent: "Έσοδο συμφόρησης",
+               ceilTitle: "Ταβάνι γραμμών", ceilSub: "Μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση και 99ο εκατοστημόριο· όταν σχεδόν ταυτίζονται, η γραμμή φτάνει συστηματικά το όριό της",
+               imp: "Εισαγωγή", exp: "Εξαγωγή", p99: "P99" },
+        sent: { coupled: "{L}: συζευγμένη όλο το 24ωρο.",
+                dec1: "{L}: αποσύζευξη {w} ({h}), με την Ελλάδα {cheap} κατά {avg} €/MWh κατά μέσο όρο (έως {max}).",
+                other: " Αντίθετα {w}.", cheaper: "φθηνότερη", dearer: "ακριβότερη",
+                dec2: "Πρόγραμμα προς {to} έως {sp} MW{lim}· πραγματική ροή έως {ap} MW. Ενέργεια στις ώρες κορεσμού: {sm} MWh στο πρόγραμμα, {am} MWh μετρημένα. Έσοδο συμφόρησης (εκτίμηση): {rent}.",
+                limIn: " ({p}% του παρατηρούμενου ορίου)", limOver: " ({p}% πάνω από το παρατηρούμενο όριο)",
+                against: "{L}: {n} με ροή αντίθετα από την τιμή ({mwh} MWh).",
+                newMax: "{L}: νέο μέγιστο {dir} της περιόδου, {mw} MW στις {h} (προηγούμενο {prev} MW).", exp: "εξαγωγής", imp: "εισαγωγής",
+                firstDec: "{L}: πρώτη αποσύζευξη μετά από {n} ημέρες πλήρους σύζευξης.",
+                maxSpread: "{L}: η μεγαλύτερη διαφορά τιμής του μήνα μέχρι σήμερα, {s} €/MWh.",
+                deviation: "Η συνολική ροή απέκλινε από το πρόγραμμα κατά {mw} MW ανά ώρα κατά μέσο όρο, πάνω από το συνηθισμένο των 30 ημερών ({p90} MW).",
+                h1: "1 ώρα", hn: "{n} ώρες", q1: "1 τέταρτο", qn: "{n} τέταρτα", many: "σε {n} διαστήματα, από {a} έως {b}",
+                to: { BG: "Βουλγαρία", IT: "Ιταλία", gr: "Ελλάδα" } },
         lineCodes: { AL: "ΕΛ–ΑΛ", BG: "ΕΛ–ΒΓ", IT: "ΕΛ–ΙΤ", MK: "ΕΛ–ΒΜ", TR: "ΕΛ–ΤΡ" },
         zero: { day: "Μηδενική ροή όλη τη μέρα · διάστημα {from} – {to} ({n})", dayOngoing: "Μηδενική ροή όλη τη μέρα · από {from}, συνεχίζεται ({n} έως {to})",
                 restart: "Η ροή επανήλθε στις {h}, μετά από {n} στο μηδέν ({from} – {to})", month: "{line}: {n} στο μηδέν αυτόν τον μήνα ({ranges})",
-                period: "{n} στο μηδέν στην περίοδο", start: " (αρχή των δεδομένων)", d1: "1 ημέρα", dn: "{n} ημέρες" },
+                period: "{n} στο μηδέν στην περίοδο", start: " (αρχή των δεδομένων)", d1: "1 ημέρα", dn: "{n} ημέρες",
+                pending: "μηδενική ροή από {from}, συνεχίζεται (τελευταία μέτρηση {to})" },
         ctry: { totalsTitle: "Καθαρό ταμείο ανά χώρα", sub: "{from} – {to} · {days} πλήρεις ημέρες · εξαγωγές μείον εισαγωγές, μετρημένη ροή × τιμή",
                 chartTitle: "Ταμείο στον χρόνο", month: "Μήνας", week: "Εβδομάδα", all: "Όλες", net: "Καθαρό", days: "{n} ημέρες",
                 tableTitle: "Όγκοι και μέσες τιμές", exports: "Εξαγωγές", imports: "Εισαγωγές", cash: "Ταμείο",
@@ -411,6 +455,24 @@ const methodologyData = {
                 ]
             },
             {
+                title: "By country",
+                items: [
+                    ["Cash flow:", "exports minus imports per country for every complete day: measured flow (SCADA) × price, with the arbitrage rule (Albania, North Macedonia and Turkey at the Greek price; Bulgaria and Italy at the mean of the two prices). Totals by month and by week (Monday to Sunday) are computed by the pipeline."],
+                    ["Zero flow:", "a line is at zero on a day when every hour is below 1 MW. Notes show the period at zero of the day, the month or the whole period you are looking at."]
+                ]
+            },
+            {
+                title: "Saturation",
+                items: [
+                    ["Coupling:", "measured on every quarter-hour of the day-ahead market. An hour counts as decoupled when the mean price difference over its decoupled quarter-hours is at least 1 €/MWh (GR–IT keeps a permanent gap of a few cents)."],
+                    ["Observed limit:", "95th percentile of the scheduled flow in the same direction over the last 30 days: an estimate from the data, not the official capacity."],
+                    ["Schedule and measured flow:", "the schedule is the commercial flow per border (ADMIE ISP). The measured flow (SCADA) can be much lower on the AC lines, because power spreads over parallel paths; the DC cable to Italy carries almost exactly its schedule."],
+                    ["Congestion rent (estimate):", "scheduled flow × price difference in the decoupled hours. It is collected by the two system operators, it is not a profit of Greece, and it is a different measure from the arbitrage cash flow."],
+                    ["Today:", "before the measurement arrives, the card shows only the final day-ahead prices."],
+                    ["Ceilings:", "highest measured hourly flow per direction, with the 99th percentile."]
+                ]
+            },
+            {
                 title: "Limitations",
                 items: [
                     ["Data:", "SCADA is published as preliminary by ADMIE and may be revised. ISP is a schedule, not a measurement of actual delivery."],
@@ -469,6 +531,24 @@ const methodologyData = {
                 ]
             },
             {
+                title: "Ανά χώρα",
+                items: [
+                    ["Ταμείο:", "εξαγωγές μείον εισαγωγές ανά χώρα για κάθε πλήρη ημέρα: μετρημένη ροή (SCADA) × τιμή, με τον κανόνα του arbitrage (Αλβανία, Β. Μακεδονία και Τουρκία με την τιμή της Ελλάδας· Βουλγαρία και Ιταλία με τον μέσο όρο των δύο τιμών). Τα σύνολα ανά μήνα και ανά εβδομάδα (Δευτέρα–Κυριακή) τα υπολογίζει η ροή δεδομένων."],
+                    ["Μηδενική ροή:", "μια γραμμή είναι στο μηδέν μια ημέρα όταν κάθε ώρα είναι κάτω από 1 MW. Οι σημειώσεις δείχνουν το διάστημα στο μηδέν της ημέρας, του μήνα ή της περιόδου που βλέπετε."]
+                ]
+            },
+            {
+                title: "Κορεσμός",
+                items: [
+                    ["Σύζευξη:", "μετριέται σε κάθε τέταρτο της αγοράς επόμενης ημέρας. Μια ώρα μετρά ως αποσυζευγμένη όταν η μέση διαφορά τιμής στα αποσυζευγμένα τέταρτά της είναι τουλάχιστον 1 €/MWh (η ΕΛ–ΙΤ κρατά μια μόνιμη διαφορά λίγων λεπτών)."],
+                    ["Παρατηρούμενο όριο:", "το 95ο εκατοστημόριο της προγραμματισμένης ροής στην ίδια κατεύθυνση τις τελευταίες 30 ημέρες: εκτίμηση από τα δεδομένα, όχι η επίσημη ικανότητα."],
+                    ["Πρόγραμμα και μετρημένη ροή:", "το πρόγραμμα είναι η εμπορική ροή ανά σύνορο (ISP ΑΔΜΗΕ). Η μετρημένη ροή (SCADA) μπορεί να είναι πολύ μικρότερη στις γραμμές εναλλασσόμενου ρεύματος, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές· το καλώδιο συνεχούς ρεύματος προς Ιταλία μεταφέρει σχεδόν ακριβώς το πρόγραμμά του."],
+                    ["Έσοδο συμφόρησης (εκτίμηση):", "προγραμματισμένη ροή × διαφορά τιμής στις αποσυζευγμένες ώρες. Το εισπράττουν οι δύο διαχειριστές, δεν είναι κέρδος της Ελλάδας, και είναι διαφορετικό μέγεθος από το ταμείο του arbitrage."],
+                    ["Σήμερα:", "πριν έρθει η μέτρηση, η κάρτα δείχνει μόνο τις οριστικές τιμές της αγοράς επόμενης ημέρας."],
+                    ["Ταβάνι:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση, μαζί με το 99ο εκατοστημόριο."]
+                ]
+            },
+            {
                 title: "Περιορισμοί",
                 items: [
                     ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
@@ -521,7 +601,7 @@ function renderMethodology() {
 }
 
 // Η ενότητα της Αναλυτικής για κάθε tab (D30): η σειρά των ενοτήτων είναι ίδια σε ελληνικά και αγγλικά
-const METHOD_SECTION_OF_TAB = { totals: 1, hourly: 2, arbitrage: 3, mtd: 4, country: 0 };
+const METHOD_SECTION_OF_TAB = { totals: 1, hourly: 2, arbitrage: 3, mtd: 4, country: 5, sat: 6 };
 
 // Μετακινεί το σώμα του παραθύρου ώστε το στοιχείο να είναι στην κορυφή του, αμέσως (χωρίς χρονοκαθυστέρηση)
 function scrollModalTo(el) {
@@ -570,6 +650,9 @@ function applyStaticText() {
     document.getElementById('tabBtnArbitrage').innerText = t.tabArbitrage;
     document.getElementById('tabBtnMTD').innerText = t.tabMTD;
     document.getElementById('tabBtnCountry').innerText = t.tabCountry;
+    document.getElementById('tabBtnSat').innerText = t.tabSat;
+    [['satDayTitle', t.sat.dayTitle], ['satMonthTitle', t.sat.monthTitle], ['satMonthSub', t.sat.monthSub],
+     ['satCeilTitle', t.sat.ceilTitle], ['satCeilSub', t.sat.ceilSub]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
     const C = t.ctry;
     [['countryTotalsTitle', C.totalsTitle], ['countryChartTitle', C.chartTitle], ['countryTableTitle', C.tableTitle],
      ['countryGranMonth', C.month], ['countryGranWeek', C.week]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
@@ -617,7 +700,7 @@ function applyStaticText() {
 
     // Οθόνη φόρτωσης: τα βήματα 2…5 παίρνουν τα ονόματα των tabs, με τη σειρά τους
     const L = t.load;
-    const stepText = { 1: L.s1, 2: t.tabTotals, 3: t.tabHourly, 4: t.tabArbitrage, 5: t.tabMTD, 6: t.tabCountry };
+    const stepText = { 1: L.s1, 2: t.tabTotals, 3: t.tabHourly, 4: t.tabArbitrage, 5: t.tabMTD, 6: t.tabCountry, 7: t.tabSat };
     const ids = { loadTitle: L.title, loadGroup1: L.g1, loadGroup2: L.g2, loadReady: L.ready };
     Object.entries(ids).forEach(([id, txt]) => { const el = document.getElementById(id); if (el) el.textContent = txt; });
     document.querySelectorAll('.load-row').forEach(r => { r.querySelector('[data-load-label]').textContent = stepText[r.dataset.step] || ''; });
@@ -1156,6 +1239,7 @@ function renderCharts() {
     renderArbitrageTab(dayData);
     renderMTDView();
     renderCountryTab();
+    renderSatTab();
     updateDataNotice(dayData);
 }
 
@@ -1464,6 +1548,137 @@ function renderCountryTab() {
         <span class="text-right">${escapeHtml(C.imports)}</span><span class="text-right">${escapeHtml(C.avg)}</span><span class="text-right">${escapeHtml(C.cash)}</span></div>` + rowsHtml;
 }
 
+// ---- Tab «Κορεσμός» (D37) ------------------------------------------------------
+let satLine = 'BG';
+let satChartInstance = null;
+function setSatLine(c) { satLine = c; renderSatTab(); }
+const fmtEur = (v) => v >= 1e6 ? `${fmtN(v / 1e6, 1)} ${currentLang === 'el' ? 'εκ. €' : 'M€'}` : `${fmtN(v, 0)} €`;
+function hourSpan(hhmm) { const h = parseInt(hhmm, 10); return `${String(h).padStart(2, '0')}–${String(h + 1).padStart(2, '0')}`; }
+
+// Οι προτάσεις της ημέρας από τα γεγονότα του analysis.json (D34, D35): πρώτα τιμές, μετά πρόγραμμα / μέτρηση / χρήματα
+function factSentences(f) {
+    const t = i18n[currentLang], S = t.sent, L = t.lineCodes[f.line] || '';
+    const dur = (h) => { const q = Math.round(h * 4); if (q < 4) return q === 1 ? S.q1 : S.qn.replace('{n}', q);
+        const hh = q / 4; return hh === 1 ? S.h1 : S.hn.replace('{n}', Number.isInteger(hh) ? hh : fmtN(hh, 2).replace(/0+$/, '').replace(/[.,]$/, '')); };
+    const wins = (ws) => ws.length <= 3 ? ws.map(w => `${w.from}–${w.to}`).join(', ')
+        : S.many.replace('{n}', ws.length).replace('{a}', ws[0].from).replace('{b}', ws[ws.length - 1].to);
+    switch (f.type) {
+        case 'coupled_all_day': return [S.coupled.replace('{L}', L)];
+        case 'decoupled': {
+            const main = f.main_dir || f.windows.slice().sort((a, b) => b.hours - a.hours)[0].dir;
+            const mw = f.windows.filter(w => w.dir === main), ow = f.windows.filter(w => w.dir !== main);
+            const hm = mw.reduce((a, w) => a + w.hours, 0);
+            const avg = mw.reduce((a, w) => a + w.avg_spread * w.hours, 0) / hm, mx = Math.max(...mw.map(w => w.max_spread));
+            let s1 = S.dec1.replace('{L}', L).replace('{w}', wins(mw)).replace('{h}', dur(hm)).replace('{cheap}', main === 'to_n' ? S.cheaper : S.dearer)
+                .replace('{avg}', fmtN(avg, 0)).replace('{max}', fmtN(mx, 0));
+            if (ow.length) s1 += S.other.replace('{w}', wins(ow));
+            if (!f.measured || !f.sched_peak_mw) return [s1];
+            const p = f.pct_of_limit;
+            const lim = f.limit_mw ? (p <= 100 ? S.limIn.replace('{p}', p) : S.limOver.replace('{p}', p - 100)) : '';
+            const s2 = S.dec2.replace('{to}', S.to[main === 'to_gr' ? 'gr' : f.line]).replace('{sp}', fmtN(f.sched_peak_mw, 0)).replace('{lim}', lim)
+                .replace('{ap}', fmtN(f.act_peak_mw, 0)).replace('{sm}', fmtN(f.sched_mwh, 0)).replace('{am}', fmtN(f.act_mwh, 0)).replace('{rent}', fmtEur(f.rent_eur || 0));
+            return [s1, s2];
+        }
+        case 'against': return [S.against.replace('{L}', L).replace('{n}', f.hours === 1 ? S.h1 : S.hn.replace('{n}', f.hours)).replace('{mwh}', fmtN(f.mwh, 0))];
+        case 'new_max': return [S.newMax.replace('{L}', L).replace('{dir}', f.dir === 'exp' ? S.exp : S.imp).replace('{mw}', fmtN(f.mw, 0)).replace('{h}', hourSpan(f.hour)).replace('{prev}', fmtN(f.prev_mw, 0))];
+        case 'first_decoupling': return [S.firstDec.replace('{L}', L).replace('{n}', f.days)];
+        case 'max_spread_month': return [S.maxSpread.replace('{L}', L).replace('{s}', fmtN(f.spread, 0))];
+        case 'deviation': return [S.deviation.replace('{mw}', fmtN(f.mw, 0)).replace('{p90}', fmtN(f.p90_mw, 0))];
+        default: return [];      // zero_start / restart: γράφονται ως σημείωση μηδενικής ροής (D36)
+    }
+}
+
+function renderSatTab() {
+    const t = i18n[currentLang], T = t.sat, N = t.countries;
+    const notice = document.getElementById('satNotice');
+    if (!analysisData || !analysisData.days) { notice.textContent = T.noData; notice.classList.remove('hidden'); return; }
+    notice.classList.add('hidden');
+
+    // 1. Η ημέρα των διασυνδέσεων — ακολουθεί το κουτί «Ημέρα»
+    const date = currentDayData ? currentDayData.Date : null;
+    const facts = (date && analysisData.days[date]) || [];
+    const measured = !!(currentDayData && currentDayData.Flags && currentDayData.Flags.scada);
+    document.getElementById('satDaySub').textContent = date ? (measured ? T.subMeasured : T.subPrices).replace('{d}', fmtDay(date)) : '';
+    const blocks = [];
+    // Ημέρα χωρίς μέτρηση: γραμμή με ανοιχτό διάστημα στο μηδέν → σημείωση αντί για πρόταση τιμών (D37)
+    const pending = {};
+    if (date && !measured) ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
+        const e = zeroEpisodes(c).find(x => x.ongoing && x.to < date);
+        if (e) pending[c] = e;
+    });
+    // Σειρά: κατά βαθμό, αλλά η «μεγαλύτερη διαφορά του μήνα» ακριβώς μετά την αποσύζευξη της ίδιας γραμμής
+    let list = facts.filter(f => f.type !== 'zero_start' && f.type !== 'restart' && !pending[f.line]);
+    const spreads = list.filter(f => f.type === 'max_spread_month');
+    list = list.filter(f => f.type !== 'max_spread_month');
+    spreads.forEach(f => { const i = list.findIndex(x => x.type === 'decoupled' && x.line === f.line); i >= 0 ? list.splice(i + 1, 0, f) : list.push(f); });
+    list.slice(0, 5).forEach(f => {
+        const ss = factSentences(f);
+        if (!ss.length) return;
+        blocks.push(`<div class="text-sm leading-relaxed"><p class="text-slate-200">${escapeHtml(ss[0])}</p>${ss[1] ? `<p class="text-slate-400 mt-1">${escapeHtml(ss[1])}</p>` : ''}</div>`);
+    });
+    Object.entries(pending).forEach(([c, e]) => blocks.push(`<p class="text-sm text-amber-300">⚠ ${escapeHtml(t.lineCodes[c])}: ${escapeHtml(t.zero.pending
+        .replace('{from}', fmtDayShort(e.from)).replace('{to}', fmtDayShort(e.to)))}</p>`));
+    if (date) ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
+        const z = zeroNoteForDay(c, date);
+        if (z) blocks.push(`<p class="text-sm text-amber-300">⚠ ${escapeHtml(t.lineCodes[c])}: ${escapeHtml(z.charAt(0).toLowerCase() + z.slice(1))}</p>`);
+    });
+    document.getElementById('satDayBody').innerHTML = blocks.length ? blocks.join('<div class="border-t border-slate-700/50"></div>')
+        : `<p class="text-sm text-slate-400">${escapeHtml(T.none)}</p>`;
+
+    // 2. Κορεσμός ανά μήνα: ΕΛ–ΒΓ και ΕΛ–ΙΤ (ποσοστό ωρών), πίνακας για τη γραμμή που επιλέγεται
+    const sat = analysisData.saturation || {};
+    const months = [...new Set(Object.values(sat).flatMap(o => Object.keys(o)))].sort();
+    document.getElementById('satLineGroup').innerHTML = ['BG', 'IT'].map(c =>
+        `<button type="button" onclick="setSatLine('${c}')" class="px-3 py-1.5 rounded transition ${satLine === c ? 'bg-acc-400 text-slate-900' : 'text-slate-400 hover:text-white'}">${escapeHtml(t.lineCodes[c])}</button>`).join('');
+    const mLabel = (k) => new Intl.DateTimeFormat(t.locale, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)));
+    if (satChartInstance) satChartInstance.destroy();
+    satChartInstance = new Chart(document.getElementById('satChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: months.map(mLabel), datasets: ['BG', 'IT'].map(c => ({ label: t.lineCodes[c], data: months.map(m => (sat[c] && sat[c][m]) ? sat[c][m].dec_pct : null), backgroundColor: countryColors[c] })) },
+        options: {
+            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: true, position: 'top' }, tooltip: tipOff((i) => tipHead(mLabel(months[i])) + tipSections(['BG', 'IT'].map(c => {
+                const m = sat[c] && sat[c][months[i]]; return m ? tipRow(t.lineCodes[c], `${fmtN(m.dec_pct, 0)}%`, countryColors[c]) : ''; }).join(''))) },
+            scales: { x: { grid: { display: false } }, y: { min: 0, max: 100, grid: { color: '#334155' }, ticks: { callback: v => `${v}%` } } }
+        }
+    });
+    const ms = sat[satLine] || {};
+    const head = `<div class="hidden md:grid grid-cols-[1fr_1fr_1.4fr_1.6fr_1.2fr] gap-3 px-6 py-2 text-xs text-slate-400 font-semibold border-t border-slate-700/50">
+        <span>${T.month}</span><span class="text-right">${T.pct}</span><span class="text-right">${escapeHtml(T.dirs.replace('{n}', t.sent.to[satLine]))}</span>
+        <span class="text-right">${T.mwh}</span><span class="text-right">${T.rent}</span></div>`;
+    document.getElementById('satMonthTable').innerHTML = head + months.filter(m => ms[m]).map(m => {
+        const x = ms[m], sch = x.mwh_to_n + x.mwh_to_gr, act = x.act_mwh_to_n + x.act_mwh_to_gr;
+        return `<div class="border-t border-slate-700/50" style="font-variant-numeric:tabular-nums">
+            <div class="hidden md:grid grid-cols-[1fr_1fr_1.4fr_1.6fr_1.2fr] gap-3 px-6 py-3 text-sm items-center">
+                <span class="text-slate-200 font-semibold">${mLabel(m)}</span><span class="text-right text-slate-200">${fmtN(x.dec_pct, 0)}%</span>
+                <span class="text-right text-slate-300">${fmtN(x.to_n_hours, 0)} / ${fmtN(x.to_gr_hours, 0)}</span>
+                <span class="text-right text-slate-300">${fmtN(sch, 0)} / ${fmtN(act, 0)}</span><span class="text-right text-emerald-400 font-semibold">${fmtEur(x.rent_eur)}</span>
+            </div>
+            <div class="md:hidden px-4 py-3 text-xs">
+                <div class="flex justify-between text-sm"><span class="text-slate-200 font-semibold">${mLabel(m)} · ${fmtN(x.dec_pct, 0)}%</span><span class="text-emerald-400 font-bold">${fmtEur(x.rent_eur)}</span></div>
+                <div class="flex justify-between text-slate-400 mt-1"><span>${escapeHtml(T.dirs.replace('{n}', t.sent.to[satLine]))}</span><span class="text-slate-300">${fmtN(x.to_n_hours, 0)} / ${fmtN(x.to_gr_hours, 0)}</span></div>
+                <div class="flex justify-between text-slate-400"><span>${T.mwh}</span><span class="text-slate-300">${fmtN(sch, 0)} / ${fmtN(act, 0)}</span></div>
+            </div></div>`;
+    }).join('');
+
+    // 3. Ταβάνι γραμμών
+    const ce = analysisData.ceilings || {};
+    const cell = (d, cls) => d ? `<div class="${cls} font-semibold">${fmtN(d.mw, 0)} MW</div><div class="text-[11px] text-slate-500 whitespace-nowrap">${fmtDayShort(d.date)}, ${hourSpan(d.hour)}</div><div class="text-[11px] text-slate-400 whitespace-nowrap">${T.p99} ${fmtN(d.p99_mw, 0)} MW</div>` : '–';
+    document.getElementById('satCeilTable').innerHTML = `<div class="hidden md:grid grid-cols-[1fr_1.5fr_1.5fr] gap-3 px-6 py-2 text-xs text-slate-400 font-semibold">
+        <span>${escapeHtml(t.colCountry)}</span><span class="text-right">↓ ${T.imp}</span><span class="text-right">↑ ${T.exp}</span></div>` +
+        ["AL", "BG", "IT", "MK", "TR"].filter(c => ce[c]).map(c => {
+            const dot = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span>`;
+            return `<div class="border-t border-slate-700/50" style="font-variant-numeric:tabular-nums">
+                <div class="hidden md:grid grid-cols-[1fr_1.5fr_1.5fr] gap-3 px-6 py-3 text-sm items-center">
+                    <span class="flex items-center gap-2 text-slate-200 font-semibold">${dot}${escapeHtml(N[c])}</span>
+                    <span class="text-right">${cell(ce[c].imp, 'text-yellow-400')}</span><span class="text-right">${cell(ce[c].exp, 'text-rose-500')}</span></div>
+                <div class="md:hidden px-4 py-3">
+                    <div class="flex items-center gap-2 text-slate-200 font-semibold text-sm">${dot}${escapeHtml(N[c])}</div>
+                    <div class="grid grid-cols-2 gap-3 mt-1.5 text-xs text-right">
+                        <div>${cell(ce[c].imp, 'text-yellow-400')}</div><div>${cell(ce[c].exp, 'text-rose-500')}</div></div></div></div>`;
+        }).join('');
+}
+
 // ---- Οθόνη φόρτωσης (D03, όπως live-greekpower D47) ----------------------
 // Πρώτα η δουλειά, μετά το γέμισμα της μπάρας, μετά το ✓. Χρόνοι ίδιοι με το live.
 const REDUCE_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -1588,6 +1803,7 @@ async function boot() {
         await loadStep(4, async () => { renderArbitrageTab(day); });
         await loadStep(5, async () => { renderMTDView(); });
         await loadStep(6, async () => { renderCountryTab(); });
+        await loadStep(7, async () => { renderSatTab(); });
 
         document.getElementById('mainSpinner').classList.add('hidden');
         document.getElementById('loadRowFinal').classList.remove('opacity-0', 'translate-y-2');

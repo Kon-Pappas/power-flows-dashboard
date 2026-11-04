@@ -47,7 +47,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Batch 16 — data layer: hourly schedule per country (BG, IT), coupling per quarter-hour, `data/analysis.json` (cash per country, line status, saturation, ceilings, daily facts)~~ (D34). After the upload: fetch the history again, month by month (2026-06 … 2026-10) and once with start 2026-11-01, end empty
 - ~~Review of the daily texts~~ (owner, 3 Nov 2026): 1 €/MWh rule, "observed limit", schedule and actual side by side, two sentences per decoupling — batch 17 (D35)
 - ~~Batch 18 — tab "By country" and zero-flow notes by day / month / period~~ (D36)
-- Batch 19 — tab "Saturation" (mobile tabs become 3 + 3): first the daily card "The day of the interconnections" (Today: final day-ahead prices only; Yesterday: windows, then schedule vs actual flow against the observed limit and congestion rent (estimate), unusual events; 3–5 sentences by score; any day from the picker), then the monthly saturation and the ceilings
+- ~~Batch 19 — tab "Saturation"~~ (D37; mobile tabs 3 + 3): first the daily card "The day of the interconnections" (Today: final day-ahead prices only; Yesterday: windows, then schedule vs actual flow against the observed limit and congestion rent (estimate), unusual events; 3–5 sentences by score; any day from the picker), then the monthly saturation and the ceilings
 - Later: real capacity from ENTSO-E (offered transfer capacity per border and hour) replacing the "usual limit"; an afternoon run (≈14:30) for "Tomorrow"; a "copy text" button
 
 ## Data files — before February 2027 (plan for December 2026 – January 2027)

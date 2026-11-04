@@ -67,6 +67,10 @@
                     <div class="flex justify-between items-center mb-1"><span class="text-xs text-slate-300" data-load-label></span><svg class="w-3.5 h-3.5 text-emerald-400 opacity-0 transition-opacity duration-300" data-load-ck fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></div>
                     <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="bg-acc-500 h-full rounded-full w-0 ease-out" style="transition-property: width, background-color; transition-duration: 300ms;" data-load-bar></div></div>
                 </div>
+                <div class="load-row opacity-50 transition-opacity duration-300" data-step="7">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-slate-300" data-load-label></span><svg class="w-3.5 h-3.5 text-emerald-400 opacity-0 transition-opacity duration-300" data-load-ck fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="bg-acc-500 h-full rounded-full w-0 ease-out" style="transition-property: width, background-color; transition-duration: 300ms;" data-load-bar></div></div>
+                </div>
             </div>
             <div class="opacity-0 transition-all duration-500 transform translate-y-2 flex items-center justify-center p-3 mt-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 gap-2" id="loadRowFinal">
                 <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -181,12 +185,13 @@
         <!-- TABS NAVIGATION (Responsive Grid for Mobile & PC)
              H01 / D25: μία μόνο γραμμή στο κινητό (αυτή κάτω από την κεφαλίδα)· χωρίς δεύτερη γραμμή και δικό της κενό πάνω από τα tabs -->
         <div>
-            <div class="grid grid-cols-6 md:grid-cols-5 gap-2 md:gap-0 md:border-b md:border-slate-800">
+            <div class="grid grid-cols-6 md:grid-cols-6 gap-2 md:gap-0 md:border-b md:border-slate-800">
                 <button id="tabBtnTotals" onclick="switchTab('totals')" role="tab" class="tab-btn">Daily ISP vs SCADA</button>
                 <button id="tabBtnHourly" onclick="switchTab('hourly')" role="tab" class="tab-btn">Hourly Profiles</button>
                 <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" role="tab" class="tab-btn">Daily Arbitrage</button>
                 <button id="tabBtnMTD" onclick="switchTab('mtd')" role="tab" class="tab-btn">MTD Position</button>
                 <button id="tabBtnCountry" onclick="switchTab('country')" role="tab" class="tab-btn">By Country</button>
+                <button id="tabBtnSat" onclick="switchTab('sat')" role="tab" class="tab-btn">Saturation</button>
             </div>
         </div>
 
@@ -276,6 +281,32 @@
         </div>
 
         <!-- VIEW 4: MTD CUMULATIVE -->
+        <!-- TAB «ΚΟΡΕΣΜΟΣ» (D37): η ημέρα των διασυνδέσεων, κορεσμός ανά μήνα, ταβάνι γραμμών — από το data/analysis.json -->
+        <div id="viewSat" class="space-y-6 hidden">
+            <p class="text-amber-400 text-xs hidden" id="satNotice"></p>
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-slate-200" id="satDayTitle">The day of the interconnections</h2>
+                <p class="text-xs text-slate-400 mt-1" id="satDaySub">-</p>
+                <div id="satDayBody" class="mt-4 space-y-3"></div>
+            </div>
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-1">
+                    <h2 class="text-lg font-semibold text-slate-200" id="satMonthTitle">Saturation by month</h2>
+                    <div class="flex gap-1 bg-slate-900/60 border border-slate-700 rounded-lg p-1 text-xs font-bold" role="group" id="satLineGroup"></div>
+                </div>
+                <p class="text-xs text-slate-400 mb-4" id="satMonthSub">-</p>
+                <div class="relative h-[220px] md:h-[280px]"><canvas id="satChart"></canvas></div>
+                <div id="satMonthTable" class="mt-4 -mx-4 md:-mx-6"></div>
+            </div>
+            <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="p-4 md:px-6 md:pt-6 md:pb-2">
+                    <h2 class="text-lg font-semibold text-slate-200" id="satCeilTitle">Line ceilings</h2>
+                    <p class="text-xs text-slate-400 mt-1" id="satCeilSub">-</p>
+                </div>
+                <div id="satCeilTable"></div>
+            </div>
+        </div>
+
         <!-- TAB «ΑΝΑ ΧΩΡΑ» (D36): ταμείο ανά χώρα από το data/analysis.json, όλη η περίοδος και εξέλιξη στον χρόνο -->
         <div id="viewCountry" class="space-y-6 hidden">
             <p class="text-amber-400 text-xs hidden" id="countryNotice"></p>
@@ -414,10 +445,10 @@
         const TAB_BASE = 'tab-btn flex items-center justify-center text-xs max-[340px]:text-[11px] md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-normal md:whitespace-nowrap leading-tight text-center px-2 max-[340px]:px-1 border md:border-0 md:border-b-2 cursor-pointer ';
         const TAB_ON = 'bg-acc-400 text-slate-900 border-acc-400 md:bg-transparent md:text-acc-400 md:border-b-acc-400';
         const TAB_OFF = 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:text-acc-200';
-        const TABS = { totals: ['tabBtnTotals', 'viewTotals'], hourly: ['tabBtnHourly', 'viewHourly'], arbitrage: ['tabBtnArbitrage', 'viewArbitrage'], mtd: ['tabBtnMTD', 'viewMTD'], country: ['tabBtnCountry', 'viewCountry'] };
-        // Στο κινητό 3 + 2, όπως το live (πλέγμα 6 στηλών: τα τρία πρώτα από 2, τα δύο τελευταία από 3)
+        const TABS = { totals: ['tabBtnTotals', 'viewTotals'], hourly: ['tabBtnHourly', 'viewHourly'], arbitrage: ['tabBtnArbitrage', 'viewArbitrage'], mtd: ['tabBtnMTD', 'viewMTD'], country: ['tabBtnCountry', 'viewCountry'], sat: ['tabBtnSat', 'viewSat'] };
+        // Στο κινητό 3 + 3 (πλέγμα 6 στηλών, κάθε tab από 2), όπως το live· στον υπολογιστή 6 σε μία σειρά
         const TAB_EXTRA = { totals: ' col-span-2 md:col-span-1', hourly: ' col-span-2 md:col-span-1', arbitrage: ' col-span-2 md:col-span-1',
-                            mtd: ' col-span-3 md:col-span-1', country: ' col-span-3 md:col-span-1' };
+                            mtd: ' col-span-2 md:col-span-1', country: ' col-span-2 md:col-span-1', sat: ' col-span-2 md:col-span-1' };
 
         function paintTabs() {
             Object.entries(TABS).forEach(([key, [btn, view]]) => {
