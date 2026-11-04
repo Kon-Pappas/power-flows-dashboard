@@ -29,7 +29,7 @@ All hourly figures are in **Greek time**: prices and the ISP schedule, published
 
 - `data/historical_flows.json`: all days, newest first;
 - `data/meta.json`: time of the run and of the next scheduled run, shown in the page header.
-- `data/analysis.json`: the interconnection analysis built from the whole history (cash per country, line status, saturation of the Bulgaria and Italy lines, line ceilings, facts of each day); see `docs/DECISIONS.md`, D34.
+- `data/analysis.json` (also feeds the **By country** tab): the interconnection analysis built from the whole history (cash per country, line status, saturation of the Bulgaria and Italy lines, line ceilings, facts of each day); see `docs/DECISIONS.md`, D34.
 
 After every fetch the workflow prints the size of the data file (`scripts/data_size.py`; you can also run it yourself: `python3 scripts/data_size.py`).
 

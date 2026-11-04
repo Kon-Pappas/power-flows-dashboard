@@ -65,10 +65,24 @@ st = out["status"]["IT"]
 check("κατάσταση: 4 ημέρες στο μηδέν συνολικά", st["zero_days"] == 4, str(st))
 check("κατάσταση: τελευταία επανεκκίνηση 5 Οκτ στις 00:00", st["last_restart"] == {"date": "2026-10-05", "hour": "00:00"}, str(st["last_restart"]))
 check("κατάσταση: καμία τρέχουσα σειρά", st["zero_streak"] == 0)
+check("διαστήματα μηδέν (D36): ΙΤ 1–4 Οκτ, 4 ημέρες, επανεκκίνηση 5 Οκτ 00:00",
+      st["zero_episodes"] == [{"from": "2026-10-01", "to": "2026-10-04", "days": 4, "ongoing": False,
+                               "restart": {"date": "2026-10-05", "hour": "00:00"}, "from_data_start": False}], str(st["zero_episodes"]))
 f31 = out["days"]["2026-10-01"]
 check("γεγονός: μηδενισμός ΙΤ την 1η Οκτ", any(f["type"] == "zero_start" and f["line"] == "IT" for f in f31))
 f35 = out["days"]["2026-10-05"]
 check("γεγονός: επανεκκίνηση ΙΤ στις 5 Οκτ, 00:00", any(f["type"] == "restart" and f["line"] == "IT" and f["hour"] == "00:00" for f in f35))
+
+# γραμμή στο μηδέν (D36): την πρώτη μέρα «μηδενισμός», από τη 2η καμία πρόταση· η κατάσταση μετρά κανονικά
+it_zero_days = ["2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04"]
+check("γραμμή στο μηδέν: καμία πρόταση αποσύζευξης ΙΤ στις ημέρες μηδέν",
+      not any(f["type"] == "decoupled" and f["line"] == "IT" for d in it_zero_days for f in out["days"][d]))
+check("γραμμή στο μηδέν: από τη 2η ημέρα κανένα γεγονός για την ΙΤ",
+      not any(f.get("line") == "IT" for d in it_zero_days[1:] for f in out["days"][d]))
+
+# εβδομαδιαία σύνολα (D36): Δευτέρα–Κυριακή
+wk = out["cash"]["weekly"]["2026-09-07"]["AL"]
+check("εβδομάδα 7–13 Σεπ: 7 ημέρες, ΑΛ +1.680.000 €", wk["days"] == 7 and wk["net"] == 7 * 240000, str(wk))
 
 # 4. Αποσύζευξη μιας ημέρας με μέτρηση (k=39): ώρες 06–08, πρόγραμμα 600 MW, σύνηθες 500
 f39 = out["days"]["2026-10-10"]

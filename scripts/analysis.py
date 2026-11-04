@@ -15,7 +15,7 @@
 """
 import json
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 COUNTRIES = ["AL", "BG", "IT", "MK", "TR"]
@@ -165,6 +165,8 @@ def day_facts(day, history):
         if not prices_known(day, c):
             continue
         ws = windows(day, c)
+        if measured and is_zero_day(day, c):
+            continue        # D36: γραμμή στο μηδέν όλη τη μέρα — το λένε τα γεγονότα μηδενισμού / επανεκκίνησης και η ειδοποίηση
         if not ws:
             facts.append({"type": "coupled_all_day", "line": c, "score": 5})
         else:
@@ -270,8 +272,23 @@ def line_status(days):
             if is_zero_day(a, c) and not is_zero_day(b, c):
                 first = next(i for i, h in enumerate(b["Hourly"]) if abs(h.get("SCADA_" + c) or 0) >= ZERO_MW)
                 last_restart = {"date": b["Date"], "hour": hhmm(first)}
+        # D36: όλα τα διαστήματα μηδενικής ροής, για να δείχνει η σελίδα το διάστημα της ΗΜΕΡΑΣ που βλέπει ο επισκέπτης
+        episodes, cur = [], None
+        for i, d in enumerate(measured):
+            if is_zero_day(d, c):
+                if cur is None:
+                    cur = {"from": d["Date"], "to": d["Date"], "days": 0, "ongoing": False, "restart": None,
+                           "from_data_start": i == 0}      # ίσως ξεκίνησε πριν από τα δεδομένα μας
+                    episodes.append(cur)
+                cur["to"], cur["days"] = d["Date"], cur["days"] + 1
+            elif cur is not None:
+                first = next(j for j, h in enumerate(d["Hourly"]) if abs(h.get("SCADA_" + c) or 0) >= ZERO_MW)
+                cur["restart"] = {"date": d["Date"], "hour": hhmm(first)}
+                cur = None
+        if cur is not None:
+            cur["ongoing"] = True
         out[c] = {"zero_streak": streak, "zero_since": since, "zero_days": sum(1 for d in measured if is_zero_day(d, c)),
-                  "last_restart": last_restart, "as_of": measured[-1]["Date"] if measured else None}
+                  "last_restart": last_restart, "zero_episodes": episodes, "as_of": measured[-1]["Date"] if measured else None}
     return out
 
 
@@ -359,6 +376,16 @@ def build(days):
             for k in ("rev", "cost", "exp_mwh", "imp_mwh", "net"):
                 mm[c][k] += per[c][k]
             mm[c]["days"] += 1
+    cash_weekly = {}                     # εβδομάδα Δευτέρα–Κυριακή, κλειδί = η Δευτέρα (D36)
+    for date, per in cash_daily.items():
+        dd = datetime.strptime(date, "%Y-%m-%d")
+        wk = (dd - timedelta(days=dd.weekday())).strftime("%Y-%m-%d")
+        ww = cash_weekly.setdefault(wk, {c: {"rev": 0, "cost": 0, "exp_mwh": 0, "imp_mwh": 0, "net": 0, "days": 0}
+                                         for c in COUNTRIES})
+        for c in COUNTRIES:
+            for k in ("rev", "cost", "exp_mwh", "imp_mwh", "net"):
+                ww[c][k] += per[c][k]
+            ww[c]["days"] += 1
     facts = {}
     for i, d in enumerate(days):
         facts[d["Date"]] = day_facts(d, days[:i])
@@ -369,7 +396,7 @@ def build(days):
                    "usual_days": USUAL_DAYS, "usual_pct": USUAL_PCT,
                    "deviation_pct": DEV_PCT, "price_rule": "AL/MK/TR: GR price; BG/IT: mean of GR and neighbour (D11)"},
         "countries": COUNTRIES, "coupled": COUPLED,
-        "cash": {"daily": cash_daily, "monthly": cash_monthly},
+        "cash": {"daily": cash_daily, "weekly": cash_weekly, "monthly": cash_monthly},
         "status": line_status(days),
         "saturation": saturation_monthly(days),
         "ceilings": ceilings(days),

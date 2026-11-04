@@ -63,6 +63,10 @@
                     <div class="flex justify-between items-center mb-1"><span class="text-xs text-slate-300" data-load-label></span><svg class="w-3.5 h-3.5 text-emerald-400 opacity-0 transition-opacity duration-300" data-load-ck fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></div>
                     <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="bg-acc-500 h-full rounded-full w-0 ease-out" style="transition-property: width, background-color; transition-duration: 300ms;" data-load-bar></div></div>
                 </div>
+                <div class="load-row opacity-50 transition-opacity duration-300" data-step="6">
+                    <div class="flex justify-between items-center mb-1"><span class="text-xs text-slate-300" data-load-label></span><svg class="w-3.5 h-3.5 text-emerald-400 opacity-0 transition-opacity duration-300" data-load-ck fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg></div>
+                    <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden"><div class="bg-acc-500 h-full rounded-full w-0 ease-out" style="transition-property: width, background-color; transition-duration: 300ms;" data-load-bar></div></div>
+                </div>
             </div>
             <div class="opacity-0 transition-all duration-500 transform translate-y-2 flex items-center justify-center p-3 mt-1 rounded-xl border border-emerald-500/30 bg-emerald-500/10 gap-2" id="loadRowFinal">
                 <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -177,11 +181,12 @@
         <!-- TABS NAVIGATION (Responsive Grid for Mobile & PC)
              H01 / D25: μία μόνο γραμμή στο κινητό (αυτή κάτω από την κεφαλίδα)· χωρίς δεύτερη γραμμή και δικό της κενό πάνω από τα tabs -->
         <div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-0 md:border-b md:border-slate-800">
+            <div class="grid grid-cols-6 md:grid-cols-5 gap-2 md:gap-0 md:border-b md:border-slate-800">
                 <button id="tabBtnTotals" onclick="switchTab('totals')" role="tab" class="tab-btn">Daily ISP vs SCADA</button>
                 <button id="tabBtnHourly" onclick="switchTab('hourly')" role="tab" class="tab-btn">Hourly Profiles</button>
                 <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" role="tab" class="tab-btn">Daily Arbitrage</button>
                 <button id="tabBtnMTD" onclick="switchTab('mtd')" role="tab" class="tab-btn">MTD Position</button>
+                <button id="tabBtnCountry" onclick="switchTab('country')" role="tab" class="tab-btn">By Country</button>
             </div>
         </div>
 
@@ -271,8 +276,42 @@
         </div>
 
         <!-- VIEW 4: MTD CUMULATIVE -->
+        <!-- TAB «ΑΝΑ ΧΩΡΑ» (D36): ταμείο ανά χώρα από το data/analysis.json, όλη η περίοδος και εξέλιξη στον χρόνο -->
+        <div id="viewCountry" class="space-y-6 hidden">
+            <p class="text-amber-400 text-xs hidden" id="countryNotice"></p>
+            <!-- Σύνολα περιόδου -->
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-slate-200" id="countryTotalsTitle">Net cash flow by country</h2>
+                <p class="text-xs text-slate-400 mt-1 mb-4" id="countryTotalsSub">-</p>
+                <div id="countryTotals" class="space-y-2"></div>
+            </div>
+            <!-- Εξέλιξη στον χρόνο -->
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+                    <h2 class="text-lg font-semibold text-slate-200" id="countryChartTitle">Cash flow over time</h2>
+                    <div class="flex gap-1 bg-slate-900/60 border border-slate-700 rounded-lg p-1 text-xs font-bold" role="group" id="countryGranGroup">
+                        <button type="button" id="countryGranMonth" class="px-3 py-1.5 rounded transition" onclick="setCountryGran('month')">Month</button>
+                        <button type="button" id="countryGranWeek" class="px-3 py-1.5 rounded transition" onclick="setCountryGran('week')">Week</button>
+                    </div>
+                </div>
+                <div id="countryChips" class="flex flex-wrap gap-2 mb-4"></div>
+                <div class="relative h-[260px] md:h-[320px]">
+                    <canvas id="countryChart"></canvas>
+                </div>
+            </div>
+            <!-- Πίνακας / κάρτες ανά χώρα -->
+            <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
+                <div class="p-4 md:px-6 md:pt-6 md:pb-2">
+                    <h2 class="text-lg font-semibold text-slate-200" id="countryTableTitle">Volumes and average prices</h2>
+                    <p class="text-xs text-slate-400 mt-1" id="countryTableSub">-</p>
+                </div>
+                <div id="countryTable"></div>
+            </div>
+        </div>
+
         <div id="viewMTD" class="space-y-6 hidden">
             <p class="text-amber-400 text-xs hidden" id="mtdExclusionNotice"></p>
+            <p class="text-amber-300 text-xs hidden" id="mtdZeroNotice"></p>
             <!-- MTD KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="order-1 md:order-1 bg-transparent md:bg-slate-800/60 p-2 md:p-4 rounded-xl border-none md:border md:border-slate-700 text-center flex flex-col justify-center">
@@ -375,12 +414,15 @@
         const TAB_BASE = 'tab-btn flex items-center justify-center text-xs max-[340px]:text-[11px] md:text-base font-bold rounded-lg md:rounded-none h-12 w-full transition whitespace-normal md:whitespace-nowrap leading-tight text-center px-2 max-[340px]:px-1 border md:border-0 md:border-b-2 cursor-pointer ';
         const TAB_ON = 'bg-acc-400 text-slate-900 border-acc-400 md:bg-transparent md:text-acc-400 md:border-b-acc-400';
         const TAB_OFF = 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white md:bg-transparent md:border-transparent md:hover:text-acc-200';
-        const TABS = { totals: ['tabBtnTotals', 'viewTotals'], hourly: ['tabBtnHourly', 'viewHourly'], arbitrage: ['tabBtnArbitrage', 'viewArbitrage'], mtd: ['tabBtnMTD', 'viewMTD'] };
+        const TABS = { totals: ['tabBtnTotals', 'viewTotals'], hourly: ['tabBtnHourly', 'viewHourly'], arbitrage: ['tabBtnArbitrage', 'viewArbitrage'], mtd: ['tabBtnMTD', 'viewMTD'], country: ['tabBtnCountry', 'viewCountry'] };
+        // Στο κινητό 3 + 2, όπως το live (πλέγμα 6 στηλών: τα τρία πρώτα από 2, τα δύο τελευταία από 3)
+        const TAB_EXTRA = { totals: ' col-span-2 md:col-span-1', hourly: ' col-span-2 md:col-span-1', arbitrage: ' col-span-2 md:col-span-1',
+                            mtd: ' col-span-3 md:col-span-1', country: ' col-span-3 md:col-span-1' };
 
         function paintTabs() {
             Object.entries(TABS).forEach(([key, [btn, view]]) => {
                 const on = key === currentTab;
-                document.getElementById(btn).className = TAB_BASE + (on ? TAB_ON : TAB_OFF);
+                document.getElementById(btn).className = TAB_BASE + (on ? TAB_ON : TAB_OFF) + (TAB_EXTRA[key] || '');
                 document.getElementById(btn).setAttribute('aria-selected', on ? 'true' : 'false');
                 document.getElementById(view).classList.toggle('hidden', !on);
             });

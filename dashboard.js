@@ -3,7 +3,8 @@ let currentLang = 'en';
 // D04 (όπως live D10): αγγλικά από προεπιλογή· η τελευταία επιλογή του επισκέπτη κρατιέται στον browser του,
 // στο κοινό κλειδί kp_lang, οπότε η γλώσσα τον ακολουθεί σε όλο το hub.
 try { const l = localStorage.getItem('kp_lang'); if (l === 'el' || l === 'en') currentLang = l; } catch (e) { /* ιδιωτική περιήγηση */ }
-let metaData = null;   // data/meta.json: πότε έγινε η τελευταία λήψη και πότε η επόμενη (D06)
+let metaData = null;
+let analysisData = null;   // data/analysis.json (D34, D36)   // data/meta.json: πότε έγινε η τελευταία λήψη και πότε η επόμενη (D06)
 
 let totalsChartInstance = null;
 let flowsChartInstance = null;
@@ -136,6 +137,15 @@ const i18n = {
         tabHourly: "Hourly Profiles",
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
+        tabCountry: "By country",
+        lineCodes: { AL: "GR–AL", BG: "GR–BG", IT: "GR–IT", MK: "GR–MK", TR: "GR–TR" },
+        zero: { day: "Zero flow all day · period {from} – {to} ({n})", dayOngoing: "Zero flow all day · since {from}, ongoing ({n} to {to})",
+                restart: "Flow resumed at {h}, after {n} at zero ({from} – {to})", month: "{line}: {n} at zero this month ({ranges})",
+                period: "{n} at zero in the period", start: " (start of the data)", d1: "1 day", dn: "{n} days" },
+        ctry: { totalsTitle: "Net cash flow by country", sub: "{from} – {to} · {days} complete days · exports minus imports, measured flow × price",
+                chartTitle: "Cash flow over time", month: "Month", week: "Week", all: "All", net: "Net", days: "{n} days",
+                tableTitle: "Volumes and average prices", exports: "Exports", imports: "Imports", cash: "Cash flow",
+                avg: "avg", noData: "The analysis could not be loaded; the other tabs work normally." },
         btnMethodology: "Methodology & Assumptions",
         
         totalsChartTitle: "Net Flows (ISP vs SCADA)",
@@ -221,6 +231,15 @@ const i18n = {
         tabHourly: "Ωριαία προφίλ",
         tabArbitrage: "Ημερήσιο Arbitrage",
         tabMTD: "Σωρευτική θέση",
+        tabCountry: "Ανά χώρα",
+        lineCodes: { AL: "ΕΛ–ΑΛ", BG: "ΕΛ–ΒΓ", IT: "ΕΛ–ΙΤ", MK: "ΕΛ–ΒΜ", TR: "ΕΛ–ΤΡ" },
+        zero: { day: "Μηδενική ροή όλη τη μέρα · διάστημα {from} – {to} ({n})", dayOngoing: "Μηδενική ροή όλη τη μέρα · από {from}, συνεχίζεται ({n} έως {to})",
+                restart: "Η ροή επανήλθε στις {h}, μετά από {n} στο μηδέν ({from} – {to})", month: "{line}: {n} στο μηδέν αυτόν τον μήνα ({ranges})",
+                period: "{n} στο μηδέν στην περίοδο", start: " (αρχή των δεδομένων)", d1: "1 ημέρα", dn: "{n} ημέρες" },
+        ctry: { totalsTitle: "Καθαρό ταμείο ανά χώρα", sub: "{from} – {to} · {days} πλήρεις ημέρες · εξαγωγές μείον εισαγωγές, μετρημένη ροή × τιμή",
+                chartTitle: "Ταμείο στον χρόνο", month: "Μήνας", week: "Εβδομάδα", all: "Όλες", net: "Καθαρό", days: "{n} ημέρες",
+                tableTitle: "Όγκοι και μέσες τιμές", exports: "Εξαγωγές", imports: "Εισαγωγές", cash: "Ταμείο",
+                avg: "μέση", noData: "Η ανάλυση δεν φορτώθηκε· τα υπόλοιπα tabs λειτουργούν κανονικά." },
         btnMethodology: "Μεθοδολογία & παραδοχές",
         
         totalsChartTitle: "Καθαρές ροές (ISP vs SCADA)",
@@ -502,7 +521,7 @@ function renderMethodology() {
 }
 
 // Η ενότητα της Αναλυτικής για κάθε tab (D30): η σειρά των ενοτήτων είναι ίδια σε ελληνικά και αγγλικά
-const METHOD_SECTION_OF_TAB = { totals: 1, hourly: 2, arbitrage: 3, mtd: 4 };
+const METHOD_SECTION_OF_TAB = { totals: 1, hourly: 2, arbitrage: 3, mtd: 4, country: 0 };
 
 // Μετακινεί το σώμα του παραθύρου ώστε το στοιχείο να είναι στην κορυφή του, αμέσως (χωρίς χρονοκαθυστέρηση)
 function scrollModalTo(el) {
@@ -550,6 +569,10 @@ function applyStaticText() {
     document.getElementById('tabBtnHourly').innerText = t.tabHourly;
     document.getElementById('tabBtnArbitrage').innerText = t.tabArbitrage;
     document.getElementById('tabBtnMTD').innerText = t.tabMTD;
+    document.getElementById('tabBtnCountry').innerText = t.tabCountry;
+    const C = t.ctry;
+    [['countryTotalsTitle', C.totalsTitle], ['countryChartTitle', C.chartTitle], ['countryTableTitle', C.tableTitle],
+     ['countryGranMonth', C.month], ['countryGranWeek', C.week]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
     
     document.getElementById('totalsChartTitle').innerText = t.totalsChartTitle;
     document.getElementById('totalsChartSub').innerText = t.totalsChartSub;
@@ -594,7 +617,7 @@ function applyStaticText() {
 
     // Οθόνη φόρτωσης: τα βήματα 2…5 παίρνουν τα ονόματα των tabs, με τη σειρά τους
     const L = t.load;
-    const stepText = { 1: L.s1, 2: t.tabTotals, 3: t.tabHourly, 4: t.tabArbitrage, 5: t.tabMTD };
+    const stepText = { 1: L.s1, 2: t.tabTotals, 3: t.tabHourly, 4: t.tabArbitrage, 5: t.tabMTD, 6: t.tabCountry };
     const ids = { loadTitle: L.title, loadGroup1: L.g1, loadGroup2: L.g2, loadReady: L.ready };
     Object.entries(ids).forEach(([id, txt]) => { const el = document.getElementById(id); if (el) el.textContent = txt; });
     document.querySelectorAll('.load-row').forEach(r => { r.querySelector('[data-load-label]').textContent = stepText[r.dataset.step] || ''; });
@@ -846,6 +869,7 @@ function updateArbitrageTab() {
             ? `<div class="text-right ${cls}">${arrow} ${v} ${unit('MWh')}<div class="opacity-90">${p} ${unit('€/MWh')}</div></div>`
             : `<div class="text-right text-slate-600">${arrow} –</div>`;
 
+        const zeroNote = currentDayData ? zeroNoteForDay(c, currentDayData.Date) : null;
         listContainer.insertAdjacentHTML('beforeend', `
             <div onclick="toggleCountrySelection('${c}')" class="border-b border-slate-700/50 cursor-pointer transition-all duration-300 ${opacity} ${bgHover}">
                 <div class="hidden md:grid grid-cols-4 gap-4 p-4 text-center font-semibold text-sm items-center">
@@ -870,6 +894,7 @@ function updateArbitrageTab() {
                         ${side('text-rose-500', '↑', expVolFmt, expAvgFmt, data.hasScada && !roundsToZero(rowData.expVol))}
                     </div>
                 </div>
+                ${zeroNote ? `<div class="px-4 md:px-6 pb-3 -mt-1 md:-mt-2 text-xs text-amber-300 flex gap-1.5"><span aria-hidden="true">⚠</span><span>${escapeHtml(zeroNote)}</span></div>` : ''}
             </div>
         `);
     });
@@ -1130,6 +1155,7 @@ function renderCharts() {
     renderHourlyTab(dayData);
     renderArbitrageTab(dayData);
     renderMTDView();
+    renderCountryTab();
     updateDataNotice(dayData);
 }
 
@@ -1142,7 +1168,7 @@ function updateStatusBadge(dayData) {
     // Desktop: pill στην κεφαλίδα (D14)· κινητό: μικρό pill μέσα στο κουτί ημέρας (D29, H05)
     const head = document.getElementById('statusPill'), box = document.getElementById('statusPillBox');
     if (!head || !box) return;
-    if (!dayData || currentTab === 'mtd') { head.className = 'hidden'; box.className = 'hidden'; return; }
+    if (!dayData || currentTab === 'mtd' || currentTab === 'country') { head.className = 'hidden'; box.className = 'hidden'; return; }
     const t = i18n[currentLang], ok = dayComplete(dayData), tone = ok ? PILL.green : PILL.orange;
     head.className = `hidden md:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[11px] font-bold ${tone}`;
     head.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-current"></span>${escapeHtml(ok ? t.pillComplete : t.pillIncomplete)}`;
@@ -1285,13 +1311,157 @@ function renderHourlyTab(dayData) {
 }
 
 // Tab «Σωρευτική θέση» (MTD)
+function updateMtdZeroNotice(month) {
+    const el = document.getElementById('mtdZeroNotice');
+    if (!el) return;
+    const t = i18n[currentLang], lines = [];
+    const first = `${month}-01`;
+    const last = new Date(Date.UTC(+month.slice(0, 4), +month.slice(5, 7), 0)).toISOString().slice(0, 10);
+    ["AL", "BG", "IT", "MK", "TR"].forEach(c => {
+        const parts = []; let n = 0;
+        zeroEpisodes(c).forEach(e => {
+            if (e.to < first || e.from > last) return;              // το διάστημα δεν αγγίζει τον μήνα
+            const a = e.from > first ? e.from : first;               // κομμένο στα όρια του μήνα
+            const b = e.to < last ? e.to : last;
+            n += Math.round((Date.parse(b) - Date.parse(a)) / 864e5) + 1;
+            parts.push(a === b ? fmtDayShort(a) : `${fmtDayShort(a)} – ${fmtDayShort(b)}`);
+        });
+        if (n) lines.push(t.zero.month.replace('{line}', t.lineCodes[c]).replace('{n}', nDays(n)).replace('{ranges}', parts.join(', ')));
+    });
+    el.textContent = lines.map(l => '⚠ ' + l).join(' · ');
+    el.classList.toggle('hidden', !lines.length);
+}
+
 function renderMTDView() {
     const selectedMonth = document.getElementById('monthSelect').value;
     let excludedDates = [];
     if (selectedMonth) {
         excludedDates = renderMTDTab(selectedMonth) || [];
+        updateMtdZeroNotice(selectedMonth);
     }
     updateMtdExclusionNotice(excludedDates);
+}
+
+// ---- Κατάσταση γραμμών (D36) --------------------------------------------------
+function fmtDayShort(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Intl.DateTimeFormat(i18n[currentLang].locale, { day: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+// Διαστήματα μηδενικής ροής (D36): η σημείωση ακολουθεί την ημέρα / τον μήνα / την περίοδο που βλέπει ο επισκέπτης
+function zeroEpisodes(c) {
+    const st = analysisData && analysisData.status && analysisData.status[c];
+    return (st && st.zero_episodes) || [];
+}
+function nDays(n) { const Z = i18n[currentLang].zero; return n === 1 ? Z.d1 : Z.dn.replace('{n}', n); }
+function zeroNoteForDay(c, date) {
+    const Z = i18n[currentLang].zero;
+    for (const e of zeroEpisodes(c)) {
+        const from = fmtDayShort(e.from) + (e.from_data_start ? Z.start : '');
+        if (e.from <= date && date <= e.to) {
+            return (e.ongoing ? Z.dayOngoing : Z.day).replace('{from}', from).replace('{to}', fmtDayShort(e.to)).replace('{n}', nDays(e.days));
+        }
+        if (e.restart && e.restart.date === date) {
+            return Z.restart.replace('{h}', e.restart.hour).replace('{n}', nDays(e.days)).replace('{from}', from).replace('{to}', fmtDayShort(e.to));
+        }
+    }
+    return null;
+}
+
+// ---- Tab «Ανά χώρα» (D36) -----------------------------------------------------
+let countryGran = 'month';
+let countryPick = 'all';
+let countryChartInstance = null;
+const fmtMEur = (v) => `${fmtN(v / 1e6, 1, true)} ${currentLang === 'el' ? 'εκ. €' : 'M€'}`;
+function setCountryGran(g) { countryGran = g; renderCountryTab(); }
+function setCountryPick(c) { countryPick = c; renderCountryTab(); }
+
+function renderCountryTab() {
+    const t = i18n[currentLang], C = t.ctry, N = t.countries;
+    const notice = document.getElementById('countryNotice');
+    const cash = analysisData && analysisData.cash;
+    if (!cash || !cash.monthly) { notice.textContent = C.noData; notice.classList.remove('hidden'); return; }
+    notice.classList.add('hidden');
+    const order = ["AL", "BG", "IT", "MK", "TR"];
+    const dates = Object.keys(cash.daily || {}).sort();
+    const sub = C.sub.replace('{from}', fmtDay(dates[0])).replace('{to}', fmtDay(dates[dates.length - 1])).replace('{days}', dates.length);
+    document.getElementById('countryTotalsSub').textContent = sub;
+    document.getElementById('countryTableSub').textContent = sub;
+
+    // Σύνολα περιόδου
+    const tot = {};
+    order.forEach(c => { tot[c] = { rev: 0, cost: 0, exp_mwh: 0, imp_mwh: 0, net: 0 }; });
+    Object.values(cash.monthly).forEach(m => order.forEach(c => { Object.keys(tot[c]).forEach(k => { tot[c][k] += m[c][k]; }); }));
+    const max = Math.max(...order.map(c => Math.abs(tot[c].net)), 1);
+    document.getElementById('countryTotals').innerHTML = order.slice().sort((a, b) => tot[b].net - tot[a].net).map(c => {
+        const v = tot[c].net, w = Math.abs(v) / max * 50;
+        const bar = v >= 0 ? `left:50%;width:${w}%;background:#10b981` : `right:50%;width:${w}%;background:#d946ef`;
+        return `<div class="grid grid-cols-[minmax(0,7.5rem)_1fr_auto] md:grid-cols-[9rem_1fr_8rem] items-center gap-2 text-sm">
+            <span class="flex items-center gap-2 text-slate-200 min-w-0"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span><span class="truncate">${escapeHtml(N[c])}</span></span>
+            <div class="relative h-3"><div class="absolute top-0 bottom-0 rounded-sm" style="${bar}"></div><div class="absolute -top-1 -bottom-1 left-1/2 w-px bg-slate-500"></div></div>
+            <span class="text-right font-semibold whitespace-nowrap ${v >= 0 ? 'text-emerald-400' : 'text-fuchsia-400'}" style="font-variant-numeric:tabular-nums">${fmtMEur(v)}</span></div>`;
+    }).join('');
+
+    // Επιλογές: μήνας / εβδομάδα, χώρα
+    [['countryGranMonth', 'month'], ['countryGranWeek', 'week']].forEach(([id, g]) => {
+        document.getElementById(id).className = `px-3 py-1.5 rounded transition ${countryGran === g ? 'bg-acc-400 text-slate-900' : 'text-slate-400 hover:text-white'}`;
+    });
+    const chip = (key, label, color) => `<button type="button" onclick="setCountryPick('${key}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition ${countryPick === key ? 'border-acc-400 text-white bg-slate-900' : 'border-slate-700 text-slate-400 hover:text-white'}">${color ? `<span class="w-2 h-2 rounded-full" style="background:${color}"></span>` : ''}${escapeHtml(label)}</button>`;
+    document.getElementById('countryChips').innerHTML = chip('all', C.all) + order.map(c => chip(c, N[c], countryColors[c])).join('');
+
+    // Γράφημα: καθαρό ταμείο ανά περίοδο, στοιβαγμένο ανά χώρα
+    const src = countryGran === 'week' ? (cash.weekly || {}) : cash.monthly;
+    const keys = Object.keys(src).sort();
+    const shown = countryPick === 'all' ? order : [countryPick];
+    const label = (k) => countryGran === 'week' ? fmtDayShort(k)
+        : new Intl.DateTimeFormat(t.locale, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)));
+    if (countryChartInstance) countryChartInstance.destroy();
+    countryChartInstance = new Chart(document.getElementById('countryChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: keys.map(label), datasets: shown.map(c => ({ label: N[c], data: keys.map(k => src[k][c].net / 1e6), backgroundColor: countryColors[c], stack: 'net' })) },
+        options: {
+            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false }, tooltip: tipOff((i) => {
+                const k = keys[i], days = src[k][order[0]].days;
+                const rows = shown.slice().sort((a, b) => src[k][b].net - src[k][a].net)
+                    .map(c => tipRow(N[c], fmtMEur(src[k][c].net), countryColors[c])).join('');
+                const total = shown.reduce((a, c) => a + src[k][c].net, 0);
+                return tipHead(countryGran === 'week' ? `${C.week} ${fmtDayShort(k)}` : label(k), C.days.replace('{n}', days))
+                    + tipSections(rows, shown.length > 1 ? tipRow(C.net, fmtMEur(total), null, { strong: true }) : '');
+            }) },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255,255,255,0.6)' : '#334155' },
+                     ticks: { callback: v => `${fmtN(v, 0)}` }, title: { display: true, text: currentLang === 'el' ? 'εκ. €' : 'M€', color: '#64748b', font: { size: 11 } } }
+            }
+        }
+    });
+
+    // Πίνακας (desktop) / κάρτες (κινητό): όγκοι και μέσες τιμές της περιόδου
+    const avg = (eur, mwh) => mwh > 0 ? `${fmtN(eur / mwh, 2)} <span class="text-[11px] font-normal text-slate-500">€/MWh</span>` : '<span class="text-slate-600">–</span>';
+    const gwh = (mwh) => mwh > 0 ? `${fmtN(mwh / 1000, 1)} <span class="text-[11px] font-normal text-slate-500">GWh</span>` : '<span class="text-slate-600">–</span>';
+    const rowsHtml = order.map(c => {
+        const x = tot[c], col = x.net >= 0 ? 'text-emerald-400' : 'text-fuchsia-400';
+        const dot = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span>`;
+        const zd = zeroEpisodes(c).reduce((a, e) => a + e.days, 0);
+        const zn = zd ? `<div class="px-4 md:px-6 pb-3 -mt-1 text-xs text-amber-300">⚠ ${escapeHtml(t.zero.period.replace('{n}', nDays(zd)))}</div>` : '';
+        return `<div class="border-t border-slate-700/50">
+            <div class="hidden md:grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] gap-3 px-6 py-3 items-center text-sm" style="font-variant-numeric:tabular-nums">
+                <span class="flex items-center gap-2 text-slate-200 font-semibold">${dot}${escapeHtml(N[c])}</span>
+                <span class="text-right text-rose-400 font-semibold">${gwh(x.exp_mwh)}</span><span class="text-right text-rose-300">${avg(x.rev, x.exp_mwh)}</span>
+                <span class="text-right text-yellow-400 font-semibold">${gwh(x.imp_mwh)}</span><span class="text-right text-yellow-300">${avg(x.cost, x.imp_mwh)}</span>
+                <span class="text-right font-bold ${col}">${fmtMEur(x.net)}</span>
+            </div>
+            <div class="md:hidden px-4 py-3">
+                <div class="flex justify-between items-center gap-3"><span class="flex items-center gap-2 text-slate-200 font-semibold text-sm">${dot}${escapeHtml(N[c])}</span><span class="font-bold text-sm ${col}">${fmtMEur(x.net)}</span></div>
+                <div class="grid grid-cols-2 gap-3 mt-1.5 text-xs font-semibold" style="font-variant-numeric:tabular-nums">
+                    <div class="text-right text-yellow-400">↓ ${gwh(x.imp_mwh)}<div class="opacity-90">${avg(x.cost, x.imp_mwh)}</div></div>
+                    <div class="text-right text-rose-500">↑ ${gwh(x.exp_mwh)}<div class="opacity-90">${avg(x.rev, x.exp_mwh)}</div></div>
+                </div>
+            </div>${zn}</div>`;
+    }).join('');
+    document.getElementById('countryTable').innerHTML = `<div class="hidden md:grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] gap-3 px-6 py-2 text-xs text-slate-400 font-semibold">
+        <span>${escapeHtml(t.colCountry)}</span><span class="text-right">${escapeHtml(C.exports)}</span><span class="text-right">${escapeHtml(C.avg)}</span>
+        <span class="text-right">${escapeHtml(C.imports)}</span><span class="text-right">${escapeHtml(C.avg)}</span><span class="text-right">${escapeHtml(C.cash)}</span></div>` + rowsHtml;
 }
 
 // ---- Οθόνη φόρτωσης (D03, όπως live-greekpower D47) ----------------------
@@ -1376,6 +1546,8 @@ function updatePicker() {
     label.setAttribute('for', mtd ? 'monthSelect' : 'dateSelect');
     document.getElementById('dateSelect').classList.toggle('hidden', mtd);
     document.getElementById('monthSelect').classList.toggle('hidden', !mtd);
+    // Το tab «Ανά χώρα» δείχνει όλη την περίοδο: χωρίς κουτί επιλογής (όπως στο live, όπου ένα tab δεν το χρειάζεται)
+    document.getElementById('pickerBox').classList.toggle('hidden', currentTab === 'country');
 }
 
 async function boot() {
@@ -1395,13 +1567,15 @@ async function boot() {
         const t0 = Date.now();
         const files = [
             getJSON('data/meta.json').catch((e) => { console.warn('meta.json', e); return null; }),   // όχι κρίσιμο
-            getJSON('data/historical_flows.json')
+            getJSON('data/historical_flows.json'),
+            getJSON('data/analysis.json').catch((e) => { console.warn('analysis.json', e); return null; })   // όχι κρίσιμο (D36)
         ];
         let done = 0;
-        const [meta, flows] = await Promise.all(files.map((p) => p.then((v) => { loadSet(1, Math.round(++done / files.length * 100)); return v; })));
+        const [meta, flows, analysis] = await Promise.all(files.map((p) => p.then((v) => { loadSet(1, Math.round(++done / files.length * 100)); return v; })));
         if (!Array.isArray(flows) || flows.length === 0) throw new Error('historical_flows.json is empty');
         rawData = flows;
         metaData = meta;
+        analysisData = analysis;
         updateHeader();
         await pause(Math.max(0, LOAD_MIN_READ - (Date.now() - t0)));
         loadDone(1);
@@ -1413,6 +1587,7 @@ async function boot() {
         await loadStep(3, async () => { renderHourlyTab(day); });
         await loadStep(4, async () => { renderArbitrageTab(day); });
         await loadStep(5, async () => { renderMTDView(); });
+        await loadStep(6, async () => { renderCountryTab(); });
 
         document.getElementById('mainSpinner').classList.add('hidden');
         document.getElementById('loadRowFinal').classList.remove('opacity-0', 'translate-y-2');
