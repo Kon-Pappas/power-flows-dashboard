@@ -138,7 +138,7 @@ const i18n = {
         tabArbitrage: "Daily Arbitrage",
         tabMTD: "MTD Position",
         tabCountry: "By country",
-        tabSat: "Saturation",
+        tabSat: "Interconnector day",
         sat: { dayTitle: "The day of the interconnections",
                subMeasured: "{d} · market prices, schedule (ADMIE ISP) and measured flow (SCADA)",
                subPrices: "{d} · final day-ahead prices only; the measured flow arrives tomorrow",
@@ -167,7 +167,11 @@ const i18n = {
         ctry: { totalsTitle: "Net cash flow by country", sub: "{from} – {to} · {days} complete days · exports minus imports, measured flow × price",
                 chartTitle: "Cash flow over time", month: "Month", week: "Week", all: "All", net: "Net", days: "{n} days",
                 tableTitle: "Volumes and average prices", exports: "Exports", imports: "Imports", cash: "Cash flow",
-                avg: "avg", noData: "The analysis could not be loaded; the other tabs work normally." },
+                avg: "avg", noData: "The analysis could not be loaded; the other tabs work normally.",
+                hint: "Tap a country in the list below to see its cumulative cash flow.", hintSel: "{c} selected · tap it again in the list to clear.",
+                cum: "Cumulative", cumAxis: "cumulative, M€", ceil: "Line ceiling (measured, whole period)",
+                satTitle: "Saturation by month (price difference ≥ 1 €/MWh)", satPct: "Saturated hours", satRent: "Congestion rent",
+                satPhys: "Physically passed", satPhysHelp: "measured flow ÷ schedule in the saturated hours" },
         btnMethodology: "Methodology & Assumptions",
         
         totalsChartTitle: "Net Flows (ISP vs SCADA)",
@@ -254,7 +258,7 @@ const i18n = {
         tabArbitrage: "Ημερήσιο Arbitrage",
         tabMTD: "Σωρευτική θέση",
         tabCountry: "Ανά χώρα",
-        tabSat: "Κορεσμός",
+        tabSat: "Ημέρα διασυνδέσεων",
         sat: { dayTitle: "Η ημέρα των διασυνδέσεων",
                subMeasured: "{d} · τιμές αγοράς, πρόγραμμα (ISP ΑΔΜΗΕ) και μετρημένη ροή (SCADA)",
                subPrices: "{d} · μόνο οι οριστικές τιμές της αγοράς επόμενης ημέρας· η μετρημένη ροή έρχεται αύριο",
@@ -283,7 +287,11 @@ const i18n = {
         ctry: { totalsTitle: "Καθαρό ταμείο ανά χώρα", sub: "{from} – {to} · {days} πλήρεις ημέρες · εξαγωγές μείον εισαγωγές, μετρημένη ροή × τιμή",
                 chartTitle: "Ταμείο στον χρόνο", month: "Μήνας", week: "Εβδομάδα", all: "Όλες", net: "Καθαρό", days: "{n} ημέρες",
                 tableTitle: "Όγκοι και μέσες τιμές", exports: "Εξαγωγές", imports: "Εισαγωγές", cash: "Ταμείο",
-                avg: "μέση", noData: "Η ανάλυση δεν φορτώθηκε· τα υπόλοιπα tabs λειτουργούν κανονικά." },
+                avg: "μέση", noData: "Η ανάλυση δεν φορτώθηκε· τα υπόλοιπα tabs λειτουργούν κανονικά.",
+                hint: "Πατήστε μια χώρα στη λίστα από κάτω για τη σωρευτική πορεία της.", hintSel: "Επιλεγμένη: {c} · πατήστε την ξανά στη λίστα για καθαρισμό.",
+                cum: "Σωρευτικό", cumAxis: "σωρευτικό, εκ. €", ceil: "Ταβάνι γραμμής (μετρημένο, όλη η περίοδος)",
+                satTitle: "Κορεσμός ανά μήνα (διαφορά τιμής ≥ 1 €/MWh)", satPct: "Ώρες κορεσμού", satRent: "Έσοδο συμφόρησης",
+                satPhys: "Πέρασε φυσικά", satPhysHelp: "μετρημένη ροή ÷ πρόγραμμα στις ώρες κορεσμού" },
         btnMethodology: "Μεθοδολογία & παραδοχές",
         
         totalsChartTitle: "Καθαρές ροές (ISP vs SCADA)",
@@ -458,7 +466,8 @@ const methodologyData = {
                 title: "By country",
                 items: [
                     ["Cash flow:", "exports minus imports per country for every complete day: measured flow (SCADA) × price, with the arbitrage rule (Albania, North Macedonia and Turkey at the Greek price; Bulgaria and Italy at the mean of the two prices). Totals by month and by week (Monday to Sunday) are computed by the pipeline."],
-                    ["Zero flow:", "a line is at zero on a day when every hour is below 1 MW. Notes show the period at zero of the day, the month or the whole period you are looking at."]
+                    ["Zero flow:", "a line is at zero on a day when every hour is below 1 MW. Notes show the period at zero of the day, the month or the whole period you are looking at."],
+                    ["Selecting a country:", "tap a country in the list: the other countries fade, its cumulative cash flow appears on the right axis, with its line ceiling and, for Bulgaria and Italy, saturation by month (saturated hours, congestion rent, and the share of the schedule that physically passed)."]
                 ]
             },
             {
@@ -534,7 +543,8 @@ const methodologyData = {
                 title: "Ανά χώρα",
                 items: [
                     ["Ταμείο:", "εξαγωγές μείον εισαγωγές ανά χώρα για κάθε πλήρη ημέρα: μετρημένη ροή (SCADA) × τιμή, με τον κανόνα του arbitrage (Αλβανία, Β. Μακεδονία και Τουρκία με την τιμή της Ελλάδας· Βουλγαρία και Ιταλία με τον μέσο όρο των δύο τιμών). Τα σύνολα ανά μήνα και ανά εβδομάδα (Δευτέρα–Κυριακή) τα υπολογίζει η ροή δεδομένων."],
-                    ["Μηδενική ροή:", "μια γραμμή είναι στο μηδέν μια ημέρα όταν κάθε ώρα είναι κάτω από 1 MW. Οι σημειώσεις δείχνουν το διάστημα στο μηδέν της ημέρας, του μήνα ή της περιόδου που βλέπετε."]
+                    ["Μηδενική ροή:", "μια γραμμή είναι στο μηδέν μια ημέρα όταν κάθε ώρα είναι κάτω από 1 MW. Οι σημειώσεις δείχνουν το διάστημα στο μηδέν της ημέρας, του μήνα ή της περιόδου που βλέπετε."],
+                    ["Επιλογή χώρας:", "πατήστε μια χώρα στη λίστα: οι υπόλοιπες σβήνουν, εμφανίζεται το σωρευτικό ταμείο της στον δεξιό άξονα, το ταβάνι της γραμμής και, για Βουλγαρία και Ιταλία, ο κορεσμός ανά μήνα (ώρες κορεσμού, έσοδο συμφόρησης και το ποσοστό του προγράμματος που πέρασε φυσικά)."]
                 ]
             },
             {
@@ -651,10 +661,9 @@ function applyStaticText() {
     document.getElementById('tabBtnMTD').innerText = t.tabMTD;
     document.getElementById('tabBtnCountry').innerText = t.tabCountry;
     document.getElementById('tabBtnSat').innerText = t.tabSat;
-    [['satDayTitle', t.sat.dayTitle], ['satMonthTitle', t.sat.monthTitle], ['satMonthSub', t.sat.monthSub],
-     ['satCeilTitle', t.sat.ceilTitle], ['satCeilSub', t.sat.ceilSub]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
+    [['satDayTitle', t.sat.dayTitle]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
     const C = t.ctry;
-    [['countryTotalsTitle', C.totalsTitle], ['countryChartTitle', C.chartTitle], ['countryTableTitle', C.tableTitle],
+    [['countryChartTitle', C.chartTitle], ['countryTableTitle', C.tableTitle],
      ['countryGranMonth', C.month], ['countryGranWeek', C.week]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
     
     document.getElementById('totalsChartTitle').innerText = t.totalsChartTitle;
@@ -1240,6 +1249,7 @@ function renderCharts() {
     renderMTDView();
     renderCountryTab();
     renderSatTab();
+    updateDayZeroNotes(dayData);
     updateDataNotice(dayData);
 }
 
@@ -1437,6 +1447,21 @@ function zeroEpisodes(c) {
     return (st && st.zero_episodes) || [];
 }
 function nDays(n) { const Z = i18n[currentLang].zero; return n === 1 ? Z.d1 : Z.dn.replace('{n}', n); }
+// Tabs «Ημερήσια ροή» και «Ωριαία προφίλ» (D38): ίδια σημείωση με το Arbitrage, για κάθε γραμμή στο μηδέν την ημέρα αυτή
+function updateDayZeroNotes(dayData) {
+    const t = i18n[currentLang];
+    const lines = dayData ? ["AL", "BG", "IT", "MK", "TR"].map(c => {
+        const z = zeroNoteForDay(c, dayData.Date);
+        return z ? `⚠ ${t.lineCodes[c]}: ${z.charAt(0).toLowerCase()}${z.slice(1)}` : null;
+    }).filter(Boolean) : [];
+    ['totalsZeroNote', 'hourlyZeroNote'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = lines.map(escapeHtml).join('<br>');
+        el.classList.toggle('hidden', !lines.length);
+    });
+}
+
 function zeroNoteForDay(c, date) {
     const Z = i18n[currentLang].zero;
     for (const e of zeroEpisodes(c)) {
@@ -1453,11 +1478,17 @@ function zeroNoteForDay(c, date) {
 
 // ---- Tab «Ανά χώρα» (D36) -----------------------------------------------------
 let countryGran = 'month';
-let countryPick = 'all';
+let countryPick = null;          // D38: μία χώρα, επιλεγμένη από τη λίστα· null = καμία
 let countryChartInstance = null;
 const fmtMEur = (v) => `${fmtN(v / 1e6, 1, true)} ${currentLang === 'el' ? 'εκ. €' : 'M€'}`;
 function setCountryGran(g) { countryGran = g; renderCountryTab(); }
-function setCountryPick(c) { countryPick = c; renderCountryTab(); }
+function selectCountry(c) {
+    countryPick = countryPick === c ? null : c;
+    renderCountryTab();
+    // Στο κινητό η λίστα είναι κάτω από το γράφημα: ομαλή άνοδος για να φανεί η αλλαγή
+    if (window.innerWidth < 768) document.getElementById('countryChartCard').scrollIntoView({ behavior: REDUCE_MOTION ? 'auto' : 'smooth', block: 'start' });
+}
+const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
 
 function renderCountryTab() {
     const t = i18n[currentLang], C = t.ctry, N = t.countries;
@@ -1468,67 +1499,93 @@ function renderCountryTab() {
     const order = ["AL", "BG", "IT", "MK", "TR"];
     const dates = Object.keys(cash.daily || {}).sort();
     const sub = C.sub.replace('{from}', fmtDay(dates[0])).replace('{to}', fmtDay(dates[dates.length - 1])).replace('{days}', dates.length);
-    document.getElementById('countryTotalsSub').textContent = sub;
     document.getElementById('countryTableSub').textContent = sub;
-
-    // Σύνολα περιόδου
-    const tot = {};
-    order.forEach(c => { tot[c] = { rev: 0, cost: 0, exp_mwh: 0, imp_mwh: 0, net: 0 }; });
-    Object.values(cash.monthly).forEach(m => order.forEach(c => { Object.keys(tot[c]).forEach(k => { tot[c][k] += m[c][k]; }); }));
-    const max = Math.max(...order.map(c => Math.abs(tot[c].net)), 1);
-    document.getElementById('countryTotals').innerHTML = order.slice().sort((a, b) => tot[b].net - tot[a].net).map(c => {
-        const v = tot[c].net, w = Math.abs(v) / max * 50;
-        const bar = v >= 0 ? `left:50%;width:${w}%;background:#10b981` : `right:50%;width:${w}%;background:#d946ef`;
-        return `<div class="grid grid-cols-[minmax(0,7.5rem)_1fr_auto] md:grid-cols-[9rem_1fr_8rem] items-center gap-2 text-sm">
-            <span class="flex items-center gap-2 text-slate-200 min-w-0"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span><span class="truncate">${escapeHtml(N[c])}</span></span>
-            <div class="relative h-3"><div class="absolute top-0 bottom-0 rounded-sm" style="${bar}"></div><div class="absolute -top-1 -bottom-1 left-1/2 w-px bg-slate-500"></div></div>
-            <span class="text-right font-semibold whitespace-nowrap ${v >= 0 ? 'text-emerald-400' : 'text-fuchsia-400'}" style="font-variant-numeric:tabular-nums">${fmtMEur(v)}</span></div>`;
-    }).join('');
-
-    // Επιλογές: μήνας / εβδομάδα, χώρα
+    document.getElementById('countryHint').textContent = countryPick ? C.hintSel.replace('{c}', N[countryPick]) : C.hint;
     [['countryGranMonth', 'month'], ['countryGranWeek', 'week']].forEach(([id, g]) => {
         document.getElementById(id).className = `px-3 py-1.5 rounded transition ${countryGran === g ? 'bg-acc-400 text-slate-900' : 'text-slate-400 hover:text-white'}`;
     });
-    const chip = (key, label, color) => `<button type="button" onclick="setCountryPick('${key}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition ${countryPick === key ? 'border-acc-400 text-white bg-slate-900' : 'border-slate-700 text-slate-400 hover:text-white'}">${color ? `<span class="w-2 h-2 rounded-full" style="background:${color}"></span>` : ''}${escapeHtml(label)}</button>`;
-    document.getElementById('countryChips').innerHTML = chip('all', C.all) + order.map(c => chip(c, N[c], countryColors[c])).join('');
 
-    // Γράφημα: καθαρό ταμείο ανά περίοδο, στοιβαγμένο ανά χώρα
+    // Γράφημα: στοιβαγμένες μπάρες ανά χώρα· με επιλογή, οι άλλες στο 30% και σωρευτική γραμμή στον δεξιό άξονα
     const src = countryGran === 'week' ? (cash.weekly || {}) : cash.monthly;
     const keys = Object.keys(src).sort();
-    const shown = countryPick === 'all' ? order : [countryPick];
     const label = (k) => countryGran === 'week' ? fmtDayShort(k)
         : new Intl.DateTimeFormat(t.locale, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)));
+    const datasets = order.map(c => ({ type: 'bar', label: N[c], data: keys.map(k => src[k][c].net / 1e6), stack: 'net', order: 2,
+        backgroundColor: countryPick && countryPick !== c ? hexA(countryColors[c], 0.3) : countryColors[c] }));
+    let cum = null;
+    if (countryPick) {
+        let run = 0;
+        cum = keys.map(k => (run += src[k][countryPick].net) / 1e6);
+        datasets.push({ type: 'line', label: `${C.cum} · ${N[countryPick]}`, data: cum, yAxisID: 'y2', order: 1,
+            borderColor: countryColors[countryPick], backgroundColor: countryColors[countryPick], borderWidth: 2.5,
+            pointRadius: countryGran === 'week' ? 0 : 3, pointHoverRadius: 4, tension: 0.2 });
+    }
     if (countryChartInstance) countryChartInstance.destroy();
     countryChartInstance = new Chart(document.getElementById('countryChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels: keys.map(label), datasets: shown.map(c => ({ label: N[c], data: keys.map(k => src[k][c].net / 1e6), backgroundColor: countryColors[c], stack: 'net' })) },
+        data: { labels: keys.map(label), datasets },
         options: {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
             plugins: { legend: { display: false }, tooltip: tipOff((i) => {
                 const k = keys[i], days = src[k][order[0]].days;
-                const rows = shown.slice().sort((a, b) => src[k][b].net - src[k][a].net)
-                    .map(c => tipRow(N[c], fmtMEur(src[k][c].net), countryColors[c])).join('');
-                const total = shown.reduce((a, c) => a + src[k][c].net, 0);
+                const rows = order.slice().sort((a, b) => src[k][b].net - src[k][a].net)
+                    .map(c => tipRow(N[c], fmtMEur(src[k][c].net), countryColors[c], { strong: c === countryPick })).join('');
+                const total = order.reduce((a, c) => a + src[k][c].net, 0);
+                const extra = countryPick ? tipRow(`${C.cum} · ${N[countryPick]}`, fmtMEur(cum[i] * 1e6), countryColors[countryPick], { strong: true }) : '';
                 return tipHead(countryGran === 'week' ? `${C.week} ${fmtDayShort(k)}` : label(k), C.days.replace('{n}', days))
-                    + tipSections(rows, shown.length > 1 ? tipRow(C.net, fmtMEur(total), null, { strong: true }) : '');
+                    + tipSections(rows, tipRow(C.net, fmtMEur(total), null, { strong: true }) + extra);
             }) },
             scales: {
                 x: { stacked: true, grid: { display: false } },
                 y: { stacked: true, grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255,255,255,0.6)' : '#334155' },
-                     ticks: { callback: v => `${fmtN(v, 0)}` }, title: { display: true, text: currentLang === 'el' ? 'εκ. €' : 'M€', color: '#64748b', font: { size: 11 } } }
+                     ticks: { callback: v => `${fmtN(v, 0)}` }, title: { display: true, text: currentLang === 'el' ? 'εκ. €' : 'M€', color: '#64748b', font: { size: 11 } } },
+                y2: { display: !!countryPick, position: 'right', grid: { display: false },
+                      ticks: { color: countryPick ? countryColors[countryPick] : '#94a3b8', callback: v => `${fmtN(v, 0)}` },
+                      title: { display: !!countryPick, text: C.cumAxis, color: '#64748b', font: { size: 11 } } }
             }
         }
     });
 
-    // Πίνακας (desktop) / κάρτες (κινητό): όγκοι και μέσες τιμές της περιόδου
+    // Λεπτομέρειες επιλεγμένης χώρας: ταβάνι, και για ΒΓ / ΙΤ ο κορεσμός ανά μήνα με τρία νούμερα
+    const det = document.getElementById('countryDetail');
+    if (!countryPick) { det.classList.add('hidden'); det.innerHTML = ''; }
+    else {
+        const ce = analysisData.ceilings && analysisData.ceilings[countryPick];
+        const cl = (d, cls, lab) => d ? `<div><div class="text-slate-400">${lab}</div><div class="${cls} font-semibold">${fmtN(d.mw, 0)} MW <span class="text-[11px] font-normal text-slate-500 whitespace-nowrap">${fmtDayShort(d.date)}, ${hourSpan(d.hour)}</span></div><div class="text-[11px] text-slate-400">P99 ${fmtN(d.p99_mw, 0)} MW</div></div>` : '';
+        let html = ce ? `<div class="text-xs font-semibold text-slate-300 mb-2">${escapeHtml(C.ceil)}</div>
+            <div class="grid grid-cols-2 gap-3 text-xs" style="font-variant-numeric:tabular-nums">${cl(ce.imp, 'text-yellow-400', '↓ ' + t.sat.imp)}${cl(ce.exp, 'text-rose-500', '↑ ' + t.sat.exp)}</div>` : '';
+        const sat = analysisData.saturation && analysisData.saturation[countryPick];
+        if (sat) {
+            const mlab = (k) => new Intl.DateTimeFormat(t.locale, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)));
+            const rows = Object.keys(sat).sort().map(m => {
+                const x = sat[m], sch = x.mwh_to_n + x.mwh_to_gr, act = x.act_mwh_to_n + x.act_mwh_to_gr;
+                const phys = sch > 0 ? `${fmtN(100 * act / sch, 0)}%` : '–';
+                return `<div class="grid grid-cols-[1fr_1fr_1.2fr_1fr] gap-2 py-1.5 border-t border-slate-700/50">
+                    <span class="text-slate-300">${mlab(m)}</span><span class="text-right text-slate-200">${fmtN(x.dec_pct, 0)}%</span>
+                    <span class="text-right text-emerald-400 font-semibold">${fmtEur(x.rent_eur)}</span><span class="text-right text-slate-200">${phys}</span></div>`;
+            }).join('');
+            html += `<div class="text-xs font-semibold text-slate-300 mt-4 mb-1">${escapeHtml(C.satTitle)}</div>
+                <div class="text-xs" style="font-variant-numeric:tabular-nums">
+                <div class="grid grid-cols-[1fr_1fr_1.2fr_1fr] gap-2 pb-1 text-slate-400"><span></span><span class="text-right">${escapeHtml(C.satPct)}</span><span class="text-right">${escapeHtml(C.satRent)}</span><span class="text-right">${escapeHtml(C.satPhys)}</span></div>
+                ${rows}</div><p class="text-[11px] text-slate-500 mt-1">${escapeHtml(C.satPhys)}: ${escapeHtml(C.satPhysHelp)}</p>`;
+        }
+        det.innerHTML = `<div class="border-t border-slate-700 pt-4">${html}</div>`;
+        det.classList.remove('hidden');
+    }
+
+    // Λίστα χωρών = διακόπτης του γραφήματος (D38)
+    const tot = {};
+    order.forEach(c => { tot[c] = { rev: 0, cost: 0, exp_mwh: 0, imp_mwh: 0, net: 0 }; });
+    Object.values(cash.monthly).forEach(m => order.forEach(c => { Object.keys(tot[c]).forEach(k => { tot[c][k] += m[c][k]; }); }));
     const avg = (eur, mwh) => mwh > 0 ? `${fmtN(eur / mwh, 2)} <span class="text-[11px] font-normal text-slate-500">€/MWh</span>` : '<span class="text-slate-600">–</span>';
     const gwh = (mwh) => mwh > 0 ? `${fmtN(mwh / 1000, 1)} <span class="text-[11px] font-normal text-slate-500">GWh</span>` : '<span class="text-slate-600">–</span>';
-    const rowsHtml = order.map(c => {
-        const x = tot[c], col = x.net >= 0 ? 'text-emerald-400' : 'text-fuchsia-400';
+    const rowsHtml = order.slice().sort((a, b) => tot[b].net - tot[a].net).map(c => {
+        const x = tot[c], col = x.net >= 0 ? 'text-emerald-400' : 'text-fuchsia-400', on = countryPick === c;
+        const dim = countryPick && !on ? ' opacity-60' : '';
         const dot = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span>`;
         const zd = zeroEpisodes(c).reduce((a, e) => a + e.days, 0);
         const zn = zd ? `<div class="px-4 md:px-6 pb-3 -mt-1 text-xs text-amber-300">⚠ ${escapeHtml(t.zero.period.replace('{n}', nDays(zd)))}</div>` : '';
-        return `<div class="border-t border-slate-700/50">
+        return `<div role="button" tabindex="0" aria-pressed="${on}" onclick="selectCountry('${c}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCountry('${c}')}"
+            class="border-t border-slate-700/50 cursor-pointer transition hover:bg-slate-700/30 ${on ? 'bg-slate-700/40 shadow-[inset_3px_0_0_0_rgb(34,211,238)]' : ''}${dim}">
             <div class="hidden md:grid grid-cols-[1.2fr_1fr_1fr_1fr_1fr_1fr] gap-3 px-6 py-3 items-center text-sm" style="font-variant-numeric:tabular-nums">
                 <span class="flex items-center gap-2 text-slate-200 font-semibold">${dot}${escapeHtml(N[c])}</span>
                 <span class="text-right text-rose-400 font-semibold">${gwh(x.exp_mwh)}</span><span class="text-right text-rose-300">${avg(x.rev, x.exp_mwh)}</span>
@@ -1549,9 +1606,6 @@ function renderCountryTab() {
 }
 
 // ---- Tab «Κορεσμός» (D37) ------------------------------------------------------
-let satLine = 'BG';
-let satChartInstance = null;
-function setSatLine(c) { satLine = c; renderSatTab(); }
 const fmtEur = (v) => v >= 1e6 ? `${fmtN(v / 1e6, 1)} ${currentLang === 'el' ? 'εκ. €' : 'M€'}` : `${fmtN(v, 0)} €`;
 function hourSpan(hhmm) { const h = parseInt(hhmm, 10); return `${String(h).padStart(2, '0')}–${String(h + 1).padStart(2, '0')}`; }
 
@@ -1625,58 +1679,6 @@ function renderSatTab() {
     document.getElementById('satDayBody').innerHTML = blocks.length ? blocks.join('<div class="border-t border-slate-700/50"></div>')
         : `<p class="text-sm text-slate-400">${escapeHtml(T.none)}</p>`;
 
-    // 2. Κορεσμός ανά μήνα: ΕΛ–ΒΓ και ΕΛ–ΙΤ (ποσοστό ωρών), πίνακας για τη γραμμή που επιλέγεται
-    const sat = analysisData.saturation || {};
-    const months = [...new Set(Object.values(sat).flatMap(o => Object.keys(o)))].sort();
-    document.getElementById('satLineGroup').innerHTML = ['BG', 'IT'].map(c =>
-        `<button type="button" onclick="setSatLine('${c}')" class="px-3 py-1.5 rounded transition ${satLine === c ? 'bg-acc-400 text-slate-900' : 'text-slate-400 hover:text-white'}">${escapeHtml(t.lineCodes[c])}</button>`).join('');
-    const mLabel = (k) => new Intl.DateTimeFormat(t.locale, { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(Date.UTC(+k.slice(0, 4), +k.slice(5, 7) - 1, 1)));
-    if (satChartInstance) satChartInstance.destroy();
-    satChartInstance = new Chart(document.getElementById('satChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels: months.map(mLabel), datasets: ['BG', 'IT'].map(c => ({ label: t.lineCodes[c], data: months.map(m => (sat[c] && sat[c][m]) ? sat[c][m].dec_pct : null), backgroundColor: countryColors[c] })) },
-        options: {
-            responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { display: true, position: 'top' }, tooltip: tipOff((i) => tipHead(mLabel(months[i])) + tipSections(['BG', 'IT'].map(c => {
-                const m = sat[c] && sat[c][months[i]]; return m ? tipRow(t.lineCodes[c], `${fmtN(m.dec_pct, 0)}%`, countryColors[c]) : ''; }).join(''))) },
-            scales: { x: { grid: { display: false } }, y: { min: 0, max: 100, grid: { color: '#334155' }, ticks: { callback: v => `${v}%` } } }
-        }
-    });
-    const ms = sat[satLine] || {};
-    const head = `<div class="hidden md:grid grid-cols-[1fr_1fr_1.4fr_1.6fr_1.2fr] gap-3 px-6 py-2 text-xs text-slate-400 font-semibold border-t border-slate-700/50">
-        <span>${T.month}</span><span class="text-right">${T.pct}</span><span class="text-right">${escapeHtml(T.dirs.replace('{n}', t.sent.to[satLine]))}</span>
-        <span class="text-right">${T.mwh}</span><span class="text-right">${T.rent}</span></div>`;
-    document.getElementById('satMonthTable').innerHTML = head + months.filter(m => ms[m]).map(m => {
-        const x = ms[m], sch = x.mwh_to_n + x.mwh_to_gr, act = x.act_mwh_to_n + x.act_mwh_to_gr;
-        return `<div class="border-t border-slate-700/50" style="font-variant-numeric:tabular-nums">
-            <div class="hidden md:grid grid-cols-[1fr_1fr_1.4fr_1.6fr_1.2fr] gap-3 px-6 py-3 text-sm items-center">
-                <span class="text-slate-200 font-semibold">${mLabel(m)}</span><span class="text-right text-slate-200">${fmtN(x.dec_pct, 0)}%</span>
-                <span class="text-right text-slate-300">${fmtN(x.to_n_hours, 0)} / ${fmtN(x.to_gr_hours, 0)}</span>
-                <span class="text-right text-slate-300">${fmtN(sch, 0)} / ${fmtN(act, 0)}</span><span class="text-right text-emerald-400 font-semibold">${fmtEur(x.rent_eur)}</span>
-            </div>
-            <div class="md:hidden px-4 py-3 text-xs">
-                <div class="flex justify-between text-sm"><span class="text-slate-200 font-semibold">${mLabel(m)} · ${fmtN(x.dec_pct, 0)}%</span><span class="text-emerald-400 font-bold">${fmtEur(x.rent_eur)}</span></div>
-                <div class="flex justify-between text-slate-400 mt-1"><span>${escapeHtml(T.dirs.replace('{n}', t.sent.to[satLine]))}</span><span class="text-slate-300">${fmtN(x.to_n_hours, 0)} / ${fmtN(x.to_gr_hours, 0)}</span></div>
-                <div class="flex justify-between text-slate-400"><span>${T.mwh}</span><span class="text-slate-300">${fmtN(sch, 0)} / ${fmtN(act, 0)}</span></div>
-            </div></div>`;
-    }).join('');
-
-    // 3. Ταβάνι γραμμών
-    const ce = analysisData.ceilings || {};
-    const cell = (d, cls) => d ? `<div class="${cls} font-semibold">${fmtN(d.mw, 0)} MW</div><div class="text-[11px] text-slate-500 whitespace-nowrap">${fmtDayShort(d.date)}, ${hourSpan(d.hour)}</div><div class="text-[11px] text-slate-400 whitespace-nowrap">${T.p99} ${fmtN(d.p99_mw, 0)} MW</div>` : '–';
-    document.getElementById('satCeilTable').innerHTML = `<div class="hidden md:grid grid-cols-[1fr_1.5fr_1.5fr] gap-3 px-6 py-2 text-xs text-slate-400 font-semibold">
-        <span>${escapeHtml(t.colCountry)}</span><span class="text-right">↓ ${T.imp}</span><span class="text-right">↑ ${T.exp}</span></div>` +
-        ["AL", "BG", "IT", "MK", "TR"].filter(c => ce[c]).map(c => {
-            const dot = `<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${countryColors[c]}"></span>`;
-            return `<div class="border-t border-slate-700/50" style="font-variant-numeric:tabular-nums">
-                <div class="hidden md:grid grid-cols-[1fr_1.5fr_1.5fr] gap-3 px-6 py-3 text-sm items-center">
-                    <span class="flex items-center gap-2 text-slate-200 font-semibold">${dot}${escapeHtml(N[c])}</span>
-                    <span class="text-right">${cell(ce[c].imp, 'text-yellow-400')}</span><span class="text-right">${cell(ce[c].exp, 'text-rose-500')}</span></div>
-                <div class="md:hidden px-4 py-3">
-                    <div class="flex items-center gap-2 text-slate-200 font-semibold text-sm">${dot}${escapeHtml(N[c])}</div>
-                    <div class="grid grid-cols-2 gap-3 mt-1.5 text-xs text-right">
-                        <div>${cell(ce[c].imp, 'text-yellow-400')}</div><div>${cell(ce[c].exp, 'text-rose-500')}</div></div></div></div>`;
-        }).join('');
 }
 
 // ---- Οθόνη φόρτωσης (D03, όπως live-greekpower D47) ----------------------

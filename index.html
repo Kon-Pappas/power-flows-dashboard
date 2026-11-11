@@ -191,7 +191,7 @@
                 <button id="tabBtnArbitrage" onclick="switchTab('arbitrage')" role="tab" class="tab-btn">Daily Arbitrage</button>
                 <button id="tabBtnMTD" onclick="switchTab('mtd')" role="tab" class="tab-btn">MTD Position</button>
                 <button id="tabBtnCountry" onclick="switchTab('country')" role="tab" class="tab-btn">By Country</button>
-                <button id="tabBtnSat" onclick="switchTab('sat')" role="tab" class="tab-btn">Saturation</button>
+                <button id="tabBtnSat" onclick="switchTab('sat')" role="tab" class="tab-btn">Interconnector day</button>
             </div>
         </div>
 
@@ -202,6 +202,7 @@
                     <div>
                         <h2 class="text-lg font-semibold text-slate-200" id="totalsChartTitle">Net Flows (ISP vs SCADA)</h2>
                         <p class="text-xs text-slate-400" id="totalsChartSub">Negative values (-) = Exports. Positive values (+) = Imports.</p>
+                        <p class="text-xs text-amber-300 mt-1 hidden" id="totalsZeroNote"></p>
                     </div>
                 </div>
                 <div class="relative h-[500px]"><canvas id="totalsChart"></canvas></div>
@@ -212,6 +213,7 @@
         <div id="viewHourly" class="space-y-6 hidden">
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
                 <h2 class="text-lg font-semibold text-slate-200" id="flowsChartTitle">Hourly Net Flows</h2>
+                <p class="text-xs text-amber-300 mt-1 hidden" id="hourlyZeroNote"></p>
                 <div class="relative h-[350px] mt-4"><canvas id="flowsChart"></canvas></div>
             </div>
             <div class="bg-slate-800/40 p-6 rounded-xl border border-slate-700">
@@ -289,46 +291,26 @@
                 <p class="text-xs text-slate-400 mt-1" id="satDaySub">-</p>
                 <div id="satDayBody" class="mt-4 space-y-3"></div>
             </div>
-            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
-                <div class="flex flex-wrap justify-between items-center gap-3 mb-1">
-                    <h2 class="text-lg font-semibold text-slate-200" id="satMonthTitle">Saturation by month</h2>
-                    <div class="flex gap-1 bg-slate-900/60 border border-slate-700 rounded-lg p-1 text-xs font-bold" role="group" id="satLineGroup"></div>
-                </div>
-                <p class="text-xs text-slate-400 mb-4" id="satMonthSub">-</p>
-                <div class="relative h-[220px] md:h-[280px]"><canvas id="satChart"></canvas></div>
-                <div id="satMonthTable" class="mt-4 -mx-4 md:-mx-6"></div>
-            </div>
-            <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">
-                <div class="p-4 md:px-6 md:pt-6 md:pb-2">
-                    <h2 class="text-lg font-semibold text-slate-200" id="satCeilTitle">Line ceilings</h2>
-                    <p class="text-xs text-slate-400 mt-1" id="satCeilSub">-</p>
-                </div>
-                <div id="satCeilTable"></div>
-            </div>
         </div>
 
         <!-- TAB «ΑΝΑ ΧΩΡΑ» (D36): ταμείο ανά χώρα από το data/analysis.json, όλη η περίοδος και εξέλιξη στον χρόνο -->
         <div id="viewCountry" class="space-y-6 hidden">
             <p class="text-amber-400 text-xs hidden" id="countryNotice"></p>
-            <!-- Σύνολα περιόδου -->
-            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
-                <h2 class="text-lg font-semibold text-slate-200" id="countryTotalsTitle">Net cash flow by country</h2>
-                <p class="text-xs text-slate-400 mt-1 mb-4" id="countryTotalsSub">-</p>
-                <div id="countryTotals" class="space-y-2"></div>
-            </div>
             <!-- Εξέλιξη στον χρόνο -->
-            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
-                <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700 scroll-mt-4" id="countryChartCard">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-1">
                     <h2 class="text-lg font-semibold text-slate-200" id="countryChartTitle">Cash flow over time</h2>
                     <div class="flex gap-1 bg-slate-900/60 border border-slate-700 rounded-lg p-1 text-xs font-bold" role="group" id="countryGranGroup">
                         <button type="button" id="countryGranMonth" class="px-3 py-1.5 rounded transition" onclick="setCountryGran('month')">Month</button>
                         <button type="button" id="countryGranWeek" class="px-3 py-1.5 rounded transition" onclick="setCountryGran('week')">Week</button>
                     </div>
                 </div>
-                <div id="countryChips" class="flex flex-wrap gap-2 mb-4"></div>
+                <p class="text-xs text-slate-400 mb-3" id="countryHint">-</p>
                 <div class="relative h-[260px] md:h-[320px]">
                     <canvas id="countryChart"></canvas>
                 </div>
+                <!-- Λεπτομέρειες της χώρας που επιλέγεται από τη λίστα (D38): ταβάνι, και για ΒΓ / ΙΤ ο κορεσμός ανά μήνα -->
+                <div id="countryDetail" class="hidden mt-4"></div>
             </div>
             <!-- Πίνακας / κάρτες ανά χώρα -->
             <div class="bg-slate-800/40 rounded-xl border border-slate-700 overflow-hidden">

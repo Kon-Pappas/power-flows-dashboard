@@ -50,6 +50,12 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Batch 19 — tab "Saturation"~~ (D37; mobile tabs 3 + 3): first the daily card "The day of the interconnections" (Today: final day-ahead prices only; Yesterday: windows, then schedule vs actual flow against the observed limit and congestion rent (estimate), unusual events; 3–5 sentences by score; any day from the picker), then the monthly saturation and the ceilings
 - Later: real capacity from ENTSO-E (offered transfer capacity per border and hour) replacing the "usual limit"; an afternoon run (≈14:30) for "Tomorrow"; a "copy text" button
 
+## Owner's review, 11 Nov 2026 (D38)
+
+- ~~Batch 20 — zero notes on tabs 1–2; By country driven by the list (cumulative line, ceiling, saturation by month); tab 6 renamed "Interconnector day"~~
+- Batch 21 — pipeline: schedule per border for all five lines, observed limit per direction per day, **estimated capacity limitation** for BG / IT (decoupled hours with the schedule well below the observed limit); tab "Interconnector day": two 24-hour charts (GR–BG, GR–IT) under the daily card
+- Batch 22 — NTC per border and hour from ENTSO-E (all five lines): exact limitation sentences ("GR→AL: NTC 100 MW 08–18 CET, usually 400") and "at 98 % of the available capacity"
+
 ## Data files — before February 2027 (plan for December 2026 – January 2027)
 
 Measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
