@@ -192,4 +192,27 @@ for h in lim_ntc["Hourly"]:
     h["NTC_EXP_BG"] = 1000
 check("με NTC, χωρίς εκτίμηση «κολλημένου» προγράμματος", not any(f["type"] == "limitation" for f in A.build(hist + [lim_ntc])["days"]["2026-10-02"]))
 
+# 12. NTC με ένα αίτημα για όλο το τρέξιμο (D42): 24 / 25 / 24 ώρες, σωστό κόψιμο στην αλλαγή ώρας, 10 αιτήματα
+from unittest import mock
+rs, _, _ = U.athens_window_utc("2026-10-24")
+_, re_, _ = U.athens_window_utc("2026-10-26")
+tot = int((re_ - rs).total_seconds() // 3600)          # 73 ώρες
+xml3 = ('<Publication_MarketDocument xmlns="urn:x"><TimeSeries><Period><timeInterval>'
+        f'<start>{rs:%Y-%m-%dT%H:%M}Z</start><end>{re_:%Y-%m-%dT%H:%M}Z</end></timeInterval><resolution>PT60M</resolution>'
+        '<Point><position>1</position><quantity>1000</quantity></Point>'
+        '<Point><position>33</position><quantity>500</quantity></Point>'      # 25 Οκτ, ώρα 08 (μετά από 24 ώρες της 24ης)
+        '<Point><position>45</position><quantity>1000</quantity></Point>'     # 25 Οκτ, ώρα 20
+        '</Period></TimeSeries></Publication_MarketDocument>')
+class _R:
+    status_code, text = 200, xml3
+calls = []
+U.NTC_CACHE.clear()
+with mock.patch.object(U, "ENTSOE_TOKEN", "x"), mock.patch.object(U, "http_get", lambda url, what="": calls.append(what) or _R()), \
+     mock.patch.object(U, "log", lambda m: None):
+    U.prefetch_ntc(["2026-10-24", "2026-10-25", "2026-10-26"])
+    e25, i25 = U.fetch_entsoe_ntc("2026-10-25", "BG")
+check("NTC ανά τρέξιμο: 10 αιτήματα για 3 ημέρες × 5 σύνορα", len(calls) == 10, str(len(calls)))
+check("NTC ανά τρέξιμο: 24 / 25 / 24 ώρες", [len(U.NTC_CACHE[(d, "AL")][0]) for d in ("2026-10-24", "2026-10-25", "2026-10-26")] == [24, 25, 24] and tot == 73)
+check("NTC ανά τρέξιμο: 25 Οκτ 500 MW ακριβώς 08:00–20:00", e25 == [1000] * 8 + [500] * 12 + [1000] * 5, str(e25))
+
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

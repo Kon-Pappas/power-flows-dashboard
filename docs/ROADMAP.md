@@ -57,7 +57,9 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Batch 22 — capacity probe (D40)~~
 - ~~Batch 23 — NTC per border and hour from ENTSO-E (all five borders), exact reduced / zero capacity sentences, NTC step lines in the charts~~ (D41); AL / MK / TR schedule not stored (size). Earlier plan: exact limitation sentences ("GR→AL: NTC 100 MW 08–18 CET, usually 400") and "at 98 % of the available capacity"
 
-## Data files — next priority (≈ 70 days to the 250 KB limit after the D41 history fetch)
+## Data files — next priority (≈ 60 days to the 250 KB limit after the D42 NTC fetch from 1 Oct)
+
+- After the move to monthly files: fetch the NTC for 16 Jun – 30 Sep 2026 (D42)
 
 Measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
 

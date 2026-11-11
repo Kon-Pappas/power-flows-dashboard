@@ -513,9 +513,47 @@ def parse_entsoe_series(xml_text, start_utc, n_hours):
     return [round(sum(b) / len(b)) if b else None for b in buckets]
 
 
+NTC_CACHE = {}
+NTC_CHUNK_DAYS = 31
+
+
+def ntc_url(out_d, in_d, start, end):
+    return (f"https://web-api.tp.entsoe.eu/api?securityToken={ENTSOE_TOKEN}&documentType=A61"
+            f"&contract_MarketAgreement.Type=A01&in_Domain={in_d}&out_Domain={out_d}"
+            f"&periodStart={start:%Y%m%d%H00}&periodEnd={end:%Y%m%d%H00}")
+
+
+def prefetch_ntc(dates):
+    """D42: το NTC όλων των ημερών του τρεξίματος με ΕΝΑ αίτημα ανά σύνορο και κατεύθυνση (κομμάτια ≤ 31 ημερών),
+    αντί για 10 αιτήματα ανά ημέρα (≈ 2 λεπτά / ημέρα στο ENTSO-E). Γεμίζει το NTC_CACHE[(ημέρα, χώρα)]."""
+    if not ENTSOE_TOKEN or not dates:
+        return
+    days = sorted(set(dates))
+    for k in range(0, len(days), NTC_CHUNK_DAYS):
+        chunk = days[k:k + NTC_CHUNK_DAYS]
+        c_start = athens_window_utc(chunk[0])[0]
+        c_end = athens_window_utc(chunk[-1])[1]
+        total = int((c_end - c_start).total_seconds() // 3600)
+        for code in ALL_CODES:
+            series = []
+            for out_d, in_d in ((ENTSOE_DOMAINS["GR"], NTC_DOMAINS[code]), (NTC_DOMAINS[code], ENTSOE_DOMAINS["GR"])):
+                r = http_get(ntc_url(out_d, in_d, c_start, c_end), what=f"NTC {code}")
+                series.append(parse_entsoe_series(r.text, c_start, total) if (r is not None and r.status_code == 200) else [None] * total)
+            for dd in chunk:
+                d_start, _, n = athens_window_utc(dd)
+                off = int((d_start - c_start).total_seconds() // 3600)
+                NTC_CACHE[(dd, code)] = (series[0][off:off + n], series[1][off:off + n])
+    log(f"NTC: {len(days)} ημέρες × {len(ALL_CODES)} σύνορα από το ENTSO-E σε {((len(days) - 1) // NTC_CHUNK_DAYS + 1) * len(ALL_CODES) * 2} αιτήματα")
+
+
 def fetch_entsoe_ntc(date_str, code):
     """D41: ικανότητα μεταφοράς επόμενης ημέρας (Forecasted Transfer Capacity, A61) για ΕΛ→χώρα και χώρα→ΕΛ, ανά ώρα
-    σε ώρα Ελλάδας. Επιστρέφει (εξαγωγή, εισαγωγή)· λίστες με None αν δεν υπάρχει."""
+    σε ώρα Ελλάδας. Επιστρέφει (εξαγωγή, εισαγωγή)· λίστες με None αν δεν υπάρχει. Πρώτα από το NTC_CACHE (D42)."""
+    if (date_str, code) in NTC_CACHE:
+        exp_h, imp_h = NTC_CACHE[(date_str, code)]
+        if all(v is None for v in exp_h + imp_h):
+            log(f"   ! NTC {code}: χωρίς στοιχεία")
+        return exp_h, imp_h
     start, end, n = athens_window_utc(date_str)
     empty = ([None] * n, [None] * n)
     if not ENTSOE_TOKEN:
@@ -885,6 +923,7 @@ if __name__ == "__main__":
     by_date = {x["Date"]: x for x in all_data}
 
     day_delay = float(os.environ.get("DAY_DELAY_SECONDS", "2"))     # D31: ευγένεια προς ΑΔΜΗΕ / ENTSO-E, όπως στο BESS
+    prefetch_ntc(dates_to_fetch)                                    # D42: NTC όλου του διαστήματος με λίγα αιτήματα
     for i, d in enumerate(dates_to_fetch):
         if i:
             time.sleep(day_delay)
