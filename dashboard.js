@@ -158,7 +158,12 @@ const i18n = {
                 maxSpread: "{L}: largest price difference of the month so far, {s} €/MWh.",
                 deviation: "Total flow deviated from the schedule by {mw} MW per hour on average, above the usual for the last 30 days ({p90} MW).",
                 h1: "1 hour", hn: "{n} hours", q1: "1 quarter-hour", qn: "{n} quarter-hours", many: "in {n} windows, from {a} to {b}",
-                to: { BG: "Bulgaria", IT: "Italy", gr: "Greece" } },
+                to: { BG: "Bulgaria", IT: "Italy", gr: "Greece" },
+                limitation: "{L}: probable capacity limitation towards {to} at {cap} MW, {w} ({n}), against an observed limit of {lim} MW (estimate)." },
+        hh: { title: "Hour by hour", sub: "Positive = imports, negative = exports. Bars: schedule; line: measured flow.",
+              subToday: "Positive = imports, negative = exports. Schedule only; the measured flow arrives tomorrow.",
+              sched: "Schedule (ISP)", meas: "Measured (SCADA)", sat: "Saturated hours", limit: "Observed limit", cap: "Probable limitation",
+              spread: "Price GR − neighbour", yes: "saturated", no: "coupled" },
         lineCodes: { AL: "GR–AL", BG: "GR–BG", IT: "GR–IT", MK: "GR–MK", TR: "GR–TR" },
         zero: { day: "Zero flow all day · period {from} – {to} ({n})", dayOngoing: "Zero flow all day · since {from}, ongoing ({n} to {to})",
                 restart: "Flow resumed at {h}, after {n} at zero ({from} – {to})", month: "{line}: {n} at zero this month ({ranges})",
@@ -278,7 +283,12 @@ const i18n = {
                 maxSpread: "{L}: η μεγαλύτερη διαφορά τιμής του μήνα μέχρι σήμερα, {s} €/MWh.",
                 deviation: "Η συνολική ροή απέκλινε από το πρόγραμμα κατά {mw} MW ανά ώρα κατά μέσο όρο, πάνω από το συνηθισμένο των 30 ημερών ({p90} MW).",
                 h1: "1 ώρα", hn: "{n} ώρες", q1: "1 τέταρτο", qn: "{n} τέταρτα", many: "σε {n} διαστήματα, από {a} έως {b}",
-                to: { BG: "Βουλγαρία", IT: "Ιταλία", gr: "Ελλάδα" } },
+                to: { BG: "Βουλγαρία", IT: "Ιταλία", gr: "Ελλάδα" },
+                limitation: "{L}: πιθανός περιορισμός ικανότητας προς {to} στα {cap} MW, {w} ({n}), έναντι παρατηρούμενου ορίου {lim} MW (εκτίμηση)." },
+        hh: { title: "Ώρα με την ώρα", sub: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μπάρες: πρόγραμμα· γραμμή: μετρημένη ροή.",
+              subToday: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μόνο το πρόγραμμα· η μετρημένη ροή έρχεται αύριο.",
+              sched: "Πρόγραμμα (ISP)", meas: "Μετρημένη (SCADA)", sat: "Ώρες κορεσμού", limit: "Παρατηρούμενο όριο", cap: "Πιθανός περιορισμός",
+              spread: "Τιμή ΕΛ − γείτονα", yes: "κορεσμός", no: "σύζευξη" },
         lineCodes: { AL: "ΕΛ–ΑΛ", BG: "ΕΛ–ΒΓ", IT: "ΕΛ–ΙΤ", MK: "ΕΛ–ΒΜ", TR: "ΕΛ–ΤΡ" },
         zero: { day: "Μηδενική ροή όλη τη μέρα · διάστημα {from} – {to} ({n})", dayOngoing: "Μηδενική ροή όλη τη μέρα · από {from}, συνεχίζεται ({n} έως {to})",
                 restart: "Η ροή επανήλθε στις {h}, μετά από {n} στο μηδέν ({from} – {to})", month: "{line}: {n} στο μηδέν αυτόν τον μήνα ({ranges})",
@@ -471,14 +481,16 @@ const methodologyData = {
                 ]
             },
             {
-                title: "Saturation",
+                title: "Interconnector day",
                 items: [
                     ["Coupling:", "measured on every quarter-hour of the day-ahead market. An hour counts as decoupled when the mean price difference over its decoupled quarter-hours is at least 1 €/MWh (GR–IT keeps a permanent gap of a few cents)."],
                     ["Observed limit:", "95th percentile of the scheduled flow in the same direction over the last 30 days: an estimate from the data, not the official capacity."],
                     ["Schedule and measured flow:", "the schedule is the commercial flow per border (ADMIE ISP). The measured flow (SCADA) can be much lower on the AC lines, because power spreads over parallel paths; the DC cable to Italy carries almost exactly its schedule."],
                     ["Congestion rent (estimate):", "scheduled flow × price difference in the decoupled hours. It is collected by the two system operators, it is not a profit of Greece, and it is a different measure from the arbitrage cash flow."],
                     ["Today:", "before the measurement arrives, the card shows only the final day-ahead prices."],
-                    ["Ceilings:", "highest measured hourly flow per direction, with the 99th percentile."]
+                    ["Ceilings:", "highest measured hourly flow per direction, with the 99th percentile."],
+                    ["Hour by hour:", "for GR–BG and GR–IT, bars show the schedule and the line the measured flow; saturated hours are shaded and the observed limit is dashed."],
+                    ["Probable capacity limitation (estimate):", "in saturated hours the market wants more flow; when the schedule stays stuck at the same value (at least 3 hours, ±3 MW) below 85 % of the observed limit, the commercial capacity was probably reduced to that value. It is inferred from the schedule, not read from the official capacity (NTC), which will be added from ENTSO-E."]
                 ]
             },
             {
@@ -548,14 +560,16 @@ const methodologyData = {
                 ]
             },
             {
-                title: "Κορεσμός",
+                title: "Ημέρα διασυνδέσεων",
                 items: [
                     ["Σύζευξη:", "μετριέται σε κάθε τέταρτο της αγοράς επόμενης ημέρας. Μια ώρα μετρά ως αποσυζευγμένη όταν η μέση διαφορά τιμής στα αποσυζευγμένα τέταρτά της είναι τουλάχιστον 1 €/MWh (η ΕΛ–ΙΤ κρατά μια μόνιμη διαφορά λίγων λεπτών)."],
                     ["Παρατηρούμενο όριο:", "το 95ο εκατοστημόριο της προγραμματισμένης ροής στην ίδια κατεύθυνση τις τελευταίες 30 ημέρες: εκτίμηση από τα δεδομένα, όχι η επίσημη ικανότητα."],
                     ["Πρόγραμμα και μετρημένη ροή:", "το πρόγραμμα είναι η εμπορική ροή ανά σύνορο (ISP ΑΔΜΗΕ). Η μετρημένη ροή (SCADA) μπορεί να είναι πολύ μικρότερη στις γραμμές εναλλασσόμενου ρεύματος, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές· το καλώδιο συνεχούς ρεύματος προς Ιταλία μεταφέρει σχεδόν ακριβώς το πρόγραμμά του."],
                     ["Έσοδο συμφόρησης (εκτίμηση):", "προγραμματισμένη ροή × διαφορά τιμής στις αποσυζευγμένες ώρες. Το εισπράττουν οι δύο διαχειριστές, δεν είναι κέρδος της Ελλάδας, και είναι διαφορετικό μέγεθος από το ταμείο του arbitrage."],
                     ["Σήμερα:", "πριν έρθει η μέτρηση, η κάρτα δείχνει μόνο τις οριστικές τιμές της αγοράς επόμενης ημέρας."],
-                    ["Ταβάνι:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση, μαζί με το 99ο εκατοστημόριο."]
+                    ["Ταβάνι:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση, μαζί με το 99ο εκατοστημόριο."],
+                    ["Ώρα με την ώρα:", "για ΕΛ–ΒΓ και ΕΛ–ΙΤ, οι μπάρες δείχνουν το πρόγραμμα και η γραμμή τη μετρημένη ροή· οι ώρες κορεσμού είναι σκιασμένες και το παρατηρούμενο όριο διακεκομμένο."],
+                    ["Πιθανός περιορισμός ικανότητας (εκτίμηση):", "στις ώρες κορεσμού η αγορά θέλει περισσότερη ροή· όταν το πρόγραμμα μένει κολλημένο στην ίδια τιμή (τουλάχιστον 3 ώρες, ±3 MW) κάτω από το 85% του παρατηρούμενου ορίου, η εμπορική ικανότητα ήταν πιθανότατα μειωμένη σε αυτή την τιμή. Προκύπτει από το πρόγραμμα, δεν διαβάζεται από την επίσημη ικανότητα (NTC), που θα προστεθεί από το ENTSO-E."]
                 ]
             },
             {
@@ -661,7 +675,7 @@ function applyStaticText() {
     document.getElementById('tabBtnMTD').innerText = t.tabMTD;
     document.getElementById('tabBtnCountry').innerText = t.tabCountry;
     document.getElementById('tabBtnSat').innerText = t.tabSat;
-    [['satDayTitle', t.sat.dayTitle]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
+    [['satDayTitle', t.sat.dayTitle], ['satChartsTitle', t.hh.title], ['satBGTitle', t.lineCodes.BG], ['satITTitle', t.lineCodes.IT]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
     const C = t.ctry;
     [['countryChartTitle', C.chartTitle], ['countryTableTitle', C.tableTitle],
      ['countryGranMonth', C.month], ['countryGranWeek', C.week]].forEach(([id, txt]) => { document.getElementById(id).textContent = txt; });
@@ -1637,9 +1651,90 @@ function factSentences(f) {
         case 'new_max': return [S.newMax.replace('{L}', L).replace('{dir}', f.dir === 'exp' ? S.exp : S.imp).replace('{mw}', fmtN(f.mw, 0)).replace('{h}', hourSpan(f.hour)).replace('{prev}', fmtN(f.prev_mw, 0))];
         case 'first_decoupling': return [S.firstDec.replace('{L}', L).replace('{n}', f.days)];
         case 'max_spread_month': return [S.maxSpread.replace('{L}', L).replace('{s}', fmtN(f.spread, 0))];
+        case 'limitation': return [S.limitation.replace('{L}', L).replace('{to}', S.to[f.dir === 'to_gr' ? 'gr' : f.line]).replace('{cap}', fmtN(f.cap_mw, 0))
+            .replace('{w}', f.windows.map(w => `${w.from}–${w.to}`).join(', ')).replace('{n}', f.hours === 1 ? S.h1 : S.hn.replace('{n}', f.hours)).replace('{lim}', fmtN(f.limit_mw, 0))];
         case 'deviation': return [S.deviation.replace('{mw}', fmtN(f.mw, 0)).replace('{p90}', fmtN(f.p90_mw, 0))];
         default: return [];      // zero_start / restart: γράφονται ως σημείωση μηδενικής ροής (D36)
     }
+}
+
+// ---- Γραφήματα 24ώρου ΕΛ–ΒΓ / ΕΛ–ΙΤ (D39) --------------------------------------
+const satHourCharts = {};
+const satOverlay = {
+    id: 'satOverlay',
+    beforeDatasetsDraw(chart, _a, o) {             // σκιασμένες στήλες στις ώρες κορεσμού
+        const { ctx, chartArea: ca, scales: { x } } = chart;
+        if (!o || !o.sat) return;
+        const w = x.getPixelForValue(1) - x.getPixelForValue(0);
+        ctx.save(); ctx.fillStyle = 'rgba(34,211,238,0.13)';
+        o.sat.forEach((on, i) => { if (on) ctx.fillRect(x.getPixelForValue(i) - w / 2, ca.top, w, ca.bottom - ca.top); });
+        ctx.restore();
+    },
+    afterDatasetsDraw(chart, _a, o) {              // διακεκομμένες: παρατηρούμενο όριο· πορτοκαλί: πιθανός περιορισμός
+        const { ctx, chartArea: ca, scales: { x, y } } = chart;
+        if (!o) return;
+        const w = x.getPixelForValue(1) - x.getPixelForValue(0);
+        ctx.save(); ctx.lineWidth = 1.5;
+        (o.limits || []).forEach(v => { const py = y.getPixelForValue(v); if (py < ca.top || py > ca.bottom) return;
+            ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(226,232,240,0.7)'; ctx.beginPath(); ctx.moveTo(ca.left, py); ctx.lineTo(ca.right, py); ctx.stroke(); });
+        (o.caps || []).forEach(c => {
+            const py = y.getPixelForValue(c.v), x0 = x.getPixelForValue(c.a) - w / 2, x1 = x.getPixelForValue(c.b - 1) + w / 2;
+            ctx.setLineDash([]); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 6;          // σκούρο περίγραμμα για να ξεχωρίζει
+            ctx.beginPath(); ctx.moveTo(x0, py); ctx.lineTo(x1, py); ctx.stroke();
+            ctx.setLineDash([6, 4]); ctx.strokeStyle = '#fde047'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(x0, py); ctx.lineTo(x1, py); ctx.stroke();
+            ctx.setLineDash([]); ctx.fillStyle = '#fde047'; ctx.font = 'bold 11px system-ui, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(`${fmtN(Math.abs(c.v), 0)} MW`, (x0 + x1) / 2, c.v < 0 ? py + 15 : py - 7);
+        });
+        ctx.restore();
+    }
+};
+
+function renderSatHourCharts(date, facts, measured) {
+    const t = i18n[currentLang], H = t.hh, day = currentDayData;
+    document.getElementById('satChartsSub').textContent = measured ? H.sub : H.subToday;
+    const anyCap = facts.some(f => f.type === 'limitation');
+    const sw = (style) => `<span class="inline-block align-middle mr-1.5" style="${style}"></span>`;
+    document.getElementById('satLegend').innerHTML = [
+        sw(`width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,${countryColors.BG} 50%,${countryColors.IT} 50%)`) + H.sched,
+        measured ? sw('width:14px;height:2px;background:#f8fafc') + H.meas : '',
+        sw('width:12px;height:10px;background:rgba(34,211,238,0.3);border-radius:2px') + H.sat,
+        sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.8)') + H.limit,
+        anyCap ? sw('width:14px;height:0;border-top:3px dashed #fde047') + H.cap : ''
+    ].filter(Boolean).map(x => `<span class="whitespace-nowrap">${x}</span>`).join('');
+    ['BG', 'IT'].forEach(c => {
+        const M = day && day.Market && day.Market[c];
+        const n = day ? day.Hourly.length : 0;
+        const sched = M ? M.isp : [], cpl = M ? M.cpl : [], spr = M ? M.spr : [];
+        const meas = day ? day.Hourly.map(h => h['SCADA_' + c]) : [];
+        const sat = Array.from({ length: n }, (_, i) => cpl[i] != null && cpl[i] < 4 && spr[i] != null && Math.abs(spr[i]) >= 1);
+        const lim = (analysisData && analysisData.limits && analysisData.limits[date] && analysisData.limits[date][c]) || {};
+        const limits = [lim.to_gr, lim.to_n != null ? -lim.to_n : null].filter(v => v != null);
+        const caps = facts.filter(f => f.type === 'limitation' && f.line === c)
+            .flatMap(f => f.windows.map(w => ({ v: (f.dir === 'to_n' ? -1 : 1) * f.cap_mw, a: parseInt(w.from, 10), b: parseInt(w.to, 10) })));
+        const labels = day ? day.Hourly.map(h => hourTick(h.Hour)) : [];
+        const ext = Math.max(10, ...limits.map(Math.abs), ...sched.filter(v => v != null).map(Math.abs), ...(measured ? meas.filter(v => v != null).map(Math.abs) : []));
+        if (satHourCharts[c]) satHourCharts[c].destroy();
+        const ds = [{ type: 'bar', label: H.sched, data: sched, backgroundColor: hexA(countryColors[c], 0.85), order: 2, barPercentage: 0.9, categoryPercentage: 0.9 }];
+        if (measured) ds.push({ type: 'line', label: H.meas, data: meas, borderColor: '#f8fafc', backgroundColor: '#f8fafc', borderWidth: 2, pointRadius: 1.5, order: 1, tension: 0.2 });
+        satHourCharts[c] = new Chart(document.getElementById('satChart' + c).getContext('2d'), {
+            data: { labels, datasets: ds },
+            plugins: [satOverlay],
+            options: {
+                responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { display: false }, satOverlay: { sat, limits, caps },
+                    tooltip: tipOff((i) => {
+                        const h = day.Hourly[i], rows = [tipRow(H.sched, `${fmtN(sched[i], 0, true)} MW`, countryColors[c])];
+                        if (measured) rows.push(tipRow(H.meas, `${fmtN(meas[i], 0, true)} MW`, '#f8fafc'));
+                        if (spr[i] != null) rows.push(tipRow(H.spread, `${fmtN(spr[i], 1, true)} €/MWh · ${sat[i] ? H.yes : H.no}`, null));
+                        return tipHead(`${t.tip.hour} ${hourRange(h.Hour)}`) + tipSections(rows.join(''));
+                    }) },
+                scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } },
+                          y: { suggestedMin: -ext * 1.1, suggestedMax: ext * 1.1, grid: { color: ctx => ctx.tick.value === 0 ? 'rgba(255,255,255,0.6)' : '#334155' },
+                               ticks: { callback: v => fmtN(v, 0) }, title: { display: true, text: 'MW', color: '#64748b', font: { size: 11 } } } }
+            }
+        });
+    });
 }
 
 function renderSatTab() {
@@ -1678,6 +1773,7 @@ function renderSatTab() {
     });
     document.getElementById('satDayBody').innerHTML = blocks.length ? blocks.join('<div class="border-t border-slate-700/50"></div>')
         : `<p class="text-sm text-slate-400">${escapeHtml(T.none)}</p>`;
+    if (date) renderSatHourCharts(date, facts, measured);
 
 }
 

@@ -291,6 +291,20 @@
                 <p class="text-xs text-slate-400 mt-1" id="satDaySub">-</p>
                 <div id="satDayBody" class="mt-4 space-y-3"></div>
             </div>
+            <!-- D39: ωριαία εικόνα των δύο γραμμών με σύζευξη αγορών -->
+            <div class="bg-slate-800/40 p-4 md:p-6 rounded-xl border border-slate-700">
+                <h2 class="text-lg font-semibold text-slate-200" id="satChartsTitle">Hour by hour</h2>
+                <p class="text-xs text-slate-400 mt-1" id="satChartsSub">-</p>
+                <div id="satLegend" class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-300 mt-3"></div>
+                <div class="mt-4">
+                    <div class="text-sm font-semibold text-slate-200" id="satBGTitle">GR–BG</div>
+                    <div class="relative h-[220px] md:h-[260px] mt-1"><canvas id="satChartBG"></canvas></div>
+                </div>
+                <div class="mt-6">
+                    <div class="text-sm font-semibold text-slate-200" id="satITTitle">GR–IT</div>
+                    <div class="relative h-[220px] md:h-[260px] mt-1"><canvas id="satChartIT"></canvas></div>
+                </div>
+            </div>
         </div>
 
         <!-- TAB «ΑΝΑ ΧΩΡΑ» (D36): ταμείο ανά χώρα από το data/analysis.json, όλη η περίοδος και εξέλιξη στον χρόνο -->

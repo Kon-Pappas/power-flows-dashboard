@@ -131,4 +131,19 @@ a1 = A.build([make_day("2026-09-02"), src])["days"]["2026-09-03"]
 a2 = A.build([make_day("2026-09-02"), packed])["days"]["2026-09-03"]
 check("λίστες ανά ημέρα (Market) = ίδια γεγονότα με τα ωριαία πεδία", a1 == a2)
 
+# 10. Πιθανός περιορισμός ικανότητας (D39): πρόγραμμα κολλημένο στα 500 MW σε 4 ώρες κορεσμού, όριο 1.000 MW
+hist = [make_day((date(2026, 9, 1) + timedelta(days=k)).isoformat(), bg_sched=-1000.0) for k in range(31)]
+lim_day = make_day("2026-10-02", bg_dec=(9, 10, 11, 12), bg_sched=-1000.0)
+for i in (9, 10, 11, 12):
+    lim_day["Hourly"][i]["ISP_BG"] = -500.0
+res = A.build(hist + [lim_day])
+lf = [f for f in res["days"]["2026-10-02"] if f["type"] == "limitation"]
+check("περιορισμός: ΕΛ→ΒΓ στα 500 MW, 09:00–13:00, έναντι ορίου 1.000 MW",
+      len(lf) == 1 and (lf[0]["dir"], lf[0]["cap_mw"], lf[0]["limit_mw"], lf[0]["hours"]) == ("to_n", 500, 1000, 4)
+      and lf[0]["windows"] == [{"from": "09:00", "to": "13:00"}], str(lf))
+no_lim = make_day("2026-10-02", bg_dec=(9, 10, 11, 12), bg_sched=-1000.0)
+res2 = A.build(hist + [no_lim])
+check("καμία ένδειξη όταν το πρόγραμμα είναι στο όριο", not any(f["type"] == "limitation" for f in res2["days"]["2026-10-02"]))
+check("όρια ανά ημέρα για τα γραφήματα: ΒΓ προς γείτονα 1.000 MW", res["limits"]["2026-10-02"]["BG"]["to_n"] == 1000, str(res["limits"].get("2026-10-02")))
+
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

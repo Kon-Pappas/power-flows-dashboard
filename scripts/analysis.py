@@ -26,6 +26,9 @@ USUAL_PCT = 95
 DEV_PCT = 90               # «εξαιρετική απόκλιση» από το πρόγραμμα: πάνω από το P90 των 30 ημερών
 MIN_HISTORY_NEW_MAX = 30   # νέο μέγιστο μόνο αφού υπάρχουν τουλάχιστον 30 ημέρες πριν
 FIRST_DEC_DAYS = 7         # «πρώτη αποσύζευξη μετά από Ν ημέρες πλήρους σύζευξης»
+PLATEAU_HOURS = 3          # D39: ≥ 3 ώρες κορεσμού με ίδιο ακριβώς πρόγραμμα (±3 MW) …
+PLATEAU_TOL = 3.0
+PLATEAU_SHARE = 0.85       # … κάτω από το 85 % του παρατηρούμενου ορίου = πιθανός περιορισμός ικανότητας
 SIG_SPREAD = 1.0           # D35: ώρα με μέση διαφορά < 1 €/MWh στα αποσυζευγμένα τέταρτα = συζευγμένη για στατιστικά
                            # και κείμενα (στην ΕΛ–ΙΤ μένει σχεδόν πάντα μια διαφορά λίγων λεπτών). Τα δεδομένα κρατούν
                            # την ακριβή μέτρηση (0,01 €/MWh).
@@ -152,6 +155,38 @@ def usual_limit(history, c, d):
     return pct(vals, USUAL_PCT) if len(vals) >= 24 else None
 
 
+def limitations(day, c, limits):
+    """D39: πιθανός περιορισμός ικανότητας (εκτίμηση). Σε ώρες κορεσμού η αγορά θέλει περισσότερη ροή· αν το πρόγραμμα
+    μένει ΚΟΛΛΗΜΕΝΟ στην ίδια τιμή (≥ 3 ώρες, ±3 MW) πολύ κάτω από το παρατηρούμενο όριο, η εμπορική ικανότητα ήταν
+    μειωμένη σε αυτή την τιμή. Επιστρέφει λίστα {dir, cap_mw, limit_mw, hours, windows}."""
+    out = []
+    for d, sign in (("to_n", -1), ("to_gr", 1)):
+        lim = limits.get(d)
+        if not lim:
+            continue
+        hrs = []
+        for i, h in enumerate(day["Hourly"]):
+            cpl, spr, sched = h.get("CPL_" + c), h.get("SPR_" + c), h.get("ISP_" + c)
+            if is_dec(cpl, spr) and direction(spr) == d and sched is not None and sign * sched > ZERO_MW:
+                hrs.append((i, sign * sched))
+        if len(hrs) < PLATEAU_HOURS:
+            continue
+        best = max(hrs, key=lambda x: sum(1 for _, v in hrs if abs(v - x[1]) <= PLATEAU_TOL))
+        at = [i for i, v in hrs if abs(v - best[1]) <= PLATEAU_TOL]
+        cap = sum(v for i, v in hrs if i in at) / len(at)
+        if len(at) >= PLATEAU_HOURS and cap < PLATEAU_SHARE * lim:
+            wins, start, prev = [], None, None
+            for i in at:
+                if start is None or i != prev + 1:
+                    if start is not None:
+                        wins.append({"from": hhmm(start), "to": hhmm(prev + 1)})
+                    start = i
+                prev = i
+            wins.append({"from": hhmm(start), "to": hhmm(prev + 1)})
+            out.append({"dir": d, "cap_mw": r0(cap), "limit_mw": r0(lim), "hours": len(at), "windows": wins})
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Γεγονότα ημέρας
 # ---------------------------------------------------------------------------
@@ -208,6 +243,10 @@ def day_facts(day, history):
                                   "score": 30 + 3 * against_h})
             f["score"] = r2(score)
             facts.append(f)
+            if measured:
+                lims = {d: usual_limit(history, c, d) for d in ("to_n", "to_gr")}
+                for lm in limitations(day, c, lims):
+                    facts.append({"type": "limitation", "line": c, **lm, "score": 75})
             # πρώτη αποσύζευξη μετά από Ν ημέρες πλήρους σύζευξης
             last = [x for x in history[-FIRST_DEC_DAYS:] if prices_known(x, c)]
             if len(last) == FIRST_DEC_DAYS and all(not windows(x, c) for x in last):
@@ -386,9 +425,13 @@ def build(days):
             for k in ("rev", "cost", "exp_mwh", "imp_mwh", "net"):
                 ww[c][k] += per[c][k]
             ww[c]["days"] += 1
-    facts = {}
+    facts, limits = {}, {}
     for i, d in enumerate(days):
         facts[d["Date"]] = day_facts(d, days[:i])
+        # D39: παρατηρούμενο όριο ανά κατεύθυνση για κάθε ημέρα (διακεκομμένες γραμμές στα γραφήματα 24ώρου)
+        lim = {c: {k: r0(usual_limit(days[:i], c, k)) for k in ("to_n", "to_gr")} for c in COUPLED}
+        if any(v for x in lim.values() for v in x.values()):
+            limits[d["Date"]] = lim
     return {
         "generated": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "params": {"zero_mw": ZERO_MW, "coupling_eur": 0.01, "significant_spread_eur": SIG_SPREAD,
@@ -401,6 +444,7 @@ def build(days):
         "saturation": saturation_monthly(days),
         "ceilings": ceilings(days),
         "days": facts,
+        "limits": limits,
     }
 
 
