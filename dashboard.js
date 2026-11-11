@@ -163,8 +163,8 @@ const i18n = {
                 ntcReduced: "{L}: reduced transfer capacity (NTC): {parts}.", ntcPart: "towards {to} {v}, {w} (usually {u} MW)",
                 ntcZero: "{L}: zero transfer capacity (NTC 0 MW) {d} all day.", bothDirs: "in both directions", toward: "towards {to}",
                 limNtc: " (up to {p}% of the day-ahead NTC, {n} MW)" },
-        hh: { title: "Hour by hour", sub: "Positive = imports, negative = exports. Bars: schedule; line: measured flow.",
-              subToday: "Positive = imports, negative = exports. Schedule only; the measured flow arrives tomorrow.",
+        hh: { title: "Hour by hour", sub: "Positive = imports, negative = exports. Bars: measured flow; line: schedule.",
+              subToday: "Positive = imports, negative = exports. Schedule only (line); the measured flow arrives tomorrow.",
               sched: "Schedule (ISP)", meas: "Measured (SCADA)", sat: "Saturated hours", limit: "Observed limit", ntc: "Transfer capacity (NTC)", cap: "Probable limitation",
               spread: "Price GR − neighbour", yes: "saturated", no: "coupled" },
         lineCodes: { AL: "GR–AL", BG: "GR–BG", IT: "GR–IT", MK: "GR–MK", TR: "GR–TR" },
@@ -291,8 +291,8 @@ const i18n = {
                 ntcReduced: "{L}: μειωμένη ικανότητα μεταφοράς (NTC): {parts}.", ntcPart: "προς {to} {v}, {w} (συνήθως {u} MW)",
                 ntcZero: "{L}: μηδενική ικανότητα μεταφοράς (NTC 0 MW) {d} όλη τη μέρα.", bothDirs: "και στις δύο κατευθύνσεις", toward: "προς {to}",
                 limNtc: " (έως {p}% του NTC επόμενης ημέρας, {n} MW)" },
-        hh: { title: "Ώρα με την ώρα", sub: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μπάρες: πρόγραμμα· γραμμή: μετρημένη ροή.",
-              subToday: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μόνο το πρόγραμμα· η μετρημένη ροή έρχεται αύριο.",
+        hh: { title: "Ώρα με την ώρα", sub: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μπάρες: μετρημένη ροή· γραμμή: πρόγραμμα.",
+              subToday: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μόνο το πρόγραμμα (γραμμή)· η μετρημένη ροή έρχεται αύριο.",
               sched: "Πρόγραμμα (ISP)", meas: "Μετρημένη (SCADA)", sat: "Ώρες κορεσμού", limit: "Παρατηρούμενο όριο", ntc: "Ικανότητα μεταφοράς (NTC)", cap: "Πιθανός περιορισμός",
               spread: "Τιμή ΕΛ − γείτονα", yes: "κορεσμός", no: "σύζευξη" },
         lineCodes: { AL: "ΕΛ–ΑΛ", BG: "ΕΛ–ΒΓ", IT: "ΕΛ–ΙΤ", MK: "ΕΛ–ΒΜ", TR: "ΕΛ–ΤΡ" },
@@ -439,13 +439,13 @@ const methodologyData = {
                 shortItems: [
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
                     ["Clock:", "every hourly figure is in Greek time. Prices and the ISP schedule, which the market publishes in Central European Time (one hour behind), are shifted by one hour so that each hour shows the measured flow, the schedule and the price of the same real hour; hour 00–01 takes the last market hour of the previous day."],
-                    ["Sources:", "ADMIE's SCADA & ISP reports, ENTSO-E day-ahead prices. Updated daily; the last 5 days are re-checked each run to catch late publications."],
+                    ["Sources:", "ADMIE's SCADA & ISP reports; ENTSO-E day-ahead prices and transfer capacities (NTC). Updated daily; the last 5 days are re-checked each run to catch late publications."],
                     ["Pending data:", "a day without SCADA yet is marked ⚠ and excluded from Month-to-Date totals until complete."]
                 ],
                 items: [
                     ["Scope:", "the five interconnections with Albania, Bulgaria, Italy, North Macedonia and Turkey; the flow to Crete is not a cross-border flow and is not included."],
                     ["Clock:", "every hourly figure is in Greek time. Prices and the ISP schedule, which the market publishes in Central European Time (one hour behind), are shifted by one hour so that each hour shows the measured flow, the schedule and the price of the same real hour; hour 00–01 takes the last market hour of the previous day."],
-                    ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) from ENTSO-E."],
+                    ["Sources:", "physical flow data is fetched daily from ADMIE's official SCADA & ISP reports; Day-Ahead Market Clearing Prices (MCPs) and day-ahead forecasted transfer capacities (NTC) from ENTSO-E."],
                     ["Updates:", "daily via a scheduled job. The last 5 days are re-checked on every run to catch late publications and corrections."],
                     ["Data Completeness:", "SCADA for a given day is published by ADMIE the following morning; until then, that day is marked ⚠, its Cash Flow shown as \"n/a\", and it is excluded from Month-to-Date totals so incomplete data can't distort monthly aggregates.", "m-complete"]
                 ]
@@ -453,15 +453,17 @@ const methodologyData = {
             {
                 title: "Daily ISP vs SCADA",
                 items: [
-                    ["ISP vs SCADA:", "ISP is the day-ahead cross-border schedule; SCADA is what was actually measured. Differences between them are expected and can reflect intraday re-dispatch or last-minute constraint activity."],
-                    ["ISP Schedule Selection:", "cross-border totals per country, and the hourly schedule, are taken from ADMIE's \"Total Market CBS (+XBID)\" section — the final schedule after intraday adjustments — rather than the day-ahead auction alone. The flow to Crete, which ADMIE's net schedule line includes, is left out, as in the SCADA figures."]
+                    ["ISP vs SCADA:", "ISP is the cross-border schedule (final, after intraday trading); SCADA is what was actually measured. Differences between them are expected and can reflect intraday re-dispatch or last-minute constraint activity."],
+                    ["ISP Schedule Selection:", "cross-border totals per country, and the hourly schedule, are taken from ADMIE's \"Total Market CBS (+XBID)\" section, the final schedule after intraday trading, per country (without the flow to Crete)."],
+                    ["Zero flow:", "when a line is at zero all day (every hour below 1 MW), a note under the subtitle gives the period at zero that contains the day you are looking at (from–to, or \"ongoing\")."]
                 ]
             },
             {
                 title: "Hourly profiles",
                 items: [
-                    ["Hourly resolution:", "flows and prices are shown as hourly values; ADMIE's underlying schedule data is quarter-hourly and is averaged to the hour for display."],
-                    ["Prices shown:", "Day-Ahead Market Clearing Prices for Greece, Bulgaria and Italy, for context alongside the physical flows."]
+                    ["Hourly Resolution:", "flows and prices are shown as hourly values; ADMIE's underlying schedule data is quarter-hourly and is averaged to each hour."],
+                    ["Prices Shown:", "Day-Ahead Market Clearing Prices for Greece, Bulgaria and Italy, as context next to the physical flows."],
+                    ["Zero flow:", "the same note as in Daily flow, under the chart title, when a line is at zero on the day you are looking at."]
                 ]
             },
             {
@@ -469,43 +471,47 @@ const methodologyData = {
                 items: [
                     ["Pricing Logic & Valuation:", "for Albania, North Macedonia and Turkey, flows are valued using the Greek price only. For Bulgaria and Italy, flows are valued using the average of the two domestic prices. This is a notional commercial valuation of the flow, not a formal congestion-rent calculation (flow × price differential, which accrues to the transmission operators, not a market participant)."],
                     ["Sign Convention:", "following ENEX standards, red denotes exports and yellow denotes imports. Exporting energy generates positive cash flow (+); importing represents a cost (–)."],
-                    ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.", "m-transit"]
+                    ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.", "m-transit"],
+                    ["Zero flow:", "on a day when a line is at zero, a note on the country's card gives its period at zero, or the hour the flow resumed."]
                 ]
             },
             {
                 title: "MTD position",
                 items: [
-                    ["", "Only complete days (SCADA present and usable prices) count toward Month-to-Date totals, Best/Worst Day, and averages. Incomplete days are listed and excluded so they can't distort the monthly picture."]
+                    ["Complete days only:", "only complete days (SCADA present and usable prices) count toward Month-to-Date totals, Best/Worst Day and averages. Incomplete days are listed and excluded so they can't distort the monthly picture."],
+                    ["Zero flow:", "a note gives, per line, the days at zero within the month you are looking at."]
                 ]
             },
             {
                 title: "By country",
                 items: [
                     ["Cash flow:", "exports minus imports per country for every complete day: measured flow (SCADA) × price, with the arbitrage rule (Albania, North Macedonia and Turkey at the Greek price; Bulgaria and Italy at the mean of the two prices). Totals by month and by week (Monday to Sunday) are computed by the pipeline."],
-                    ["Zero flow:", "a line is at zero on a day when every hour is below 1 MW. Notes show the period at zero of the day, the month or the whole period you are looking at."],
-                    ["Selecting a country:", "tap a country in the list: the other countries fade, its cumulative cash flow appears on the right axis, with its line ceiling and, for Bulgaria and Italy, saturation by month (saturated hours, congestion rent, and the share of the schedule that physically passed)."]
+                    ["Selecting a country:", "tap a country in the list: the other countries fade, its cumulative cash flow appears on the right axis, and its details appear under the chart."],
+                    ["Line ceiling:", "highest measured hourly flow per direction over the whole period, with date and hour, and the 99th percentile."],
+                    ["Saturation by month (Bulgaria, Italy):", "share of hours with a price difference of at least 1 €/MWh, the congestion rent (estimate) and \"physically passed\" = measured flow ÷ schedule in the saturated hours. On the AC lines to Bulgaria it is low, because power spreads over parallel paths; the DC cable to Italy carries almost exactly its schedule."],
+                    ["Zero flow:", "the zero days of the whole period appear on the country's row."]
                 ]
             },
             {
                 title: "Interconnector day",
                 items: [
-                    ["Coupling:", "measured on every quarter-hour of the day-ahead market. An hour counts as decoupled when the mean price difference over its decoupled quarter-hours is at least 1 €/MWh (GR–IT keeps a permanent gap of a few cents)."],
-                    ["Observed limit:", "95th percentile of the scheduled flow in the same direction over the last 30 days: an estimate from the data, not the official capacity."],
-                    ["Schedule and measured flow:", "the schedule is the commercial flow per border (ADMIE ISP). The measured flow (SCADA) can be much lower on the AC lines, because power spreads over parallel paths; the DC cable to Italy carries almost exactly its schedule."],
-                    ["Congestion rent (estimate):", "scheduled flow × price difference in the decoupled hours. It is collected by the two system operators, it is not a profit of Greece, and it is a different measure from the arbitrage cash flow."],
-                    ["Today:", "before the measurement arrives, the card shows only the final day-ahead prices."],
-                    ["Ceilings:", "highest measured hourly flow per direction, with the 99th percentile."],
-                    ["Hour by hour:", "for GR–BG and GR–IT, bars show the schedule and the line the measured flow; saturated hours are shaded and the observed limit is dashed."],
-                    ["Probable capacity limitation (estimate):", "in saturated hours the market wants more flow; when the schedule stays stuck at the same value (at least 3 hours, ±3 MW) below 85 % of the observed limit, the commercial capacity was probably reduced to that value. It is used only on days without the official capacity (NTC)."],
-                    ["Transfer capacity (NTC):", "the day-ahead forecasted transfer capacity per border and direction published on ENTSO-E (all five borders). It is reported as reduced when it is below 85 % of its median over the last 30 days for at least 2 hours, and as zero on the first day it is 0 MW all day. In the saturated hours, the card gives the highest share of the day-ahead NTC taken by the schedule; the schedule is final (it includes intraday trading), so it can exceed the day-ahead NTC. On the AC lines the measured flow can exceed the commercial NTC, because physical flow follows the whole network."]
+                    ["Coupling:", "measured on every quarter-hour of the day-ahead market. An hour counts as decoupled (saturated) when the mean price difference over its decoupled quarter-hours is at least 1 €/MWh (GR–IT keeps a permanent gap of a few cents)."],
+                    ["Today:", "before the measurement arrives, the card shows only what is final: day-ahead prices and the transfer capacity (NTC)."],
+                    ["Schedule and measured flow:", "the schedule is the commercial flow per border (ADMIE ISP, final after intraday trading). The measured flow (SCADA) can be much lower on the AC lines, because power spreads over parallel paths."],
+                    ["Congestion rent (estimate):", "scheduled flow × price difference in the saturated hours. It is collected by the two system operators, it is not a profit of Greece, and it is a different measure from the arbitrage cash flow."],
+                    ["Transfer capacity (NTC):", "the day-ahead forecasted transfer capacity per border and direction published on ENTSO-E (all five borders). It is reported as reduced when it is below 85 % of its median over the last 30 days for at least 2 hours, and as zero on the first day it is 0 MW all day. In the saturated hours the card gives the highest share of the day-ahead NTC taken by the schedule; the schedule is final (it includes intraday trading), so it can exceed 100 %. On the AC lines the measured flow can exceed the commercial NTC, because physical flow follows the whole network."],
+                    ["Hour by hour:", "for GR–BG and GR–IT, the bars show the measured flow, the white step line the schedule and the grey dashed step line the NTC; saturated hours are shaded. When the schedule line meets the NTC, the line was at its commercial limit."],
+                    ["Without NTC — observed limit:", "on days without NTC the dashed line is the 95th percentile of the schedule in the same direction over the last 30 days: an estimate from the data, not the official capacity."],
+                    ["Without NTC — probable capacity limitation (estimate):", "in saturated hours the market wants more flow; when the schedule stays stuck at the same value (at least 3 hours, ±3 MW) below 85 % of the observed limit, the commercial capacity was probably reduced to that value (yellow dashed segment)."]
                 ]
             },
             {
                 title: "Limitations",
                 items: [
-                    ["Data:", "SCADA is published as preliminary by ADMIE and may be revised. ISP is a schedule, not a measurement of actual delivery."],
-                    ["Pricing:", "the valuation uses a simplified average-price convention, not a formal congestion-rent or bilateral-settlement calculation, and does not reflect any single participant's realized P&L."],
-                    ["Nature:", "this is an independent analysis of open data by a single analyst. It is not the official position of ADMIE, ENTSO-E, or any other organisation."]
+                    ["Data:", "SCADA is published as provisional by ADMIE and may be revised. ISP is a schedule, not a measurement of physical delivery."],
+                    ["Valuation:", "the arbitrage cash flow uses a simplified mean-price convention, not bilateral settlement, and does not reflect transmission fees or individual contracts. The congestion rent is an estimate from public data, not the amount the system operators actually collect."],
+                    ["Transfer capacity (NTC):", "available from 1 Oct 2026 (and 1–15 Jun 2026); ENTSO-E has gaps for some days and borders (e.g. Turkey 19–24 Oct 2026). Days without NTC use the observed limit and the estimate. The final schedule is compared with the day-ahead NTC."],
+                    ["Nature:", "an independent analysis of open data by a single analyst. It is not an official position of ADMIE, ENTSO-E or any other organisation."]
                 ]
             }
         ]
@@ -519,13 +525,13 @@ const methodologyData = {
                 shortItems: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
                     ["Ώρα:", "όλα τα ωριαία στοιχεία είναι σε ώρα Ελλάδας. Οι τιμές και το πρόγραμμα ISP, που η αγορά δίνει σε ώρα Κεντρικής Ευρώπης (μία ώρα πίσω), μετατοπίζονται κατά μία ώρα, ώστε κάθε ώρα να δείχνει τη μετρημένη ροή, το πρόγραμμα και την τιμή της ίδιας πραγματικής ώρας· η ώρα 00–01 παίρνει την τελευταία ώρα αγοράς της προηγούμενης ημέρας."],
-                    ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ, τιμές ημερήσιας αγοράς ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
+                    ["Πηγές:", "αναφορές SCADA & ISP του ΑΔΜΗΕ· τιμές ημερήσιας αγοράς και ικανότητα μεταφοράς (NTC) από το ENTSO-E. Ενημέρωση καθημερινά· οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις."],
                     ["Εκκρεμή δεδομένα:", "μια ημέρα χωρίς SCADA ακόμα σημειώνεται με ⚠ και εξαιρείται από τα μηνιαία σύνολα μέχρι να ολοκληρωθεί."]
                 ],
                 items: [
                     ["Πεδίο:", "οι πέντε διασυνδέσεις με Αλβανία, Βουλγαρία, Ιταλία, Β. Μακεδονία και Τουρκία· η ροή προς Κρήτη δεν είναι διασυνοριακή και δεν περιλαμβάνεται."],
                     ["Ώρα:", "όλα τα ωριαία στοιχεία είναι σε ώρα Ελλάδας. Οι τιμές και το πρόγραμμα ISP, που η αγορά δίνει σε ώρα Κεντρικής Ευρώπης (μία ώρα πίσω), μετατοπίζονται κατά μία ώρα, ώστε κάθε ώρα να δείχνει τη μετρημένη ροή, το πρόγραμμα και την τιμή της ίδιας πραγματικής ώρας· η ώρα 00–01 παίρνει την τελευταία ώρα αγοράς της προηγούμενης ημέρας."],
-                    ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) από το ENTSO-E."],
+                    ["Πηγές:", "τα δεδομένα φυσικής ροής αντλούνται καθημερινά από τις επίσημες αναφορές SCADA & ISP του ΑΔΜΗΕ· οι Τιμές Εκκαθάρισης Ημερήσιας Αγοράς (MCPs) και η ικανότητα μεταφοράς επόμενης ημέρας (NTC) από το ENTSO-E."],
                     ["Ενημερώσεις:", "καθημερινά μέσω προγραμματισμένης διαδικασίας. Οι τελευταίες 5 ημέρες επανελέγχονται σε κάθε τρέξιμο για καθυστερημένες δημοσιεύσεις και διορθώσεις."],
                     ["Πληρότητα δεδομένων:", "το SCADA μιας ημέρας δημοσιεύεται από τον ΑΔΜΗΕ το επόμενο πρωί· μέχρι τότε, η ημέρα σημειώνεται με ⚠, το Ταμείο της εμφανίζεται ως «μ/δ», και εξαιρείται από τα μηνιαία σύνολα ώστε ελλιπή δεδομένα να μην τα αλλοιώνουν.", "m-complete"]
                 ]
@@ -533,15 +539,17 @@ const methodologyData = {
             {
                 title: "Ημερήσια ροή (ISP vs SCADA)",
                 items: [
-                    ["ISP έναντι SCADA:", "το ISP είναι το προγραμματισμένο διασυνοριακό πρόγραμμα· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσιο αναπρογραμματισμό ή δραστηριότητα περιορισμών της τελευταίας στιγμής."],
-                    ["Επιλογή προγράμματος ISP:", "τα σύνολα ανά χώρα και το ωριαίο πρόγραμμα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ — το τελικό πρόγραμμα μετά τις ενδοημερήσιες προσαρμογές — όχι μόνο από τη δημοπρασία ημερήσιου προγραμματισμού. Η ροή προς Κρήτη, που περιλαμβάνεται στη γραμμή καθαρού προγράμματος του ΑΔΜΗΕ, μένει έξω, όπως και στο SCADA."]
+                    ["ISP έναντι SCADA:", "το ISP είναι το διασυνοριακό πρόγραμμα (τελικό, μετά τις ενδοημερήσιες συναλλαγές)· το SCADA είναι η πραγματική μέτρηση. Διαφορές ανάμεσά τους είναι αναμενόμενες και μπορεί να αντανακλούν ενδοημερήσια ανακατανομή ή ενεργοποίηση περιορισμών της τελευταίας στιγμής."],
+                    ["Επιλογή προγράμματος ISP:", "τα σύνολα ανά χώρα και το ωριαίο πρόγραμμα λαμβάνονται από την ενότητα «Total Market CBS (+XBID)» του ΑΔΜΗΕ, το τελικό πρόγραμμα μετά τις ενδοημερήσιες συναλλαγές, ανά χώρα (χωρίς τη ροή προς Κρήτη)."],
+                    ["Μηδενική ροή:", "όταν μια γραμμή είναι στο μηδέν όλη τη μέρα (κάθε ώρα κάτω από 1 MW), μια σημείωση κάτω από τον υπότιτλο δίνει το διάστημα στο μηδέν που περιέχει την ημέρα που βλέπετε (από–έως, ή «συνεχίζεται»)."]
                 ]
             },
             {
                 title: "Ωριαία προφίλ",
                 items: [
-                    ["Ωριαία ανάλυση:", "οι ροές και οι τιμές εμφανίζονται ως ωριαίες τιμές· τα υποκείμενα δεδομένα προγράμματος του ΑΔΜΗΕ είναι τεταρτωριαία και υπολογίζεται ο μέσος όρος τους για την ωριαία προβολή."],
-                    ["Τιμές που εμφανίζονται:", "Τιμές Εκκαθάρισης Ημερήσιας Αγοράς για Ελλάδα, Βουλγαρία και Ιταλία, ως πλαίσιο δίπλα στις φυσικές ροές."]
+                    ["Ωριαία ανάλυση:", "οι ροές και οι τιμές εμφανίζονται ως ωριαίες τιμές· τα υποκείμενα δεδομένα προγράμματος του ΑΔΜΗΕ είναι τεταρτωριαία και υπολογίζεται ο μέσος όρος τους ανά ώρα."],
+                    ["Τιμές που εμφανίζονται:", "Τιμές Εκκαθάρισης Ημερήσιας Αγοράς για Ελλάδα, Βουλγαρία και Ιταλία, ως πλαίσιο δίπλα στις φυσικές ροές."],
+                    ["Μηδενική ροή:", "η ίδια σημείωση με την Ημερήσια ροή, κάτω από τον τίτλο του γραφήματος, όταν μια γραμμή είναι στο μηδέν την ημέρα που βλέπετε."]
                 ]
             },
             {
@@ -549,43 +557,47 @@ const methodologyData = {
                 items: [
                     ["Λογική τιμολόγησης & αποτίμησης:", "για Αλβανία, Β. Μακεδονία και Τουρκία, η αποτίμηση γίνεται αποκλειστικά με την ελληνική τιμή. Για Βουλγαρία και Ιταλία, με τον μέσο όρο των δύο εγχώριων τιμών. Πρόκειται για ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (ροή × διαφορά τιμών, το οποίο αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς)."],
                     ["Σύμβαση προσήμων:", "σύμφωνα με τα πρότυπα του ENEX, το κόκκινο αντιστοιχεί σε Εξαγωγές και το κίτρινο σε Εισαγωγές. Η εξαγωγή ενέργειας παράγει θετικό ταμείο (+), η εισαγωγή αντιπροσωπεύει κόστος (–)."],
-                    ["Προαιρετική προσαρμογή transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου.", "m-transit"]
+                    ["Προαιρετική προσαρμογή transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου.", "m-transit"],
+                    ["Μηδενική ροή:", "την ημέρα που μια γραμμή είναι στο μηδέν, μια σημείωση στην κάρτα της χώρας δίνει το διάστημα στο μηδέν ή την ώρα που επανήλθε η ροή."]
                 ]
             },
             {
                 title: "Σωρευτική θέση (MTD)",
                 items: [
-                    ["", "Μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."]
+                    ["Μόνο πλήρεις ημέρες:", "μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."],
+                    ["Μηδενική ροή:", "μια σημείωση δίνει, ανά γραμμή, τις ημέρες στο μηδέν μέσα στον μήνα που βλέπετε."]
                 ]
             },
             {
                 title: "Ανά χώρα",
                 items: [
                     ["Ταμείο:", "εξαγωγές μείον εισαγωγές ανά χώρα για κάθε πλήρη ημέρα: μετρημένη ροή (SCADA) × τιμή, με τον κανόνα του arbitrage (Αλβανία, Β. Μακεδονία και Τουρκία με την τιμή της Ελλάδας· Βουλγαρία και Ιταλία με τον μέσο όρο των δύο τιμών). Τα σύνολα ανά μήνα και ανά εβδομάδα (Δευτέρα–Κυριακή) τα υπολογίζει η ροή δεδομένων."],
-                    ["Μηδενική ροή:", "μια γραμμή είναι στο μηδέν μια ημέρα όταν κάθε ώρα είναι κάτω από 1 MW. Οι σημειώσεις δείχνουν το διάστημα στο μηδέν της ημέρας, του μήνα ή της περιόδου που βλέπετε."],
-                    ["Επιλογή χώρας:", "πατήστε μια χώρα στη λίστα: οι υπόλοιπες σβήνουν, εμφανίζεται το σωρευτικό ταμείο της στον δεξιό άξονα, το ταβάνι της γραμμής και, για Βουλγαρία και Ιταλία, ο κορεσμός ανά μήνα (ώρες κορεσμού, έσοδο συμφόρησης και το ποσοστό του προγράμματος που πέρασε φυσικά)."]
+                    ["Επιλογή χώρας:", "πατήστε μια χώρα στη λίστα: οι υπόλοιπες σβήνουν, εμφανίζεται το σωρευτικό ταμείο της στον δεξιό άξονα, και κάτω από το γράφημα οι λεπτομέρειές της."],
+                    ["Ταβάνι γραμμής:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση σε όλη την περίοδο, με ημερομηνία και ώρα, μαζί με το 99ο εκατοστημόριο."],
+                    ["Κορεσμός ανά μήνα (Βουλγαρία, Ιταλία):", "ποσοστό ωρών με διαφορά τιμής από 1 €/MWh και πάνω, το έσοδο συμφόρησης (εκτίμηση) και το «πέρασε φυσικά» = μετρημένη ροή ÷ πρόγραμμα στις ώρες κορεσμού. Στις γραμμές εναλλασσόμενου ρεύματος προς Βουλγαρία είναι χαμηλό, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές· το καλώδιο συνεχούς ρεύματος προς Ιταλία μεταφέρει σχεδόν ακριβώς το πρόγραμμά του."],
+                    ["Μηδενική ροή:", "οι ημέρες στο μηδέν όλης της περιόδου εμφανίζονται στη γραμμή της χώρας."]
                 ]
             },
             {
                 title: "Ημέρα διασυνδέσεων",
                 items: [
-                    ["Σύζευξη:", "μετριέται σε κάθε τέταρτο της αγοράς επόμενης ημέρας. Μια ώρα μετρά ως αποσυζευγμένη όταν η μέση διαφορά τιμής στα αποσυζευγμένα τέταρτά της είναι τουλάχιστον 1 €/MWh (η ΕΛ–ΙΤ κρατά μια μόνιμη διαφορά λίγων λεπτών)."],
-                    ["Παρατηρούμενο όριο:", "το 95ο εκατοστημόριο της προγραμματισμένης ροής στην ίδια κατεύθυνση τις τελευταίες 30 ημέρες: εκτίμηση από τα δεδομένα, όχι η επίσημη ικανότητα."],
-                    ["Πρόγραμμα και μετρημένη ροή:", "το πρόγραμμα είναι η εμπορική ροή ανά σύνορο (ISP ΑΔΜΗΕ). Η μετρημένη ροή (SCADA) μπορεί να είναι πολύ μικρότερη στις γραμμές εναλλασσόμενου ρεύματος, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές· το καλώδιο συνεχούς ρεύματος προς Ιταλία μεταφέρει σχεδόν ακριβώς το πρόγραμμά του."],
-                    ["Έσοδο συμφόρησης (εκτίμηση):", "προγραμματισμένη ροή × διαφορά τιμής στις αποσυζευγμένες ώρες. Το εισπράττουν οι δύο διαχειριστές, δεν είναι κέρδος της Ελλάδας, και είναι διαφορετικό μέγεθος από το ταμείο του arbitrage."],
-                    ["Σήμερα:", "πριν έρθει η μέτρηση, η κάρτα δείχνει μόνο τις οριστικές τιμές της αγοράς επόμενης ημέρας."],
-                    ["Ταβάνι:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση, μαζί με το 99ο εκατοστημόριο."],
-                    ["Ώρα με την ώρα:", "για ΕΛ–ΒΓ και ΕΛ–ΙΤ, οι μπάρες δείχνουν το πρόγραμμα και η γραμμή τη μετρημένη ροή· οι ώρες κορεσμού είναι σκιασμένες και το παρατηρούμενο όριο διακεκομμένο."],
-                    ["Πιθανός περιορισμός ικανότητας (εκτίμηση):", "στις ώρες κορεσμού η αγορά θέλει περισσότερη ροή· όταν το πρόγραμμα μένει κολλημένο στην ίδια τιμή (τουλάχιστον 3 ώρες, ±3 MW) κάτω από το 85% του παρατηρούμενου ορίου, η εμπορική ικανότητα ήταν πιθανότατα μειωμένη σε αυτή την τιμή. Χρησιμοποιείται μόνο τις ημέρες χωρίς επίσημη ικανότητα (NTC)."],
-                    ["Ικανότητα μεταφοράς (NTC):", "η ικανότητα μεταφοράς επόμενης ημέρας ανά σύνορο και κατεύθυνση, όπως δημοσιεύεται στο ENTSO-E (και τα πέντε σύνορα). Αναφέρεται ως μειωμένη όταν είναι κάτω από το 85% του διάμεσου των τελευταίων 30 ημερών για τουλάχιστον 2 ώρες, και ως μηδενική την πρώτη ημέρα που είναι 0 MW όλο το 24ωρο. Στις ώρες κορεσμού η κάρτα δίνει το μεγαλύτερο ποσοστό του NTC επόμενης ημέρας που πήρε το πρόγραμμα· το πρόγραμμα είναι το τελικό (περιλαμβάνει και τις ενδοημερήσιες συναλλαγές), γι' αυτό μπορεί να ξεπερνά το NTC επόμενης ημέρας. Στις γραμμές εναλλασσόμενου ρεύματος η μετρημένη ροή μπορεί να ξεπερνά το εμπορικό NTC, γιατί η φυσική ροή ακολουθεί όλο το δίκτυο."]
+                    ["Σύζευξη:", "μετριέται σε κάθε τέταρτο της αγοράς επόμενης ημέρας. Μια ώρα μετρά ως αποσυζευγμένη (κορεσμός) όταν η μέση διαφορά τιμής στα αποσυζευγμένα τέταρτά της είναι τουλάχιστον 1 €/MWh (η ΕΛ–ΙΤ κρατά μια μόνιμη διαφορά λίγων λεπτών)."],
+                    ["Σήμερα:", "πριν έρθει η μέτρηση, η κάρτα δείχνει μόνο ό,τι είναι οριστικό: τις τιμές της αγοράς επόμενης ημέρας και την ικανότητα μεταφοράς (NTC)."],
+                    ["Πρόγραμμα και μετρημένη ροή:", "το πρόγραμμα είναι η εμπορική ροή ανά σύνορο (ISP ΑΔΜΗΕ, τελικό μετά τις ενδοημερήσιες συναλλαγές). Η μετρημένη ροή (SCADA) μπορεί να είναι πολύ μικρότερη στις γραμμές εναλλασσόμενου ρεύματος, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές."],
+                    ["Έσοδο συμφόρησης (εκτίμηση):", "προγραμματισμένη ροή × διαφορά τιμής στις ώρες κορεσμού. Το εισπράττουν οι δύο διαχειριστές, δεν είναι κέρδος της Ελλάδας, και είναι διαφορετικό μέγεθος από το ταμείο του arbitrage."],
+                    ["Ικανότητα μεταφοράς (NTC):", "η ικανότητα μεταφοράς επόμενης ημέρας ανά σύνορο και κατεύθυνση, όπως δημοσιεύεται στο ENTSO-E (και τα πέντε σύνορα). Αναφέρεται ως μειωμένη όταν είναι κάτω από το 85% του διάμεσου των τελευταίων 30 ημερών για τουλάχιστον 2 ώρες, και ως μηδενική την πρώτη ημέρα που είναι 0 MW όλο το 24ωρο. Στις ώρες κορεσμού η κάρτα δίνει το μεγαλύτερο ποσοστό του NTC επόμενης ημέρας που πήρε το πρόγραμμα· το πρόγραμμα είναι το τελικό (περιλαμβάνει και τις ενδοημερήσιες συναλλαγές), γι' αυτό μπορεί να ξεπερνά το 100%. Στις γραμμές εναλλασσόμενου ρεύματος η μετρημένη ροή μπορεί να ξεπερνά το εμπορικό NTC, γιατί η φυσική ροή ακολουθεί όλο το δίκτυο."],
+                    ["Ώρα με την ώρα:", "για ΕΛ–ΒΓ και ΕΛ–ΙΤ, οι μπάρες δείχνουν τη μετρημένη ροή, η λευκή κλιμακωτή γραμμή το πρόγραμμα και η γκρι διακεκομμένη κλιμακωτή γραμμή το NTC· οι ώρες κορεσμού είναι σκιασμένες. Όταν η γραμμή του προγράμματος συναντά το NTC, η γραμμή ήταν στο εμπορικό της όριο."],
+                    ["Χωρίς NTC — παρατηρούμενο όριο:", "τις ημέρες χωρίς NTC η διακεκομμένη γραμμή είναι το 95ο εκατοστημόριο του προγράμματος στην ίδια κατεύθυνση τις τελευταίες 30 ημέρες: εκτίμηση από τα δεδομένα, όχι η επίσημη ικανότητα."],
+                    ["Χωρίς NTC — πιθανός περιορισμός ικανότητας (εκτίμηση):", "στις ώρες κορεσμού η αγορά θέλει περισσότερη ροή· όταν το πρόγραμμα μένει κολλημένο στην ίδια τιμή (τουλάχιστον 3 ώρες, ±3 MW) κάτω από το 85% του παρατηρούμενου ορίου, η εμπορική ικανότητα ήταν πιθανότατα μειωμένη σε αυτή την τιμή (κίτρινο διακεκομμένο τμήμα)."]
                 ]
             },
             {
                 title: "Περιορισμοί",
                 items: [
                     ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
-                    ["Τιμολόγηση:", "η αποτίμηση χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι επίσημο υπολογισμό εσόδου συμφόρησης ή διμερούς διακανονισμού, και δεν αντανακλά το πραγματικό P&L κάποιου συγκεκριμένου συμμετέχοντα."],
-                    ["Φύση:", "πρόκειται για ανεξάρτητη ανάλυση ανοιχτών δεδομένων από έναν αναλυτή. Δεν αποτελεί επίσημη θέση του ΑΔΜΗΕ, του ENTSO-E, ή άλλου οργανισμού."]
+                    ["Αποτίμηση:", "το ταμείο του arbitrage χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι διμερή διακανονισμό, και δεν αντανακλά τέλη μεταφοράς ή μεμονωμένα συμβόλαια. Το έσοδο συμφόρησης είναι εκτίμηση από δημόσια δεδομένα, όχι το ποσό που εισπράττουν πράγματι οι διαχειριστές."],
+                    ["Ικανότητα μεταφοράς (NTC):", "διαθέσιμη από 1 Οκτ 2026 (και 1–15 Ιουν 2026)· το ENTSO-E έχει κενά για κάποιες ημέρες και σύνορα (π.χ. Τουρκία 19–24 Οκτ 2026). Οι ημέρες χωρίς NTC χρησιμοποιούν το παρατηρούμενο όριο και την εκτίμηση. Το τελικό πρόγραμμα συγκρίνεται με το NTC επόμενης ημέρας."],
+                    ["Φύση:", "πρόκειται για ανεξάρτητη ανάλυση ανοιχτών δεδομένων από έναν αναλυτή. Δεν αποτελεί επίσημη θέση του ΑΔΜΗΕ, του ENTSO-E ή άλλου οργανισμού."]
                 ]
             }
         ]
@@ -1692,7 +1704,7 @@ const satOverlay = {
         const w = x.getPixelForValue(1) - x.getPixelForValue(0);
         ctx.save(); ctx.lineWidth = 1.5;
         (o.ntc || []).forEach(arr => {                 // D41: μία βαθμίδα ανά ώρα, ενωμένες κάθετα
-            ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(226,232,240,0.85)'; ctx.beginPath();
+            ctx.setLineDash([5, 4]); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.beginPath();
             let started = false, prevY = null;
             arr.forEach((v, i) => {
                 if (v == null) { started = false; return; }
@@ -1703,7 +1715,7 @@ const satOverlay = {
             ctx.stroke();
         });
         (o.limits || []).forEach(v => { const py = y.getPixelForValue(v); if (py < ca.top || py > ca.bottom) return;
-            ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(226,232,240,0.7)'; ctx.beginPath(); ctx.moveTo(ca.left, py); ctx.lineTo(ca.right, py); ctx.stroke(); });
+            ctx.setLineDash([5, 4]); ctx.strokeStyle = '#94a3b8'; ctx.beginPath(); ctx.moveTo(ca.left, py); ctx.lineTo(ca.right, py); ctx.stroke(); });
         (o.caps || []).forEach(c => {
             const py = y.getPixelForValue(c.v), x0 = x.getPixelForValue(c.a) - w / 2, x1 = x.getPixelForValue(c.b - 1) + w / 2;
             ctx.setLineDash([]); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 6;          // σκούρο περίγραμμα για να ξεχωρίζει
@@ -1743,8 +1755,11 @@ function renderSatHourCharts(date, facts, measured) {
         const labels = day ? day.Hourly.map(h => hourTick(h.Hour)) : [];
         const ext = Math.max(10, ...limits.map(Math.abs), ...ntc.flat().filter(v => v != null).map(Math.abs), ...sched.filter(v => v != null).map(Math.abs), ...(measured ? meas.filter(v => v != null).map(Math.abs) : []));
         if (satHourCharts[c]) satHourCharts[c].destroy();
-        const ds = [{ type: 'bar', label: H.sched, data: sched, backgroundColor: hexA(countryColors[c], 0.85), order: 2, barPercentage: 0.9, categoryPercentage: 0.9 }];
-        if (measured) ds.push({ type: 'line', label: H.meas, data: meas, borderColor: '#f8fafc', backgroundColor: '#f8fafc', borderWidth: 2, pointRadius: 1.5, order: 1, tension: 0.2 });
+        // D43: μετρημένη ροή = μπάρες (η φυσική πραγματικότητα)· πρόγραμμα = κλιμακωτή γραμμή, μία βαθμίδα ανά ώρα, όπως το NTC
+        const ds = [];
+        if (measured) ds.push({ type: 'bar', label: H.meas, data: meas, backgroundColor: hexA(countryColors[c], 0.85), order: 2, barPercentage: 0.9, categoryPercentage: 0.9 });
+        ds.push({ type: 'line', label: H.sched, data: sched, borderColor: '#f8fafc', backgroundColor: '#f8fafc', borderWidth: 2.5,
+                  stepped: 'middle', pointRadius: 0, pointHoverRadius: 3, order: 1 });
         satHourCharts[c] = new Chart(document.getElementById('satChart' + c).getContext('2d'), {
             data: { labels, datasets: ds },
             plugins: [satOverlay],
@@ -1752,8 +1767,9 @@ function renderSatHourCharts(date, facts, measured) {
                 responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                 plugins: { legend: { display: false }, satOverlay: { sat, limits, caps, ntc },
                     tooltip: tipOff((i) => {
-                        const h = day.Hourly[i], rows = [tipRow(H.sched, `${fmtN(sched[i], 0, true)} MW`, countryColors[c])];
-                        if (measured) rows.push(tipRow(H.meas, `${fmtN(meas[i], 0, true)} MW`, '#f8fafc'));
+                        const h = day.Hourly[i], rows = [];
+                        if (measured) rows.push(tipRow(H.meas, `${fmtN(meas[i], 0, true)} MW`, countryColors[c]));
+                        rows.push(tipRow(H.sched, `${fmtN(sched[i], 0, true)} MW`, '#f8fafc'));
                         if (spr[i] != null) rows.push(tipRow(H.spread, `${fmtN(spr[i], 1, true)} €/MWh · ${sat[i] ? H.yes : H.no}`, null));
                         if (ntc.length) rows.push(tipRow(H.ntc, `↓ ${ntcImp && ntcImp[i] != null ? fmtN(ntcImp[i], 0) : '–'} · ↑ ${ntcExp && ntcExp[i] != null ? fmtN(-ntcExp[i], 0) : '–'} MW`, null));
                         return tipHead(`${t.tip.hour} ${hourRange(h.Hour)}`) + tipSections(rows.join(''));
@@ -1765,11 +1781,11 @@ function renderSatHourCharts(date, facts, measured) {
         });
     });
     document.getElementById('satLegend').innerHTML = [
-        sw(`width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,${countryColors.BG} 50%,${countryColors.IT} 50%)`) + H.sched,
-        measured ? sw('width:14px;height:2px;background:#f8fafc') + H.meas : '',
+        measured ? sw(`width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,${countryColors.BG} 50%,${countryColors.IT} 50%)`) + H.meas : '',
+        sw('width:14px;height:2.5px;background:#f8fafc') + H.sched,
         sw('width:12px;height:10px;background:rgba(34,211,238,0.3);border-radius:2px') + H.sat,
-        anyNtc ? sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.85)') + H.ntc : '',
-        anyLimit ? sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.8)') + H.limit : '',
+        anyNtc ? sw('width:14px;height:0;border-top:2px dashed #94a3b8') + H.ntc : '',
+        anyLimit ? sw('width:14px;height:0;border-top:2px dashed #94a3b8') + H.limit : '',
         anyCap ? sw('width:14px;height:0;border-top:3px dashed #fde047') + H.cap : ''
     ].filter(Boolean).map(x => `<span class="whitespace-nowrap">${x}</span>`).join('');
 }
@@ -1933,7 +1949,7 @@ async function boot() {
 
         // Βήματα 2…5: ένα ανά tab, με τη σειρά των tabs
         let day = null;
-        await loadStep(2, async () => { fillPickers(); updatePicker(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); renderTotalsTab(day); });
+        await loadStep(2, async () => { fillPickers(); updatePicker(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); updateDayZeroNotes(day); renderTotalsTab(day); });
         await loadStep(3, async () => { renderHourlyTab(day); });
         await loadStep(4, async () => { renderArbitrageTab(day); });
         await loadStep(5, async () => { renderMTDView(); });
