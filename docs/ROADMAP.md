@@ -54,7 +54,8 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 
 - ~~Batch 20 — zero notes on tabs 1–2; By country driven by the list (cumulative line, ceiling, saturation by month); tab 6 renamed "Interconnector day"~~
 - ~~Batch 21 — observed limit per direction per day, probable capacity limitation for BG / IT (schedule plateau), two 24-hour charts~~ (D39)
-- Batch 22 — schedule per border for AL / MK / TR (moved from batch 21, one history fetch) and NTC per border and hour from ENTSO-E (all five lines): exact limitation sentences ("GR→AL: NTC 100 MW 08–18 CET, usually 400") and "at 98 % of the available capacity"
+- ~~Batch 22 — capacity probe (D40)~~
+- Batch 23 — schedule per border for AL / MK / TR (moved from batch 21, one history fetch) and NTC per border and hour from ENTSO-E, from what the probe finds: exact limitation sentences ("GR→AL: NTC 100 MW 08–18 CET, usually 400") and "at 98 % of the available capacity"
 
 ## Data files — before February 2027 (plan for December 2026 – January 2027)
 
