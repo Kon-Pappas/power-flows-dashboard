@@ -1,0 +1,37 @@
+name: Probe ENTSO-E capacity
+
+# D40: ανίχνευση των στοιχείων ικανότητας μεταφοράς (NTC κ.λπ.) για τα ελληνικά σύνορα.
+# Μόνο χειροκίνητα (Actions → Probe ENTSO-E capacity → Run workflow). Τυπώνει στο log· ΔΕΝ γράφει και ΔΕΝ κάνει commit.
+on:
+  workflow_dispatch:
+    inputs:
+      dates:
+        description: 'Ημέρες, χωρισμένες με κόμμα (κενό = 2026-10-05,2026-10-29,2026-11-10)'
+        required: false
+        type: string
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas requests openpyxl xlrd
+
+      - name: Probe transfer capacities (log only)
+        env:
+          ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
+          PROBE_DATES: ${{ inputs.dates }}
+        run: python scripts/probe_capacity.py
