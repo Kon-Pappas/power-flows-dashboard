@@ -18,6 +18,8 @@ Days with missing SCADA data or prices are marked ⚠ in the date picker and wit
 
 All hourly figures are in **Greek time**: prices and the ISP schedule, published by the market in Central European Time, are shifted by one hour to match the SCADA measurements.
 
+The **transfer capacity (NTC)** of every border comes from the ENTSO-E Transparency Platform (day-ahead forecasted transfer capacities); the manual workflow *Probe ENTSO-E capacity* lists what ENTSO-E publishes for the Greek borders without changing any data.
+
 ## Data sources
 
 - **IPTO / ADMIE**: SCADA (actual flows) and ISP (scheduled flows), daily files.

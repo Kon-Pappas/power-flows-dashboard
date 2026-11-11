@@ -195,6 +195,11 @@ def day_facts(day, history):
     facts = []
     measured = has_scada(day)
     prev = history[-1] if history else None
+    has_ntc = {c: any(v is not None for d in ("to_n", "to_gr") for v in ntc_of(day, c, d)) for c in COUNTRIES}
+    for c in COUNTRIES:
+        if measured and is_zero_day(day, c) and prev is not None and is_zero_day(prev, c):
+            continue        # ήδη στο μηδέν από χθες: το λένε οι σημειώσεις μηδενικής ροής (D36)
+        facts.extend(ntc_facts(day, history, c))
 
     for c in COUPLED:
         if not prices_known(day, c):
@@ -233,6 +238,17 @@ def day_facts(day, history):
                             against_h += 1
                             against_mwh += abs(meas)
                 limit = usual_limit(history, c, main)
+                # D41: ποσοστό της διαθέσιμης ικανότητας (NTC) που πήρε το πρόγραμμα στις ώρες κορεσμού (το μέγιστο)
+                util, util_ntc = None, None
+                ntc_main = ntc_of(day, c, main)
+                for i, h in enumerate(day["Hourly"]):
+                    cpl, spr, sched = h.get("CPL_" + c), h.get("SPR_" + c), h.get("ISP_" + c)
+                    nv = ntc_main[i]
+                    if is_dec(cpl, spr) and direction(spr) == main and sched is not None and nv and sign * sched > 0:
+                        u = 100 * sign * sched / nv
+                        if util is None or u > util:
+                            util, util_ntc = u, nv
+                f.update({"ntc_util_pct": r0(util), "ntc_mw": r0(util_ntc)})
                 f.update({"main_dir": main, "rent_eur": r0(rent),
                           "sched_peak_mw": r0(sched_peak), "act_peak_mw": r0(act_peak),
                           "sched_mwh": r0(sched_mwh), "act_mwh": r0(act_mwh),
@@ -243,7 +259,7 @@ def day_facts(day, history):
                                   "score": 30 + 3 * against_h})
             f["score"] = r2(score)
             facts.append(f)
-            if measured:
+            if measured and not has_ntc[c]:         # D41: εκτίμηση μόνο όταν δεν υπάρχει επίσημο NTC
                 lims = {d: usual_limit(history, c, d) for d in ("to_n", "to_gr")}
                 for lm in limitations(day, c, lims):
                     facts.append({"type": "limitation", "line": c, **lm, "score": 75})
@@ -394,14 +410,81 @@ def ceilings(days):
     return out
 
 
+def unrle(pairs, n):
+    """[[ώρα, τιμή], …] (αλλαγές τιμής) → ωριαία λίστα n θέσεων (D41)."""
+    vals, cur, j = [], None, 0
+    for i in range(n):
+        while j < len(pairs) and pairs[j][0] <= i:
+            cur = pairs[j][1]
+            j += 1
+        vals.append(cur)
+    return vals if pairs else [None] * n
+
+
 def expand_market(day):
-    """Οι λίστες day["Market"][χώρα] (isp / cpl / spr) → πεδία ISP_X / CPL_X / SPR_X ανά ώρα, μόνο στη μνήμη."""
+    """Οι λίστες day["Market"][χώρα] → πεδία ανά ώρα, μόνο στη μνήμη: ISP_X / CPL_X / SPR_X, και (D41) NTC_EXP_X / NTC_IMP_X."""
+    n = len(day["Hourly"])
     for c, m in (day.get("Market") or {}).items():
+        ntc = {"NTC_EXP_": unrle(m.get("ntc_exp") or [], n), "NTC_IMP_": unrle(m.get("ntc_imp") or [], n)}
         for i, h in enumerate(day["Hourly"]):
             for key, field in (("isp", "ISP_"), ("cpl", "CPL_"), ("spr", "SPR_")):
                 arr = m.get(key) or []
                 h[field + c] = arr[i] if i < len(arr) else None
+            for field, arr in ntc.items():
+                h[field + c] = arr[i]
     return day
+
+
+NTC_SHARE = 0.85           # D41: NTC κάτω από το 85 % του συνήθους (διάμεσος 30 ημερών) = μειωμένη ικανότητα
+
+
+def ntc_of(day, c, d):
+    return [h.get(("NTC_EXP_" if d == "to_n" else "NTC_IMP_") + c) for h in day["Hourly"]]
+
+
+def usual_ntc(history, c, d):
+    vals = [v for x in history[-USUAL_DAYS:] for v in ntc_of(x, c, d) if v is not None]
+    return pct(vals, 50) if len(vals) >= 72 else None
+
+
+def ntc_facts(day, history, c):
+    """D41: μειωμένη ή μηδενική ικανότητα μεταφοράς (NTC, επίσημο στοιχείο του ENTSO-E). Ένα γεγονός ανά γραμμή,
+    με τις κατευθύνσεις μέσα του."""
+    zero, reduced = [], []
+    for d in ("to_n", "to_gr"):
+        vals = ntc_of(day, c, d)
+        if all(v is None for v in vals):
+            continue
+        if all(v == 0 for v in vals if v is not None):
+            prev = ntc_of(history[-1], c, d) if history else []
+            if not (any(v is not None for v in prev) and all(v == 0 for v in prev if v is not None)):
+                zero.append(d)          # μόνο την πρώτη ημέρα
+            continue
+        usual = usual_ntc(history, c, d)
+        if not usual:
+            continue
+        wins, cur = [], None
+        for i, v in enumerate(vals):
+            if v is not None and v < NTC_SHARE * usual:
+                if cur and cur["_end"] == i:
+                    cur["_end"], cur["min"], cur["max"] = i + 1, min(cur["min"], v), max(cur["max"], v)
+                else:
+                    cur = {"_start": i, "_end": i + 1, "min": v, "max": v}
+                    wins.append(cur)
+            else:
+                cur = None
+        wins = [w for w in wins if w["_end"] - w["_start"] >= 2]
+        for w in wins:
+            w["from"], w["to"] = hhmm(w.pop("_start")), hhmm(w.pop("_end"))
+            w["min"], w["max"] = r0(w["min"]), r0(w["max"])
+        if wins:
+            reduced.append({"dir": d, "windows": wins, "usual_mw": r0(usual)})
+    out = []
+    if zero:
+        out.append({"type": "ntc_zero", "line": c, "dirs": zero, "score": 85})
+    if reduced:
+        out.append({"type": "ntc_reduced", "line": c, "dirs": reduced, "score": 80})
+    return out
 
 
 def build(days):

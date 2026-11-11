@@ -165,6 +165,9 @@ for d, n in DAYS.items():
     check(f"{d}: πρόγραμμα ανά ώρα ΒΓ / ΙΤ αποθηκεύεται, ίδια ευθυγράμμιση (D34)",
           all(len(day["Market"][c][k]) == n for c in ("BG", "IT") for k in ("isp", "cpl", "spr")) and day["Market"]["BG"]["isp"][0] == exp_bg0,
           f"Market.BG.isp[0] = {day['Market']['BG']['isp'][0]}")
+    check(f"{d}: θέσεις NTC για όλα τα σύνορα, χωρίς πρόγραμμα ΑΛ / ΒΜ / ΤΡ (D41)",
+          set(day["Market"]) == {"AL", "BG", "IT", "MK", "TR"} and "isp" not in day["Market"]["AL"]
+          and all("ntc_exp" in m and "ntc_imp" in m for m in day["Market"].values()), str(day["Market"]["AL"]))
     hi, ti = sum(h["ISP_Net"] for h in H), sum(day["Totals"]["ISP"].values())
     check(f"{d}: ISP χωρίς Κρήτη (D27): άθροισμα ωρών = σύνολο χωρών (ίδιο 24ωρο με το SCADA, D33)", abs(hi - ti) < 0.05, f"{hi:.0f} / {ti:.0f}")
 

@@ -468,6 +468,91 @@ COUPLED_CODES = ("BG", "IT")
 COUPLING_EUR = 0.01          # |ΕΛ − γείτονας| < 0,01 €/MWh = συζευγμένο τέταρτο
 
 
+ALL_CODES = ("AL", "BG", "IT", "MK", "TR")
+NTC_DOMAINS = {"AL": "10YAL-KESH-----5", "BG": "10YCA-BULGARIA-R", "IT": "10Y1001A1001A788",
+               "MK": "10YMK-MEPSO----8", "TR": "10YTR-TEIAS----W"}
+
+
+def parse_entsoe_series(xml_text, start_utc, n_hours):
+    """Ωριαίες τιμές (ώρα Ελλάδας) από έγγραφο ENTSO-E με quantity. Συμπληρώνει τα σημεία που λείπουν (καμπύλη A03:
+    το ENTSO-E στέλνει τιμή μόνο όταν αλλάζει) μέχρι το επόμενο σημείο ή το τέλος της περιόδου. None όπου δεν υπάρχει τιμή."""
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError:
+        return [None] * n_hours
+    if "Acknowledgement" in root.tag:
+        return [None] * n_hours
+    ns = root.tag.split('}')[0] + '}' if root.tag.startswith('{') else ''
+    buckets = [[] for _ in range(n_hours)]
+    for period in root.iter(ns + "Period"):
+        st, en = period.find(f"{ns}timeInterval/{ns}start"), period.find(f"{ns}timeInterval/{ns}end")
+        rs = period.find(f"{ns}resolution")
+        if st is None or en is None or rs is None:
+            continue
+        t0 = datetime.strptime(st.text.replace("Z", ""), "%Y-%m-%dT%H:%M")
+        t1 = datetime.strptime(en.text.replace("Z", ""), "%Y-%m-%dT%H:%M")
+        step = {"PT15M": 15, "PT30M": 30, "PT60M": 60}.get(rs.text)
+        if not step:
+            continue
+        n_steps = int((t1 - t0).total_seconds() // 60 // step)
+        vals = {}
+        for pt in period.findall(ns + "Point"):
+            q = pt.find(ns + "quantity")
+            if q is not None:
+                vals[int(pt.find(ns + "position").text)] = float(q.text)
+        last = None
+        for pos in range(1, n_steps + 1):
+            last = vals.get(pos, last)
+            if last is None:
+                continue
+            t = t0 + timedelta(minutes=(pos - 1) * step)
+            h = int((t - start_utc).total_seconds() // 3600)
+            if 0 <= h < n_hours:
+                buckets[h].append(last)
+    return [round(sum(b) / len(b)) if b else None for b in buckets]
+
+
+def fetch_entsoe_ntc(date_str, code):
+    """D41: ικανότητα μεταφοράς επόμενης ημέρας (Forecasted Transfer Capacity, A61) για ΕΛ→χώρα και χώρα→ΕΛ, ανά ώρα
+    σε ώρα Ελλάδας. Επιστρέφει (εξαγωγή, εισαγωγή)· λίστες με None αν δεν υπάρχει."""
+    start, end, n = athens_window_utc(date_str)
+    empty = ([None] * n, [None] * n)
+    if not ENTSOE_TOKEN:
+        return empty
+    ps, pe = start.strftime("%Y%m%d%H00"), end.strftime("%Y%m%d%H00")
+    out = []
+    for out_d, in_d in ((ENTSOE_DOMAINS["GR"], NTC_DOMAINS[code]), (NTC_DOMAINS[code], ENTSOE_DOMAINS["GR"])):
+        url = (f"https://web-api.tp.entsoe.eu/api?securityToken={ENTSOE_TOKEN}&documentType=A61"
+               f"&contract_MarketAgreement.Type=A01&in_Domain={in_d}&out_Domain={out_d}&periodStart={ps}&periodEnd={pe}")
+        r = http_get(url, what=f"NTC {code}")
+        out.append(parse_entsoe_series(r.text, start, n) if (r is not None and r.status_code == 200) else [None] * n)
+    if all(v is None for v in out[0] + out[1]):
+        log(f"   ! NTC {code}: χωρίς στοιχεία")
+    return out[0], out[1]
+
+
+def rle(values):
+    """Συμπίεση ωριαίας λίστας σε αλλαγές τιμής: [[ώρα, τιμή], …] (το NTC αλλάζει λίγες φορές τη μέρα). [] = καμία τιμή."""
+    out, prev = [], object()
+    for i, v in enumerate(values):
+        if v != prev:
+            out.append([i, v])
+            prev = v
+    return [] if all(v is None for v in values) else out
+
+
+def unrle(pairs, n):
+    """Αντίστροφο του rle: ωριαία λίστα n θέσεων."""
+    vals, cur, j = [], None, 0
+    for i in range(n):
+        while j < len(pairs) and pairs[j][0] <= i:
+            cur = pairs[j][1]
+            j += 1
+        vals.append(cur)
+    return vals if pairs else [None] * n
+
+
 def coupling_by_hour(q_gr, q_x, n_hours):
     """Για κάθε ώρα: (συζευγμένα τέταρτα 0–4, μέση διαφορά ΕΛ − γείτονας στα ΑΠΟσυζευγμένα τέταρτα, €/MWh).
     Αρνητική διαφορά = η Ελλάδα φθηνότερη (αναμενόμενη ροή προς τον γείτονα). (None, None) αν λείπει τιμή."""
@@ -548,10 +633,10 @@ def process_day(date_str):
     # της σημερινής. Τα σύνολα ανά χώρα είναι το άθροισμα αυτών των ωρών, ίδιο 24ωρο με το SCADA.
     isp_totals = {c: None for c in COUNTRIES}
     isp_net_h = none_list(n_hours)
-    isp_country_h = {code: none_list(n_hours) for code in COUPLED_CODES}
+    isp_country_h = {code: none_list(n_hours) for code in ALL_CODES}
     cur, prv = isp_market_day(date_str), isp_market_day(prev_day(date_str))
     k = (n_hours - 1) * 4
-    isp_country_h = {code: none_list(n_hours) for code in COUPLED_CODES}
+    isp_country_h = {code: none_list(n_hours) for code in ALL_CODES}
     if cur and prv and cur["country_q"] and prv["country_q"]:
         net = np.zeros(n_hours)
         name_to_code = {name: code for name, _, code, _ in COUNTRY_MAP}
@@ -561,7 +646,7 @@ def process_day(date_str):
             isp_totals[name] = float(round(h.sum(), 2))
             net += h
             if name_to_code[name] in isp_country_h:
-                isp_country_h[name_to_code[name]] = to_list(h)       # D34: πρόγραμμα ανά ώρα για ΒΓ / ΙΤ
+                isp_country_h[name_to_code[name]] = to_list(h)       # D34 / D41: πρόγραμμα ανά ώρα, όλα τα σύνορα
         isp_net_h = to_list(net)
     elif cur and prv and cur["net_q"] is not None and prv["net_q"] is not None:
         why = (cur["why"] if not cur["country_q"] else prv["why"])
@@ -602,6 +687,12 @@ def process_day(date_str):
     # στα αποσυζευγμένα τέταρτα (€/MWh, − = Ελλάδα φθηνότερη). Όλα σε ώρα Ελλάδας.
     day["Market"] = {c: {"isp": isp_country_h[c], "cpl": [v[0] for v in coupling[c]], "spr": [v[1] for v in coupling[c]]}
                      for c in COUPLED_CODES}
+    # D41: η ικανότητα μεταφοράς (NTC) όλων των συνόρων από το ENTSO-E, συμπιεσμένη σε αλλαγές τιμής (≈ 1 KB για όλο το
+    # ιστορικό). Το πρόγραμμα ΑΛ / ΒΜ / ΤΡ ΔΕΝ αποθηκεύεται (≈ 28 KB gzip, δεν το χρειάζεται καμία ανάλυση· το λέει το NTC).
+    for c in ALL_CODES:
+        m = day["Market"].setdefault(c, {})
+        exp_h, imp_h = fetch_entsoe_ntc(date_str, c)
+        m["ntc_exp"], m["ntc_imp"] = rle(exp_h), rle(imp_h)
 
     day["Flags"] = compute_flags(day)
     return day

@@ -146,4 +146,50 @@ res2 = A.build(hist + [no_lim])
 check("καμία ένδειξη όταν το πρόγραμμα είναι στο όριο", not any(f["type"] == "limitation" for f in res2["days"]["2026-10-02"]))
 check("όρια ανά ημέρα για τα γραφήματα: ΒΓ προς γείτονα 1.000 MW", res["limits"]["2026-10-02"]["BG"]["to_n"] == 1000, str(res["limits"].get("2026-10-02")))
 
+# 11. NTC (D41): συμπλήρωση των σημείων που λείπουν (καμπύλη A03), συμπίεση, μειωμένη / μηδενική ικανότητα
+st0, en0, n0 = U.athens_window_utc("2026-10-05")
+xml = ('<Publication_MarketDocument xmlns="urn:x"><TimeSeries><Period><timeInterval>'
+       f'<start>{st0:%Y-%m-%dT%H:%M}Z</start><end>{en0:%Y-%m-%dT%H:%M}Z</end></timeInterval><resolution>PT60M</resolution>'
+       '<Point><position>1</position><quantity>300</quantity></Point><Point><position>9</position><quantity>100</quantity></Point>'
+       '<Point><position>21</position><quantity>300</quantity></Point></Period></TimeSeries></Publication_MarketDocument>')
+ntc = U.parse_entsoe_series(xml, st0, n0)
+check("NTC: τα κενά παίρνουν την προηγούμενη τιμή (300 / 100 στις 08–20 / 300)", ntc == [300] * 8 + [100] * 12 + [300] * 4, str(ntc))
+check("NTC: συμπίεση σε αλλαγές τιμής και πίσω", U.rle(ntc) == [[0, 300], [8, 100], [20, 300]] and A.unrle(U.rle(ntc), 24) == ntc)
+check("NTC: κανένα στοιχείο → κενή λίστα", U.rle([None] * 24) == [] and A.unrle([], 3) == [None, None, None])
+check("NTC: απάντηση «δεν βρέθηκαν στοιχεία» → None", U.parse_entsoe_series('<Acknowledgement_MarketDocument xmlns="urn:y"/>', st0, 24) == [None] * 24)
+
+def with_ntc(dd, exp_vals, imp_vals=None):
+    for i, h in enumerate(dd["Hourly"]):
+        h["NTC_EXP_AL"] = exp_vals[i]
+        h["NTC_IMP_AL"] = (imp_vals or [500] * 24)[i]
+    return dd
+
+h11 = [with_ntc(make_day((date(2026, 9, 1) + timedelta(days=k)).isoformat()), [300] * 24) for k in range(31)]
+d11 = with_ntc(make_day("2026-10-02"), ntc)
+r11 = A.build(h11 + [d11])
+nf = [f for f in r11["days"]["2026-10-02"] if f["type"] == "ntc_reduced"]
+check("μειωμένο NTC ΕΛ→ΑΛ: 100 MW, 08:00–20:00, έναντι συνήθους 300 (ένα γεγονός ανά γραμμή)", len(nf) == 1
+      and nf[0]["dirs"] == [{"dir": "to_n", "windows": [{"from": "08:00", "to": "20:00", "min": 100, "max": 100}], "usual_mw": 300}], str(nf))
+z1 = with_ntc(make_day("2026-10-02"), [0] * 24)
+z2 = with_ntc(make_day("2026-10-03"), [0] * 24)
+r12 = A.build(h11 + [z1, z2])
+z1b = [f for f in r12["days"]["2026-10-02"] if f["type"] == "ntc_zero"]
+check("μηδενικό NTC μόνο προς ΑΛ: ένα γεγονός, μία κατεύθυνση", len(z1b) == 1 and z1b[0]["dirs"] == ["to_n"], str(z1b))
+check("μηδενικό NTC: γεγονός μόνο την πρώτη ημέρα", any(f["type"] == "ntc_zero" for f in r12["days"]["2026-10-02"])
+      and not any(f["type"] == "ntc_zero" for f in r12["days"]["2026-10-03"]))
+
+# ποσοστό ικανότητας στις ώρες κορεσμού: πρόγραμμα 500 MW, NTC 500 MW → 100 %
+h13 = [make_day((date(2026, 9, 1) + timedelta(days=k)).isoformat()) for k in range(31)]
+d13 = make_day("2026-10-02", bg_dec=(6, 7), bg_sched=-500.0)
+for h in d13["Hourly"]:
+    h["NTC_EXP_BG"], h["NTC_IMP_BG"] = 500, 900
+f13 = next(f for f in A.build(h13 + [d13])["days"]["2026-10-02"] if f["type"] == "decoupled" and f["line"] == "BG")
+check("χρήση NTC στις ώρες κορεσμού: 100 % των 500 MW", (f13["ntc_util_pct"], f13["ntc_mw"]) == (100, 500), str((f13.get("ntc_util_pct"), f13.get("ntc_mw"))))
+lim_ntc = make_day("2026-10-02", bg_dec=(9, 10, 11, 12), bg_sched=-1000.0)
+for i in (9, 10, 11, 12):
+    lim_ntc["Hourly"][i]["ISP_BG"] = -500.0
+for h in lim_ntc["Hourly"]:
+    h["NTC_EXP_BG"] = 1000
+check("με NTC, χωρίς εκτίμηση «κολλημένου» προγράμματος", not any(f["type"] == "limitation" for f in A.build(hist + [lim_ntc])["days"]["2026-10-02"]))
+
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

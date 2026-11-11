@@ -158,11 +158,14 @@ const i18n = {
                 maxSpread: "{L}: largest price difference of the month so far, {s} €/MWh.",
                 deviation: "Total flow deviated from the schedule by {mw} MW per hour on average, above the usual for the last 30 days ({p90} MW).",
                 h1: "1 hour", hn: "{n} hours", q1: "1 quarter-hour", qn: "{n} quarter-hours", many: "in {n} windows, from {a} to {b}",
-                to: { BG: "Bulgaria", IT: "Italy", gr: "Greece" },
-                limitation: "{L}: probable capacity limitation towards {to} at {cap} MW, {w} ({n}), against an observed limit of {lim} MW (estimate)." },
+                to: { AL: "Albania", BG: "Bulgaria", IT: "Italy", MK: "North Macedonia", TR: "Turkey", gr: "Greece" },
+                limitation: "{L}: probable capacity limitation towards {to} at {cap} MW, {w} ({n}), against an observed limit of {lim} MW (estimate).",
+                ntcReduced: "{L}: reduced transfer capacity (NTC): {parts}.", ntcPart: "towards {to} {v}, {w} (usually {u} MW)",
+                ntcZero: "{L}: zero transfer capacity (NTC 0 MW) {d} all day.", bothDirs: "in both directions", toward: "towards {to}",
+                limNtc: " (up to {p}% of the day-ahead NTC, {n} MW)" },
         hh: { title: "Hour by hour", sub: "Positive = imports, negative = exports. Bars: schedule; line: measured flow.",
               subToday: "Positive = imports, negative = exports. Schedule only; the measured flow arrives tomorrow.",
-              sched: "Schedule (ISP)", meas: "Measured (SCADA)", sat: "Saturated hours", limit: "Observed limit", cap: "Probable limitation",
+              sched: "Schedule (ISP)", meas: "Measured (SCADA)", sat: "Saturated hours", limit: "Observed limit", ntc: "Transfer capacity (NTC)", cap: "Probable limitation",
               spread: "Price GR − neighbour", yes: "saturated", no: "coupled" },
         lineCodes: { AL: "GR–AL", BG: "GR–BG", IT: "GR–IT", MK: "GR–MK", TR: "GR–TR" },
         zero: { day: "Zero flow all day · period {from} – {to} ({n})", dayOngoing: "Zero flow all day · since {from}, ongoing ({n} to {to})",
@@ -283,11 +286,14 @@ const i18n = {
                 maxSpread: "{L}: η μεγαλύτερη διαφορά τιμής του μήνα μέχρι σήμερα, {s} €/MWh.",
                 deviation: "Η συνολική ροή απέκλινε από το πρόγραμμα κατά {mw} MW ανά ώρα κατά μέσο όρο, πάνω από το συνηθισμένο των 30 ημερών ({p90} MW).",
                 h1: "1 ώρα", hn: "{n} ώρες", q1: "1 τέταρτο", qn: "{n} τέταρτα", many: "σε {n} διαστήματα, από {a} έως {b}",
-                to: { BG: "Βουλγαρία", IT: "Ιταλία", gr: "Ελλάδα" },
-                limitation: "{L}: πιθανός περιορισμός ικανότητας προς {to} στα {cap} MW, {w} ({n}), έναντι παρατηρούμενου ορίου {lim} MW (εκτίμηση)." },
+                to: { AL: "Αλβανία", BG: "Βουλγαρία", IT: "Ιταλία", MK: "Β. Μακεδονία", TR: "Τουρκία", gr: "Ελλάδα" },
+                limitation: "{L}: πιθανός περιορισμός ικανότητας προς {to} στα {cap} MW, {w} ({n}), έναντι παρατηρούμενου ορίου {lim} MW (εκτίμηση).",
+                ntcReduced: "{L}: μειωμένη ικανότητα μεταφοράς (NTC): {parts}.", ntcPart: "προς {to} {v}, {w} (συνήθως {u} MW)",
+                ntcZero: "{L}: μηδενική ικανότητα μεταφοράς (NTC 0 MW) {d} όλη τη μέρα.", bothDirs: "και στις δύο κατευθύνσεις", toward: "προς {to}",
+                limNtc: " (έως {p}% του NTC επόμενης ημέρας, {n} MW)" },
         hh: { title: "Ώρα με την ώρα", sub: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μπάρες: πρόγραμμα· γραμμή: μετρημένη ροή.",
               subToday: "Θετικό = εισαγωγή, αρνητικό = εξαγωγή. Μόνο το πρόγραμμα· η μετρημένη ροή έρχεται αύριο.",
-              sched: "Πρόγραμμα (ISP)", meas: "Μετρημένη (SCADA)", sat: "Ώρες κορεσμού", limit: "Παρατηρούμενο όριο", cap: "Πιθανός περιορισμός",
+              sched: "Πρόγραμμα (ISP)", meas: "Μετρημένη (SCADA)", sat: "Ώρες κορεσμού", limit: "Παρατηρούμενο όριο", ntc: "Ικανότητα μεταφοράς (NTC)", cap: "Πιθανός περιορισμός",
               spread: "Τιμή ΕΛ − γείτονα", yes: "κορεσμός", no: "σύζευξη" },
         lineCodes: { AL: "ΕΛ–ΑΛ", BG: "ΕΛ–ΒΓ", IT: "ΕΛ–ΙΤ", MK: "ΕΛ–ΒΜ", TR: "ΕΛ–ΤΡ" },
         zero: { day: "Μηδενική ροή όλη τη μέρα · διάστημα {from} – {to} ({n})", dayOngoing: "Μηδενική ροή όλη τη μέρα · από {from}, συνεχίζεται ({n} έως {to})",
@@ -490,7 +496,8 @@ const methodologyData = {
                     ["Today:", "before the measurement arrives, the card shows only the final day-ahead prices."],
                     ["Ceilings:", "highest measured hourly flow per direction, with the 99th percentile."],
                     ["Hour by hour:", "for GR–BG and GR–IT, bars show the schedule and the line the measured flow; saturated hours are shaded and the observed limit is dashed."],
-                    ["Probable capacity limitation (estimate):", "in saturated hours the market wants more flow; when the schedule stays stuck at the same value (at least 3 hours, ±3 MW) below 85 % of the observed limit, the commercial capacity was probably reduced to that value. It is inferred from the schedule, not read from the official capacity (NTC), which will be added from ENTSO-E."]
+                    ["Probable capacity limitation (estimate):", "in saturated hours the market wants more flow; when the schedule stays stuck at the same value (at least 3 hours, ±3 MW) below 85 % of the observed limit, the commercial capacity was probably reduced to that value. It is used only on days without the official capacity (NTC)."],
+                    ["Transfer capacity (NTC):", "the day-ahead forecasted transfer capacity per border and direction published on ENTSO-E (all five borders). It is reported as reduced when it is below 85 % of its median over the last 30 days for at least 2 hours, and as zero on the first day it is 0 MW all day. In the saturated hours, the card gives the highest share of the day-ahead NTC taken by the schedule; the schedule is final (it includes intraday trading), so it can exceed the day-ahead NTC. On the AC lines the measured flow can exceed the commercial NTC, because physical flow follows the whole network."]
                 ]
             },
             {
@@ -569,7 +576,8 @@ const methodologyData = {
                     ["Σήμερα:", "πριν έρθει η μέτρηση, η κάρτα δείχνει μόνο τις οριστικές τιμές της αγοράς επόμενης ημέρας."],
                     ["Ταβάνι:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση, μαζί με το 99ο εκατοστημόριο."],
                     ["Ώρα με την ώρα:", "για ΕΛ–ΒΓ και ΕΛ–ΙΤ, οι μπάρες δείχνουν το πρόγραμμα και η γραμμή τη μετρημένη ροή· οι ώρες κορεσμού είναι σκιασμένες και το παρατηρούμενο όριο διακεκομμένο."],
-                    ["Πιθανός περιορισμός ικανότητας (εκτίμηση):", "στις ώρες κορεσμού η αγορά θέλει περισσότερη ροή· όταν το πρόγραμμα μένει κολλημένο στην ίδια τιμή (τουλάχιστον 3 ώρες, ±3 MW) κάτω από το 85% του παρατηρούμενου ορίου, η εμπορική ικανότητα ήταν πιθανότατα μειωμένη σε αυτή την τιμή. Προκύπτει από το πρόγραμμα, δεν διαβάζεται από την επίσημη ικανότητα (NTC), που θα προστεθεί από το ENTSO-E."]
+                    ["Πιθανός περιορισμός ικανότητας (εκτίμηση):", "στις ώρες κορεσμού η αγορά θέλει περισσότερη ροή· όταν το πρόγραμμα μένει κολλημένο στην ίδια τιμή (τουλάχιστον 3 ώρες, ±3 MW) κάτω από το 85% του παρατηρούμενου ορίου, η εμπορική ικανότητα ήταν πιθανότατα μειωμένη σε αυτή την τιμή. Χρησιμοποιείται μόνο τις ημέρες χωρίς επίσημη ικανότητα (NTC)."],
+                    ["Ικανότητα μεταφοράς (NTC):", "η ικανότητα μεταφοράς επόμενης ημέρας ανά σύνορο και κατεύθυνση, όπως δημοσιεύεται στο ENTSO-E (και τα πέντε σύνορα). Αναφέρεται ως μειωμένη όταν είναι κάτω από το 85% του διάμεσου των τελευταίων 30 ημερών για τουλάχιστον 2 ώρες, και ως μηδενική την πρώτη ημέρα που είναι 0 MW όλο το 24ωρο. Στις ώρες κορεσμού η κάρτα δίνει το μεγαλύτερο ποσοστό του NTC επόμενης ημέρας που πήρε το πρόγραμμα· το πρόγραμμα είναι το τελικό (περιλαμβάνει και τις ενδοημερήσιες συναλλαγές), γι' αυτό μπορεί να ξεπερνά το NTC επόμενης ημέρας. Στις γραμμές εναλλασσόμενου ρεύματος η μετρημένη ροή μπορεί να ξεπερνά το εμπορικό NTC, γιατί η φυσική ροή ακολουθεί όλο το δίκτυο."]
                 ]
             },
             {
@@ -1642,7 +1650,8 @@ function factSentences(f) {
             if (ow.length) s1 += S.other.replace('{w}', wins(ow));
             if (!f.measured || !f.sched_peak_mw) return [s1];
             const p = f.pct_of_limit;
-            const lim = f.limit_mw ? (p <= 100 ? S.limIn.replace('{p}', p) : S.limOver.replace('{p}', p - 100)) : '';
+            const lim = f.ntc_util_pct != null ? S.limNtc.replace('{p}', f.ntc_util_pct).replace('{n}', fmtN(f.ntc_mw, 0))
+                : f.limit_mw ? (p <= 100 ? S.limIn.replace('{p}', p) : S.limOver.replace('{p}', p - 100)) : '';
             const s2 = S.dec2.replace('{to}', S.to[main === 'to_gr' ? 'gr' : f.line]).replace('{sp}', fmtN(f.sched_peak_mw, 0)).replace('{lim}', lim)
                 .replace('{ap}', fmtN(f.act_peak_mw, 0)).replace('{sm}', fmtN(f.sched_mwh, 0)).replace('{am}', fmtN(f.act_mwh, 0)).replace('{rent}', fmtEur(f.rent_eur || 0));
             return [s1, s2];
@@ -1653,6 +1662,13 @@ function factSentences(f) {
         case 'max_spread_month': return [S.maxSpread.replace('{L}', L).replace('{s}', fmtN(f.spread, 0))];
         case 'limitation': return [S.limitation.replace('{L}', L).replace('{to}', S.to[f.dir === 'to_gr' ? 'gr' : f.line]).replace('{cap}', fmtN(f.cap_mw, 0))
             .replace('{w}', f.windows.map(w => `${w.from}–${w.to}`).join(', ')).replace('{n}', f.hours === 1 ? S.h1 : S.hn.replace('{n}', f.hours)).replace('{lim}', fmtN(f.limit_mw, 0))];
+        case 'ntc_reduced': return [S.ntcReduced.replace('{L}', L).replace('{parts}', f.dirs.map(x => {
+            const same = x.windows.every(w => w.min === x.windows[0].min && w.max === w.min);
+            const v = same ? `${fmtN(x.windows[0].min, 0)} MW` : x.windows.map(w => w.min === w.max ? `${fmtN(w.min, 0)} MW` : `${fmtN(w.min, 0)}–${fmtN(w.max, 0)} MW`).join(' / ');
+            return S.ntcPart.replace('{to}', S.to[x.dir === 'to_gr' ? 'gr' : f.line]).replace('{v}', v)
+                .replace('{w}', x.windows.map(w => `${w.from}–${w.to}`).join(', ')).replace('{u}', fmtN(x.usual_mw, 0));
+        }).join(currentLang === 'el' ? '· ' : '; '))];
+        case 'ntc_zero': return [S.ntcZero.replace('{L}', L).replace('{d}', f.dirs.length === 2 ? S.bothDirs : S.toward.replace('{to}', S.to[f.dirs[0] === 'to_gr' ? 'gr' : f.line]))];
         case 'deviation': return [S.deviation.replace('{mw}', fmtN(f.mw, 0)).replace('{p90}', fmtN(f.p90_mw, 0))];
         default: return [];      // zero_start / restart: γράφονται ως σημείωση μηδενικής ροής (D36)
     }
@@ -1670,11 +1686,22 @@ const satOverlay = {
         o.sat.forEach((on, i) => { if (on) ctx.fillRect(x.getPixelForValue(i) - w / 2, ca.top, w, ca.bottom - ca.top); });
         ctx.restore();
     },
-    afterDatasetsDraw(chart, _a, o) {              // διακεκομμένες: παρατηρούμενο όριο· πορτοκαλί: πιθανός περιορισμός
+    afterDatasetsDraw(chart, _a, o) {              // διακεκομμένες: NTC (κλιμακωτή) ή παρατηρούμενο όριο· κίτρινη: πιθανός περιορισμός
         const { ctx, chartArea: ca, scales: { x, y } } = chart;
         if (!o) return;
         const w = x.getPixelForValue(1) - x.getPixelForValue(0);
         ctx.save(); ctx.lineWidth = 1.5;
+        (o.ntc || []).forEach(arr => {                 // D41: μία βαθμίδα ανά ώρα, ενωμένες κάθετα
+            ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(226,232,240,0.85)'; ctx.beginPath();
+            let started = false, prevY = null;
+            arr.forEach((v, i) => {
+                if (v == null) { started = false; return; }
+                const py = Math.min(Math.max(y.getPixelForValue(v), ca.top), ca.bottom), x0 = x.getPixelForValue(i) - w / 2, x1 = x0 + w;
+                if (!started) { ctx.moveTo(x0, py); started = true; } else if (prevY !== py) { ctx.lineTo(x0, py); }
+                ctx.lineTo(x1, py); prevY = py;
+            });
+            ctx.stroke();
+        });
         (o.limits || []).forEach(v => { const py = y.getPixelForValue(v); if (py < ca.top || py > ca.bottom) return;
             ctx.setLineDash([5, 4]); ctx.strokeStyle = 'rgba(226,232,240,0.7)'; ctx.beginPath(); ctx.moveTo(ca.left, py); ctx.lineTo(ca.right, py); ctx.stroke(); });
         (o.caps || []).forEach(c => {
@@ -1694,14 +1721,9 @@ function renderSatHourCharts(date, facts, measured) {
     const t = i18n[currentLang], H = t.hh, day = currentDayData;
     document.getElementById('satChartsSub').textContent = measured ? H.sub : H.subToday;
     const anyCap = facts.some(f => f.type === 'limitation');
+    let anyNtc = false, anyLimit = false;
     const sw = (style) => `<span class="inline-block align-middle mr-1.5" style="${style}"></span>`;
-    document.getElementById('satLegend').innerHTML = [
-        sw(`width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,${countryColors.BG} 50%,${countryColors.IT} 50%)`) + H.sched,
-        measured ? sw('width:14px;height:2px;background:#f8fafc') + H.meas : '',
-        sw('width:12px;height:10px;background:rgba(34,211,238,0.3);border-radius:2px') + H.sat,
-        sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.8)') + H.limit,
-        anyCap ? sw('width:14px;height:0;border-top:3px dashed #fde047') + H.cap : ''
-    ].filter(Boolean).map(x => `<span class="whitespace-nowrap">${x}</span>`).join('');
+
     ['BG', 'IT'].forEach(c => {
         const M = day && day.Market && day.Market[c];
         const n = day ? day.Hourly.length : 0;
@@ -1709,11 +1731,17 @@ function renderSatHourCharts(date, facts, measured) {
         const meas = day ? day.Hourly.map(h => h['SCADA_' + c]) : [];
         const sat = Array.from({ length: n }, (_, i) => cpl[i] != null && cpl[i] < 4 && spr[i] != null && Math.abs(spr[i]) >= 1);
         const lim = (analysisData && analysisData.limits && analysisData.limits[date] && analysisData.limits[date][c]) || {};
-        const limits = [lim.to_gr, lim.to_n != null ? -lim.to_n : null].filter(v => v != null);
+        // D41: με επίσημο NTC, αυτό αντικαθιστά το παρατηρούμενο όριο
+        const unr = (p) => { const out = []; let cur = null, j = 0; for (let i = 0; i < n; i++) { while (p && j < p.length && p[j][0] <= i) { cur = p[j][1]; j++; } out.push(cur); } return out; };
+        const ntcImp = M && M.ntc_imp && M.ntc_imp.length ? unr(M.ntc_imp) : null;
+        const ntcExp = M && M.ntc_exp && M.ntc_exp.length ? unr(M.ntc_exp).map(v => v == null ? null : -v) : null;
+        const ntc = [ntcImp, ntcExp].filter(Boolean);
+        if (ntc.length) anyNtc = true; else anyLimit = true;
+        const limits = ntc.length ? [] : [lim.to_gr, lim.to_n != null ? -lim.to_n : null].filter(v => v != null);
         const caps = facts.filter(f => f.type === 'limitation' && f.line === c)
             .flatMap(f => f.windows.map(w => ({ v: (f.dir === 'to_n' ? -1 : 1) * f.cap_mw, a: parseInt(w.from, 10), b: parseInt(w.to, 10) })));
         const labels = day ? day.Hourly.map(h => hourTick(h.Hour)) : [];
-        const ext = Math.max(10, ...limits.map(Math.abs), ...sched.filter(v => v != null).map(Math.abs), ...(measured ? meas.filter(v => v != null).map(Math.abs) : []));
+        const ext = Math.max(10, ...limits.map(Math.abs), ...ntc.flat().filter(v => v != null).map(Math.abs), ...sched.filter(v => v != null).map(Math.abs), ...(measured ? meas.filter(v => v != null).map(Math.abs) : []));
         if (satHourCharts[c]) satHourCharts[c].destroy();
         const ds = [{ type: 'bar', label: H.sched, data: sched, backgroundColor: hexA(countryColors[c], 0.85), order: 2, barPercentage: 0.9, categoryPercentage: 0.9 }];
         if (measured) ds.push({ type: 'line', label: H.meas, data: meas, borderColor: '#f8fafc', backgroundColor: '#f8fafc', borderWidth: 2, pointRadius: 1.5, order: 1, tension: 0.2 });
@@ -1722,11 +1750,12 @@ function renderSatHourCharts(date, facts, measured) {
             plugins: [satOverlay],
             options: {
                 responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
-                plugins: { legend: { display: false }, satOverlay: { sat, limits, caps },
+                plugins: { legend: { display: false }, satOverlay: { sat, limits, caps, ntc },
                     tooltip: tipOff((i) => {
                         const h = day.Hourly[i], rows = [tipRow(H.sched, `${fmtN(sched[i], 0, true)} MW`, countryColors[c])];
                         if (measured) rows.push(tipRow(H.meas, `${fmtN(meas[i], 0, true)} MW`, '#f8fafc'));
                         if (spr[i] != null) rows.push(tipRow(H.spread, `${fmtN(spr[i], 1, true)} €/MWh · ${sat[i] ? H.yes : H.no}`, null));
+                        if (ntc.length) rows.push(tipRow(H.ntc, `↓ ${ntcImp && ntcImp[i] != null ? fmtN(ntcImp[i], 0) : '–'} · ↑ ${ntcExp && ntcExp[i] != null ? fmtN(-ntcExp[i], 0) : '–'} MW`, null));
                         return tipHead(`${t.tip.hour} ${hourRange(h.Hour)}`) + tipSections(rows.join(''));
                     }) },
                 scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } },
@@ -1735,6 +1764,14 @@ function renderSatHourCharts(date, facts, measured) {
             }
         });
     });
+    document.getElementById('satLegend').innerHTML = [
+        sw(`width:10px;height:10px;border-radius:2px;background:linear-gradient(90deg,${countryColors.BG} 50%,${countryColors.IT} 50%)`) + H.sched,
+        measured ? sw('width:14px;height:2px;background:#f8fafc') + H.meas : '',
+        sw('width:12px;height:10px;background:rgba(34,211,238,0.3);border-radius:2px') + H.sat,
+        anyNtc ? sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.85)') + H.ntc : '',
+        anyLimit ? sw('width:14px;height:0;border-top:2px dashed rgba(226,232,240,0.8)') + H.limit : '',
+        anyCap ? sw('width:14px;height:0;border-top:3px dashed #fde047') + H.cap : ''
+    ].filter(Boolean).map(x => `<span class="whitespace-nowrap">${x}</span>`).join('');
 }
 
 function renderSatTab() {
