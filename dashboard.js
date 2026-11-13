@@ -264,7 +264,7 @@ const i18n = {
         tabTotals: "Ημερήσια ροή",
         tabHourly: "Ωριαία προφίλ",
         tabArbitrage: "Ημερήσιο Arbitrage",
-        tabMTD: "Σωρευτική θέση",
+        tabMTD: "Μηνιαία θέση",
         tabCountry: "Ανά χώρα",
         tabSat: "Ημέρα διασυνδέσεων",
         sat: { dayTitle: "Η ημέρα των διασυνδέσεων",
@@ -469,7 +469,7 @@ const methodologyData = {
             {
                 title: "Daily arbitrage",
                 items: [
-                    ["Pricing Logic & Valuation:", "for Albania, North Macedonia and Turkey, flows are valued using the Greek price only. For Bulgaria and Italy, flows are valued using the average of the two domestic prices. This is a notional commercial valuation of the flow, not a formal congestion-rent calculation (flow × price differential, which accrues to the transmission operators, not a market participant)."],
+                    ["Pricing Logic & Valuation:", "all five borders are valued at the Greek day-ahead price: the value of the flow for the Greek market. The congestion rent (flow × price difference), which accrues to the two transmission operators, is shown separately in By country and Interconnector day, so it is not mixed into the cash flow. Change of 13 Nov 2026: until then Bulgaria and Italy were valued at the mean of the two prices, which included half of the congestion rent; the whole history is recalculated with the Greek price."],
                     ["Sign Convention:", "following ENEX standards, red denotes exports and yellow denotes imports. Exporting energy generates positive cash flow (+); importing represents a cost (–)."],
                     ["Optional Transit Adjustment (Bulgaria ↔ Italy):", "a toggle lets you view cash flow with simultaneous, opposite-direction Bulgaria–Italy flows (transit through Greece) priced once, in the dominant direction, instead of twice. Physical import/export volumes (MWh) are never altered by this toggle — only the cash-flow calculation.", "m-transit"],
                     ["Zero flow:", "on a day when a line is at zero, a note on the country's card gives its period at zero, or the hour the flow resumed."]
@@ -485,7 +485,7 @@ const methodologyData = {
             {
                 title: "By country",
                 items: [
-                    ["Cash flow:", "exports minus imports per country for every complete day: measured flow (SCADA) × price, with the arbitrage rule (Albania, North Macedonia and Turkey at the Greek price; Bulgaria and Italy at the mean of the two prices). Totals by month and by week (Monday to Sunday) are computed by the pipeline."],
+                    ["Cash flow:", "exports minus imports per country for every complete day: measured flow (SCADA) × price, at the Greek price for all five borders, as in the arbitrage tab. Totals by month and by week (Monday to Sunday) are computed by the pipeline."],
                     ["Selecting a country:", "tap a country in the list: the other countries fade, its cumulative cash flow appears on the right axis, and its details appear under the chart."],
                     ["Line ceiling:", "highest measured hourly flow per direction over the whole period, with date and hour, and the 99th percentile."],
                     ["Saturation by month (Bulgaria, Italy):", "share of hours with a price difference of at least 1 €/MWh, the congestion rent (estimate) and \"physically passed\" = measured flow ÷ schedule in the saturated hours. On the AC lines to Bulgaria it is low, because power spreads over parallel paths; the DC cable to Italy carries almost exactly its schedule."],
@@ -509,7 +509,7 @@ const methodologyData = {
                 title: "Limitations",
                 items: [
                     ["Data:", "SCADA is published as provisional by ADMIE and may be revised. ISP is a schedule, not a measurement of physical delivery."],
-                    ["Valuation:", "the arbitrage cash flow uses a simplified mean-price convention, not bilateral settlement, and does not reflect transmission fees or individual contracts. The congestion rent is an estimate from public data, not the amount the system operators actually collect."],
+                    ["Valuation:", "the arbitrage cash flow values every border at the Greek price, not bilateral settlement, and does not reflect transmission fees or individual contracts. The congestion rent is an estimate from public data, not the amount the system operators actually collect."],
                     ["Transfer capacity (NTC):", "available from 1 Oct 2026 (and 1–15 Jun 2026); ENTSO-E has gaps for some days and borders (e.g. Turkey 19–24 Oct 2026). Days without NTC use the observed limit and the estimate. The final schedule is compared with the day-ahead NTC."],
                     ["Nature:", "an independent analysis of open data by a single analyst. It is not an official position of ADMIE, ENTSO-E or any other organisation."]
                 ]
@@ -555,14 +555,14 @@ const methodologyData = {
             {
                 title: "Ημερήσιο arbitrage",
                 items: [
-                    ["Λογική τιμολόγησης & αποτίμησης:", "για Αλβανία, Β. Μακεδονία και Τουρκία, η αποτίμηση γίνεται αποκλειστικά με την ελληνική τιμή. Για Βουλγαρία και Ιταλία, με τον μέσο όρο των δύο εγχώριων τιμών. Πρόκειται για ονομαστική εμπορική αποτίμηση της ροής, όχι επίσημο υπολογισμό εσόδου συμφόρησης (ροή × διαφορά τιμών, το οποίο αποδίδεται στους διαχειριστές δικτύου, όχι σε συμμετέχοντα της αγοράς)."],
+                    ["Λογική τιμολόγησης & αποτίμησης:", "και τα πέντε σύνορα αποτιμώνται με την τιμή της ελληνικής αγοράς επόμενης ημέρας: η αξία της ροής για την ελληνική αγορά. Το έσοδο συμφόρησης (ροή × διαφορά τιμών), που αποδίδεται στους δύο διαχειριστές, δείχνεται χωριστά στα «Ανά χώρα» και «Ημέρα διασυνδέσεων», ώστε να μην ανακατεύεται με το ταμείο. Αλλαγή της 13ης Νοε 2026: μέχρι τότε η Βουλγαρία και η Ιταλία αποτιμώνταν με τον μέσο όρο των δύο τιμών, που περιείχε το μισό έσοδο συμφόρησης· όλο το ιστορικό ξαναϋπολογίζεται με την τιμή της Ελλάδας."],
                     ["Σύμβαση προσήμων:", "σύμφωνα με τα πρότυπα του ENEX, το κόκκινο αντιστοιχεί σε Εξαγωγές και το κίτρινο σε Εισαγωγές. Η εξαγωγή ενέργειας παράγει θετικό ταμείο (+), η εισαγωγή αντιπροσωπεύει κόστος (–)."],
                     ["Προαιρετική προσαρμογή transit (Βουλγαρία ↔ Ιταλία):", "ένας διακόπτης επιτρέπει να δείτε το ταμείο με τις ταυτόχρονες, αντίθετες ροές Βουλγαρίας-Ιταλίας (transit μέσω Ελλάδας) να τιμολογούνται μία φορά, στην κατεύθυνση που υπερισχύει, αντί για δύο. Οι φυσικοί όγκοι εισαγωγών/εξαγωγών (MWh) δεν αλλάζουν ποτέ από αυτόν τον διακόπτη — μόνο ο υπολογισμός του ταμείου.", "m-transit"],
                     ["Μηδενική ροή:", "την ημέρα που μια γραμμή είναι στο μηδέν, μια σημείωση στην κάρτα της χώρας δίνει το διάστημα στο μηδέν ή την ώρα που επανήλθε η ροή."]
                 ]
             },
             {
-                title: "Σωρευτική θέση (MTD)",
+                title: "Μηνιαία σωρευτική θέση (MTD)",
                 items: [
                     ["Μόνο πλήρεις ημέρες:", "μόνο πλήρεις ημέρες (με διαθέσιμο SCADA και χρησιμοποιήσιμες τιμές) μετράνε στα σωρευτικά μηνιαία σύνολα, στο Best/Worst Day και στους μέσους όρους. Οι ελλιπείς ημέρες αναφέρονται και εξαιρούνται, ώστε να μην αλλοιώνουν τη μηνιαία εικόνα."],
                     ["Μηδενική ροή:", "μια σημείωση δίνει, ανά γραμμή, τις ημέρες στο μηδέν μέσα στον μήνα που βλέπετε."]
@@ -571,7 +571,7 @@ const methodologyData = {
             {
                 title: "Ανά χώρα",
                 items: [
-                    ["Ταμείο:", "εξαγωγές μείον εισαγωγές ανά χώρα για κάθε πλήρη ημέρα: μετρημένη ροή (SCADA) × τιμή, με τον κανόνα του arbitrage (Αλβανία, Β. Μακεδονία και Τουρκία με την τιμή της Ελλάδας· Βουλγαρία και Ιταλία με τον μέσο όρο των δύο τιμών). Τα σύνολα ανά μήνα και ανά εβδομάδα (Δευτέρα–Κυριακή) τα υπολογίζει η ροή δεδομένων."],
+                    ["Ταμείο:", "εξαγωγές μείον εισαγωγές ανά χώρα για κάθε πλήρη ημέρα: μετρημένη ροή (SCADA) × τιμή, με την τιμή της Ελλάδας και για τα πέντε σύνορα, όπως στο arbitrage. Τα σύνολα ανά μήνα και ανά εβδομάδα (Δευτέρα–Κυριακή) τα υπολογίζει η ροή δεδομένων."],
                     ["Επιλογή χώρας:", "πατήστε μια χώρα στη λίστα: οι υπόλοιπες σβήνουν, εμφανίζεται το σωρευτικό ταμείο της στον δεξιό άξονα, και κάτω από το γράφημα οι λεπτομέρειές της."],
                     ["Ταβάνι γραμμής:", "η μέγιστη μετρημένη ωριαία ροή ανά κατεύθυνση σε όλη την περίοδο, με ημερομηνία και ώρα, μαζί με το 99ο εκατοστημόριο."],
                     ["Κορεσμός ανά μήνα (Βουλγαρία, Ιταλία):", "ποσοστό ωρών με διαφορά τιμής από 1 €/MWh και πάνω, το έσοδο συμφόρησης (εκτίμηση) και το «πέρασε φυσικά» = μετρημένη ροή ÷ πρόγραμμα στις ώρες κορεσμού. Στις γραμμές εναλλασσόμενου ρεύματος προς Βουλγαρία είναι χαμηλό, γιατί η ενέργεια μοιράζεται σε παράλληλες διαδρομές· το καλώδιο συνεχούς ρεύματος προς Ιταλία μεταφέρει σχεδόν ακριβώς το πρόγραμμά του."],
@@ -595,7 +595,7 @@ const methodologyData = {
                 title: "Περιορισμοί",
                 items: [
                     ["Δεδομένα:", "το SCADA δημοσιεύεται ως προσωρινό από τον ΑΔΜΗΕ και μπορεί να αναθεωρηθεί. Το ISP είναι πρόγραμμα, όχι μέτρηση πραγματικής παράδοσης."],
-                    ["Αποτίμηση:", "το ταμείο του arbitrage χρησιμοποιεί απλοποιημένη σύμβαση μέσου όρου τιμών, όχι διμερή διακανονισμό, και δεν αντανακλά τέλη μεταφοράς ή μεμονωμένα συμβόλαια. Το έσοδο συμφόρησης είναι εκτίμηση από δημόσια δεδομένα, όχι το ποσό που εισπράττουν πράγματι οι διαχειριστές."],
+                    ["Αποτίμηση:", "το ταμείο του arbitrage αποτιμά κάθε σύνορο με την τιμή της Ελλάδας, όχι με διμερή διακανονισμό, και δεν αντανακλά τέλη μεταφοράς ή μεμονωμένα συμβόλαια. Το έσοδο συμφόρησης είναι εκτίμηση από δημόσια δεδομένα, όχι το ποσό που εισπράττουν πράγματι οι διαχειριστές."],
                     ["Ικανότητα μεταφοράς (NTC):", "διαθέσιμη από 1 Οκτ 2026 (και 1–15 Ιουν 2026)· το ENTSO-E έχει κενά για κάποιες ημέρες και σύνορα (π.χ. Τουρκία 19–24 Οκτ 2026). Οι ημέρες χωρίς NTC χρησιμοποιούν το παρατηρούμενο όριο και την εκτίμηση. Το τελικό πρόγραμμα συγκρίνεται με το NTC επόμενης ημέρας."],
                     ["Φύση:", "πρόκειται για ανεξάρτητη ανάλυση ανοιχτών δεδομένων από έναν αναλυτή. Δεν αποτελεί επίσημη θέση του ΑΔΜΗΕ, του ENTSO-E ή άλλου οργανισμού."]
                 ]
@@ -789,13 +789,10 @@ function computeHourlyEconomics(dayData, transitNetting) {
         MK: dayData.Hourly.map(h => h.SCADA_MK || 0),
         TR: dayData.Hourly.map(h => h.SCADA_TR || 0)
     };
-    const prices = {
-        AL: mcpGR,
-        BG: mcpGR.map((gr, i) => (gr + mcpBG[i]) / 2),
-        IT: mcpGR.map((gr, i) => (gr + mcpIT[i]) / 2),
-        MK: mcpGR,
-        TR: mcpGR
-    };
+    // D44: όλα τα σύνορα με την τιμή της Ελλάδας. Το έσοδο συμφόρησης (ροή × διαφορά τιμών) δείχνεται χωριστά
+    // («Ανά χώρα», «Ημέρα διασυνδέσεων»)· με τον μέσο όρο των δύο τιμών το μισό του θα «κρυβόταν» μέσα στο ταμείο.
+    // Οι τιμές ΒΓ / ΙΤ (mcpBG, mcpIT) μένουν για το γράφημα τιμών.
+    const prices = { AL: mcpGR, BG: mcpGR, IT: mcpGR, MK: mcpGR, TR: mcpGR };
 
     const n = flows.AL.length;
     const amount = { AL: [], BG: [], IT: [], MK: [], TR: [] };
@@ -1438,7 +1435,7 @@ function renderHourlyTab(dayData) {
 
 }
 
-// Tab «Σωρευτική θέση» (MTD)
+// Tab «Μηνιαία θέση» (MTD, D44)
 function updateMtdZeroNotice(month) {
     const el = document.getElementById('mtdZeroNotice');
     if (!el) return;

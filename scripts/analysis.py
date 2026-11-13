@@ -58,14 +58,8 @@ def hhmm(i):
 
 
 def price_for(h, c):
-    """Ο κανόνας του Arbitrage (D11): ΑΛ, ΒΜ, ΤΡ με την τιμή ΕΛ· ΒΓ, ΙΤ με τον μέσο όρο ΕΛ και γείτονα."""
-    g = h.get("MCP_GR")
-    if g is None:
-        return None
-    if c in COUPLED:
-        n = h.get("MCP_" + c)
-        return None if n is None else (g + n) / 2
-    return g
+    """Ο κανόνας του Arbitrage (D44): όλα τα σύνορα με την τιμή ΕΛ. Το έσοδο συμφόρησης υπολογίζεται χωριστά."""
+    return h.get("MCP_GR")
 
 
 def has_scada(day):
@@ -520,7 +514,7 @@ def build(days):
         "params": {"zero_mw": ZERO_MW, "coupling_eur": 0.01, "significant_spread_eur": SIG_SPREAD,
                    "observed_limit": f"P{USUAL_PCT} of the scheduled flow, same direction, last {USUAL_DAYS} days",
                    "usual_days": USUAL_DAYS, "usual_pct": USUAL_PCT,
-                   "deviation_pct": DEV_PCT, "price_rule": "AL/MK/TR: GR price; BG/IT: mean of GR and neighbour (D11)"},
+                   "deviation_pct": DEV_PCT, "price_rule": "all borders at the GR price (D44; BG/IT were at the mean of GR and neighbour until 13 Nov 2026)"},
         "countries": COUNTRIES, "coupled": COUPLED,
         "cash": {"daily": cash_daily, "weekly": cash_weekly, "monthly": cash_monthly},
         "status": line_status(days),
