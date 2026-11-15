@@ -33,7 +33,7 @@ The **transfer capacity (NTC)** of every border comes from the ENTSO-E Transpare
 - `data/meta.json`: time of the run and of the next scheduled run, shown in the page header.
 - `data/analysis.json` (also feeds the **By country** tab): the interconnection analysis built from the whole history (cash per country, line status, saturation of the Bulgaria and Italy lines, line ceilings, facts of each day); see `docs/DECISIONS.md`, D34.
 
-Since 15 Nov 2026 (D46) the run also writes the same data **by month**, next to the files above: `data/manifest.json` (days and their completeness, months, last / next update), `data/months/YYYY-MM.json` (the days of each month), `data/facts/YYYY-MM.json` (the facts of each month's days) and `data/analysis_core.json` (the whole-period analysis without the daily facts). The page will move to them in the next step (D47); until then it reads the single files.
+Since 15 Nov 2026 (D46) the run also writes the same data **by month**, next to the files above: `data/manifest.json` (days and their completeness, months, last / next update), `data/months/YYYY-MM.json` (the days of each month), `data/facts/YYYY-MM.json` (the facts of each month's days) and `data/analysis_core.json` (the whole-period analysis without the daily facts). The page will move to them in the next step (D48); until then it reads the single files.
 
 After every fetch the workflow prints the size of the data file (`scripts/data_size.py`; you can also run it yourself: `python3 scripts/data_size.py`).
 

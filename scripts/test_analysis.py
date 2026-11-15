@@ -219,4 +219,23 @@ check("NTC ανά τρέξιμο: 25 Οκτ 500 MW ακριβώς 08:00–20:00"
 hp = {"MCP_GR": 100.0, "MCP_BG": 200.0, "MCP_IT": 50.0}
 check("ταμείο: ΒΓ, ΙΤ, ΑΛ με την τιμή ΕΛ (100 €/MWh), όχι μέσο όρο", [A.price_for(hp, c) for c in ("BG", "IT", "AL")] == [100.0, 100.0, 100.0])
 
+# 14. NTC όταν το ENTSO-E δεν απαντά (D47): χωρίς νέα τιμή → η παλιά· νέα τιμή (και 0) → η νέα· ανά ώρα
+def ntc_day(exp, imp=None):
+    return {"Date": "2026-11-11", "Hourly": [{}] * 24, "Market": {"TR": {"ntc_exp": exp, "ntc_imp": imp or []}}}
+with mock.patch.object(U, "log", lambda m: None):
+    d = ntc_day([]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    check("NTC: timeout (κενό) → κρατά το παλιό 166 MW", d["Market"]["TR"]["ntc_exp"] == [[0, 166]])
+    d = ntc_day([[0, 200]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    check("NTC: νέα διαφορετική τιμή → η νέα (200 MW)", d["Market"]["TR"]["ntc_exp"] == [[0, 200]])
+    d = ntc_day([[0, 0]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    check("NTC: νέα τιμή 0 (κλειστή γραμμή) → το 0, όχι το παλιό", d["Market"]["TR"]["ntc_exp"] == [[0, 0]])
+    d = ntc_day([[0, None], [10, 300]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    check("NTC: ώρες 00–10 χωρίς τιμή → 166, από τις 10 η νέα 300", d["Market"]["TR"]["ntc_exp"] == [[0, 166], [10, 300]],
+          str(d["Market"]["TR"]["ntc_exp"]))
+    d = ntc_day([], [[0, 100], [1, 150]]); U.merge_ntc(d, ntc_day([[0, 166]], [[0, 50]]))
+    check("NTC: κάθε κατεύθυνση χωριστά (εξαγωγή από τα παλιά, εισαγωγή η νέα)",
+          d["Market"]["TR"]["ntc_exp"] == [[0, 166]] and d["Market"]["TR"]["ntc_imp"] == [[0, 100], [1, 150]])
+    d = ntc_day([]); U.merge_ntc(d, ntc_day([]))
+    check("NTC: ούτε παλιό ούτε νέο → μένει κενό", d["Market"]["TR"]["ntc_exp"] == [])
+
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

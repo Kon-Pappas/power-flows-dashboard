@@ -61,7 +61,8 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 ## Data files — in progress (started 15 Nov 2026, owner's decision)
 
 - **Phase A (batch 29, D46):** the pipeline writes `manifest.json`, `months/`, `facts/` and `analysis_core.json` next to the single files; the page is unchanged. After the upload: one short manual run (start and end = today) to create them, then compare
-- **Phase B (D47):** the page reads the manifest, the core and only the months it shows; the single files `historical_flows.json`, `analysis.json`, `meta.json` are removed; README tab table (six tabs) updated
+- **NTC protection (batch 30, D47):** found during phase A; after the upload, a run from 2026-11-11 (end empty) restores GR→TR NTC for 11–15 Nov
+- **Phase B (D48):** the page reads the manifest, the core and only the months it shows; the single files `historical_flows.json`, `analysis.json`, `meta.json` are removed; README tab table (six tabs) updated
 - **Then:** fetch the NTC for 16 Jun – 30 Sep 2026 (D42), four manual runs, one per month
 
 Original plan (3 Nov 2026), measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
