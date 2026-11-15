@@ -3,7 +3,7 @@
 Public dashboard of Greece's cross-border electricity flows: scheduled (ISP) versus actual (SCADA) flows per interconnection, hourly profiles with day-ahead prices, the daily cash position of imports and exports, and the month-to-date position.
 
 **Live page:** https://kon-pappas.github.io/power-flows-dashboard/
-**Part of:** [Konstantinos Pappas Hub](https://kon-pappas.github.io/), with BESS, Gas-Power, BigHydro and Live Greek Power.
+**Part of:** [Greek Energy Hub](https://kon-pappas.github.io/), with BESS, Gas-Power, BigHydro and Live Greek Power.
 
 ## What the page shows
 
@@ -38,6 +38,10 @@ After every fetch the workflow prints the size of the data file (`scripts/data_s
 Before every fetch the workflow runs two offline checks, `scripts/test_dst_days.py` (days of 23, 24 and 25 hours, Greek time, Crete) and `scripts/test_analysis.py` (the interconnection analysis); if it fails, nothing is fetched or written.
 
 A run for a date range can be started by hand: *Actions → Daily Power Flows Fetcher → Run workflow*, with a start date and, optionally, an end date (empty = up to today). The workflow needs the repository secret `ENTSOE_TOKEN`.
+
+## Visit counting
+
+The page counts visits with **GoatCounter** (`konpappas.goatcounter.com`): one script line just before `</body>` in `index.html`. No cookies are set and no consent banner is needed. The owner's own visits are excluded through the hub (`#toggle-goatcounter`). See `docs/DECISIONS.md`, D45.
 
 ## Repository layout
 

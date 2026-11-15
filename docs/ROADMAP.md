@@ -25,6 +25,7 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 ## Hub-wide (all repositories in one pass)
 
 - H07 market vs SCADA clock (Flows done, D33); H06 mobile secondary box, which includes H01 (no divider) and H05 (pill in the box): Flows done (D29), BESS done, live-greekpower to do; H02 short header labels on mobile; conventions C01 (titles and casing) and C02 (no all-caps labels) (see `KNOWN_ISSUES.md`)
+- C03 hub link "Greek Energy Hub" and GoatCounter visit counting: Flows done (batch 27, D45); the other repositories in their own threads
 
 ## Phase 3: charts — done in batch 7
 
