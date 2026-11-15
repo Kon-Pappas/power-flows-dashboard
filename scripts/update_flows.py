@@ -844,32 +844,41 @@ def merge_with_old(new, old):
             set_series(new, f, old_s)
 
     if same_hours:
-        merge_ntc(new, old)
+        merge_market_lists(new, old)
 
     new["Flags"] = compute_flags(new)
     return new
 
 
-def merge_ntc(new, old):
-    """D47: NTC ανά ώρα και κατεύθυνση. Ώρα χωρίς νέα τιμή (το ENTSO-E δεν απάντησε / timeout, ή απάντησε χωρίς
-    τιμή) κρατά την παλιά της ίδιας ώρας. Ώρα με νέα τιμή, ίδια ή διαφορετική, ΚΑΙ 0 (κλειστή γραμμή, D41), παίρνει
-    τη νέα. Πριν: ένα timeout έσβηνε το NTC που είχαμε (ΕΛ→ΤΡ, 11–15 Νοε 2026)."""
+def merge_market_lists(new, old):
+    """D47 / D49: οι ωριαίες λίστες ανά γραμμή (Market), ανά ώρα. Ώρα χωρίς νέα τιμή (αποτυχημένη λήψη / timeout, ή
+    απάντηση χωρίς τιμή) κρατά την παλιά της ίδιας ώρας· ώρα με νέα τιμή, ίδια ή διαφορετική, ΚΑΙ 0, παίρνει τη νέα.
+    ntc_exp / ntc_imp (D41, σε αλλαγές τιμής): D47, μετά το ΕΛ→ΤΡ 11–15 Νοε 2026. isp / cpl / spr (D34, μία τιμή ανά
+    ώρα): D49, μετά τη 10 Ιουλ 2026, όπου οι παλιές τιμές ΒΓ κρατήθηκαν αλλά η σύζευξη ΕΛ–ΒΓ που βγαίνει από αυτές χάθηκε."""
     n = len(new["Hourly"])
     for c in ALL_CODES:
         m_new = (new.get("Market") or {}).get(c)
         m_old = (old.get("Market") or {}).get(c) or {}
         if m_new is None:
             continue
-        for k in ("ntc_exp", "ntc_imp"):
+        for k in ("ntc_exp", "ntc_imp", "isp", "cpl", "spr"):
             if not m_old.get(k):
                 continue
-            nv, ov = unrle(m_new.get(k) or [], n), unrle(m_old[k], n)
+            if k.startswith("ntc"):
+                nv, ov = unrle(m_new.get(k) or [], n), unrle(m_old[k], n)
+            else:
+                ov = m_old[k]
+                if len(ov) != n:
+                    continue                          # παλιά εγγραφή με άλλο πλήθος ωρών: δεν ανακατεύεται
+                nv = list(m_new.get(k) or [None] * n)
+                if len(nv) != n:
+                    continue
             kept = [i for i in range(n) if nv[i] is None and ov[i] is not None]
             if kept:
                 for i in kept:
                     nv[i] = ov[i]
-                m_new[k] = rle(nv)
-                log(f"   → {new['Date']}: κρατάω το προηγούμενο {k} {c} σε {len(kept)} ώρες (χωρίς νέα τιμή από το ENTSO-E)")
+                m_new[k] = rle(nv) if k.startswith("ntc") else nv
+                log(f"   → {new['Date']}: κρατάω το προηγούμενο {k} {c} σε {len(kept)} ώρες (χωρίς νέα τιμή)")
 
 
 def save_atomic(json_path, data):

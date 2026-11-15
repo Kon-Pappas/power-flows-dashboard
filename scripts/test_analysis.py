@@ -223,20 +223,33 @@ check("ταμείο: ΒΓ, ΙΤ, ΑΛ με την τιμή ΕΛ (100 €/MWh), �
 def ntc_day(exp, imp=None):
     return {"Date": "2026-11-11", "Hourly": [{}] * 24, "Market": {"TR": {"ntc_exp": exp, "ntc_imp": imp or []}}}
 with mock.patch.object(U, "log", lambda m: None):
-    d = ntc_day([]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    d = ntc_day([]); U.merge_market_lists(d, ntc_day([[0, 166]]))
     check("NTC: timeout (κενό) → κρατά το παλιό 166 MW", d["Market"]["TR"]["ntc_exp"] == [[0, 166]])
-    d = ntc_day([[0, 200]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    d = ntc_day([[0, 200]]); U.merge_market_lists(d, ntc_day([[0, 166]]))
     check("NTC: νέα διαφορετική τιμή → η νέα (200 MW)", d["Market"]["TR"]["ntc_exp"] == [[0, 200]])
-    d = ntc_day([[0, 0]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    d = ntc_day([[0, 0]]); U.merge_market_lists(d, ntc_day([[0, 166]]))
     check("NTC: νέα τιμή 0 (κλειστή γραμμή) → το 0, όχι το παλιό", d["Market"]["TR"]["ntc_exp"] == [[0, 0]])
-    d = ntc_day([[0, None], [10, 300]]); U.merge_ntc(d, ntc_day([[0, 166]]))
+    d = ntc_day([[0, None], [10, 300]]); U.merge_market_lists(d, ntc_day([[0, 166]]))
     check("NTC: ώρες 00–10 χωρίς τιμή → 166, από τις 10 η νέα 300", d["Market"]["TR"]["ntc_exp"] == [[0, 166], [10, 300]],
           str(d["Market"]["TR"]["ntc_exp"]))
-    d = ntc_day([], [[0, 100], [1, 150]]); U.merge_ntc(d, ntc_day([[0, 166]], [[0, 50]]))
+    d = ntc_day([], [[0, 100], [1, 150]]); U.merge_market_lists(d, ntc_day([[0, 166]], [[0, 50]]))
     check("NTC: κάθε κατεύθυνση χωριστά (εξαγωγή από τα παλιά, εισαγωγή η νέα)",
           d["Market"]["TR"]["ntc_exp"] == [[0, 166]] and d["Market"]["TR"]["ntc_imp"] == [[0, 100], [1, 150]])
-    d = ntc_day([]); U.merge_ntc(d, ntc_day([]))
+    d = ntc_day([]); U.merge_market_lists(d, ntc_day([]))
     check("NTC: ούτε παλιό ούτε νέο → μένει κενό", d["Market"]["TR"]["ntc_exp"] == [])
+
+# 16. Πρόγραμμα / σύζευξη / διαφορά ανά ώρα (D49): χωρίς νέα τιμή → η παλιά· νέα τιμή → η νέα
+def mk_day(cpl, spr, isp):
+    return {"Date": "2026-07-10", "Hourly": [{}] * 24, "Market": {"BG": {"cpl": cpl, "spr": spr, "isp": isp}}}
+with mock.patch.object(U, "log", lambda m: None):
+    d = mk_day([None] * 24, [None] * 24, [100.0] * 24); U.merge_market_lists(d, mk_day([4] * 24, [0.0] * 24, [90.0] * 24))
+    check("σύζευξη: τιμές ΒΓ χωρίς απάντηση → κρατά «συζευγμένη» (cpl 4, spr 0) της 10 Ιουλ", d["Market"]["BG"]["cpl"] == [4] * 24 and d["Market"]["BG"]["spr"] == [0.0] * 24)
+    check("πρόγραμμα: νέα τιμή ανά ώρα → η νέα (100 MW, όχι 90)", d["Market"]["BG"]["isp"] == [100.0] * 24)
+    d = mk_day([0] * 12 + [None] * 12, [-5.0] * 12 + [None] * 12, []); U.merge_market_lists(d, mk_day([4] * 24, [0.0] * 24, [90.0] * 24))
+    check("σύζευξη: μόνο οι ώρες χωρίς τιμή από τα παλιά· κενό πρόγραμμα → το παλιό",
+          d["Market"]["BG"]["cpl"] == [0] * 12 + [4] * 12 and d["Market"]["BG"]["spr"] == [-5.0] * 12 + [0.0] * 12 and d["Market"]["BG"]["isp"] == [90.0] * 24)
+    d = mk_day([None] * 24, [None] * 24, [None] * 24); U.merge_market_lists(d, mk_day([4] * 25, [0.0] * 25, [90.0] * 25))
+    check("σύζευξη: παλιά ημέρα με 25 ώρες δεν ανακατεύεται με 24", d["Market"]["BG"]["cpl"] == [None] * 24)
 
 # 15. Η ανάλυση δεν αλλάζει τις ημέρες που της δίνονται (D48: οι ίδιες ημέρες γράφονται μετά στους μήνες)
 import copy as _copy, json as _json

@@ -63,7 +63,8 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Phase A (batch 29, D46): monthly files next to the single files~~
 - ~~NTC protection (batch 30, D47)~~; GR→TR NTC of 11–15 Nov restored by a run on 15 Nov
 - ~~Phase B (batch 31, D48): page and pipeline on the monthly files; single files removed; README tab table~~
-- **Next:** fetch the NTC for 16 Jun – 30 Sep 2026 (D42), four manual runs, one per month (≈5 KB per summer month, nothing on the first load)
+- ~~Summer NTC 16 Jun – 30 Sep 2026 (D42): four manual runs on 15 Nov~~; all borders filled
+- ~~Protection of every hourly list of a line (batch 32, D49)~~; repair runs 2026-07-10 and 2026-11-08
 - Later, if `data_size.py` warns (first load over 150 KB, years away): split the daily cash of the core by year
 
 ## Checks with a date
