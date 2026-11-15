@@ -58,11 +58,13 @@ Order of work for aligning this dashboard with the hub house style (live-greekpo
 - ~~Batch 22 — capacity probe (D40)~~
 - ~~Batch 23 — NTC per border and hour from ENTSO-E (all five borders), exact reduced / zero capacity sentences, NTC step lines in the charts~~ (D41); AL / MK / TR schedule not stored (size). Earlier plan: exact limitation sentences ("GR→AL: NTC 100 MW 08–18 CET, usually 400") and "at 98 % of the available capacity"
 
-## Data files — next priority (≈ 60 days to the 250 KB limit after the D42 NTC fetch from 1 Oct)
+## Data files — in progress (started 15 Nov 2026, owner's decision)
 
-- After the move to monthly files: fetch the NTC for 16 Jun – 30 Sep 2026 (D42)
+- **Phase A (batch 29, D46):** the pipeline writes `manifest.json`, `months/`, `facts/` and `analysis_core.json` next to the single files; the page is unchanged. After the upload: one short manual run (start and end = today) to create them, then compare
+- **Phase B (D47):** the page reads the manifest, the core and only the months it shows; the single files `historical_flows.json`, `analysis.json`, `meta.json` are removed; README tab table (six tabs) updated
+- **Then:** fetch the NTC for 16 Jun – 30 Sep 2026 (D42), four manual runs, one per month
 
-Measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
+Original plan (3 Nov 2026), measured by `scripts/data_size.py` (K03): after D34 (one day per line, new fields as lists) ≈163 KB gzip once the history is fetched again, growing ≈1.1 KB/day; the 250 KB limit about 83 days away (late January 2027):
 
 - one file **per month** (`data/months/2026-10.json`) plus a `manifest.json` (list of days and their completeness, last / next update; replaces `meta.json`);
 - the page downloads the manifest and only the months it shows (normally the current one, ≈20–30 KB); MTD needs a whole month anyway, so a monthly file fits it exactly;

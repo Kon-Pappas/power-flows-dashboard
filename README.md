@@ -33,9 +33,11 @@ The **transfer capacity (NTC)** of every border comes from the ENTSO-E Transpare
 - `data/meta.json`: time of the run and of the next scheduled run, shown in the page header.
 - `data/analysis.json` (also feeds the **By country** tab): the interconnection analysis built from the whole history (cash per country, line status, saturation of the Bulgaria and Italy lines, line ceilings, facts of each day); see `docs/DECISIONS.md`, D34.
 
+Since 15 Nov 2026 (D46) the run also writes the same data **by month**, next to the files above: `data/manifest.json` (days and their completeness, months, last / next update), `data/months/YYYY-MM.json` (the days of each month), `data/facts/YYYY-MM.json` (the facts of each month's days) and `data/analysis_core.json` (the whole-period analysis without the daily facts). The page will move to them in the next step (D47); until then it reads the single files.
+
 After every fetch the workflow prints the size of the data file (`scripts/data_size.py`; you can also run it yourself: `python3 scripts/data_size.py`).
 
-Before every fetch the workflow runs two offline checks, `scripts/test_dst_days.py` (days of 23, 24 and 25 hours, Greek time, Crete) and `scripts/test_analysis.py` (the interconnection analysis); if it fails, nothing is fetched or written.
+Before every fetch the workflow runs three offline checks, `scripts/test_dst_days.py` (days of 23, 24 and 25 hours, Greek time, Crete), `scripts/test_analysis.py` (the interconnection analysis) and `scripts/test_split.py` (the monthly files equal the single files); if it fails, nothing is fetched or written.
 
 A run for a date range can be started by hand: *Actions → Daily Power Flows Fetcher → Run workflow*, with a start date and, optionally, an end date (empty = up to today). The workflow needs the repository secret `ENTSOE_TOKEN`.
 
@@ -49,6 +51,8 @@ The page counts visits with **GoatCounter** (`konpappas.goatcounter.com`): one s
 index.html                 page (Tailwind + Chart.js)
 dashboard.js               page logic, texts in English and Greek, methodology
 scripts/update_flows.py    data pipeline (Python)
+scripts/analysis.py        interconnection analysis (analysis.json)
+scripts/split_data.py      monthly files (D46)
 data/                      data files written by the pipeline
 docs/                      decisions, known issues, roadmap
 .github/workflows/         the update workflow

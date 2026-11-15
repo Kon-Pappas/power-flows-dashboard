@@ -946,6 +946,13 @@ if __name__ == "__main__":
     except Exception as e:
         log(f"   ! analysis.json: δεν ενημερώθηκε ({type(e).__name__}: {e})")
 
+    # Μηνιαία αρχεία (D46), δίπλα στα ενιαία που διαβάζει ακόμα η σελίδα. Αν αποτύχει, τα ενιαία μένουν σωστά.
+    try:
+        import split_data
+        split_data.write_split(log=log)
+    except Exception as e:
+        log(f"   ! μηνιαία αρχεία (D46): δεν ενημερώθηκαν ({type(e).__name__}: {e})")
+
     log("--- Σύνοψη ---")
     for d in dates_to_fetch:
         fl = by_date[d]["Flags"]
