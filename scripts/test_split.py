@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Έλεγχος των μηνιαίων αρχείων (D46), χωρίς δίκτυο: τα μηνιαία πρέπει να λένε ΑΚΡΙΒΩΣ ό,τι και τα ενιαία.
-Τρέχει (α) σε τεχνητό ιστορικό γνωστής απάντησης και (β) στα πραγματικά αρχεία του repo, σε προσωρινό φάκελο
-(τα αρχεία του repo δεν αλλάζουν).
+"""Έλεγχος των μηνιαίων αρχείων (D46, D48), χωρίς δίκτυο.
+(α) τεχνητό ιστορικό γνωστής απάντησης· (β) η μετάβαση από τα παλιά ενιαία αρχεία· (γ) τα πραγματικά αρχεία του
+repo, σε προσωρινό φάκελο: διάβασμα και ξαναγράψιμο δίνουν ακριβώς τα ίδια αρχεία (τα αρχεία του repo δεν αλλάζουν).
 Τρέξε από τη ρίζα του repo:  python3 scripts/test_split.py
 """
 import json
@@ -25,24 +25,6 @@ def check(name, cond, info=""):
     ok += 1
 
 
-def reassemble(data_dir):
-    """Ξαναφτιάχνει τα ενιαία από τα μηνιαία, όπως θα τα δει η σελίδα."""
-    man = json.loads((data_dir / "manifest.json").read_text(encoding="utf-8"))
-    flows, facts, limits = [], {}, {}
-    for m in man["months"]:
-        part = json.loads((data_dir / "months" / f"{m}.json").read_text(encoding="utf-8"))
-        assert all(d["Date"][:7] == m for d in part), m
-        flows += part
-        fa = json.loads((data_dir / "facts" / f"{m}.json").read_text(encoding="utf-8"))
-        assert fa["month"] == m and all(k[:7] == m for k in list(fa["days"]) + list(fa["limits"])), m
-        facts.update(fa["days"])
-        limits.update(fa["limits"])
-    core_p = data_dir / "analysis_core.json"
-    core = json.loads(core_p.read_text(encoding="utf-8")) if core_p.exists() else None
-    return man, flows, facts, limits, core
-
-
-# 1. Τεχνητό ιστορικό: 3 μήνες, μία ελλιπής ημέρα, μία ημέρα χωρίς γεγονότα
 def day(date, complete=True):
     return {"Date": date, "Totals": {"SCADA": {"BG": 1}}, "Hourly": [{"SCADA_BG": 1.5}] * 24,
             "Flags": {"scada": True, "complete": complete}}
@@ -53,12 +35,13 @@ analysis = {"generated": "2026-11-02T05:00:00Z", "cash": {"daily": {"2026-09-30"
             "days": {"2026-09-30": [{"type": "a"}], "2026-10-31": [], "2026-11-02": [{"type": "b"}]},
             "limits": {"2026-11-02": {"BG": {"to_n": 500}}}}
 meta = {"fetched": "2026-11-02T05:06:00Z", "next_update": "2026-11-03T05:02:00Z"}
+
+# 1. Τεχνητό ιστορικό
 files = S.split(flows, analysis, meta)
-check("τεχνητό: 3 μήνες, νεότερος πρώτος", json.loads(files["manifest.json"])["months"] == ["2026-11", "2026-10", "2026-09"])
-check("τεχνητό: 3 + 3 μηνιαία + manifest + core = 8 αρχεία", len(files) == 8, str(sorted(files)))
-m10 = json.loads(files["months/2026-10.json"])
-check("τεχνητό: Οκτώβριος = 31 Οκτ, 1 Οκτ (νεότερη πρώτη)", [d["Date"] for d in m10] == ["2026-10-31", "2026-10-01"])
 man = json.loads(files["manifest.json"])
+check("τεχνητό: 3 μήνες, νεότερος πρώτος", man["months"] == ["2026-11", "2026-10", "2026-09"])
+check("τεχνητό: 3 + 3 μηνιαία + manifest + core = 8 αρχεία", len(files) == 8, str(sorted(files)))
+check("τεχνητό: Οκτώβριος = 31 Οκτ, 1 Οκτ (νεότερη πρώτη)", [d["Date"] for d in json.loads(files["months/2026-10.json"])] == ["2026-10-31", "2026-10-01"])
 check("τεχνητό: πληρότητα στο manifest (1 Οκτ ελλιπής)", man["days"]["2026-10-01"] is False and man["days"]["2026-11-02"] is True)
 check("τεχνητό: ημέρες manifest νεότερη πρώτη", list(man["days"]) == ["2026-11-02", "2026-11-01", "2026-10-31", "2026-10-01", "2026-09-30"])
 check("τεχνητό: τελευταία / επόμενη ενημέρωση στο manifest", man["fetched"] == meta["fetched"] and man["next_update"] == meta["next_update"])
@@ -67,48 +50,57 @@ check("τεχνητό: core χωρίς days / limits, με cash και status", 
 f11 = json.loads(files["facts/2026-11.json"])
 check("τεχνητό: γεγονότα και όρια Νοεμβρίου", f11["days"] == {"2026-11-02": [{"type": "b"}]} and f11["limits"] == {"2026-11-02": {"BG": {"to_n": 500}}})
 f10 = json.loads(files["facts/2026-10.json"])
-check("τεχνητό: Οκτώβριος: 31 Οκτ χωρίς γεγονότα (κενή λίστα), 1 Οκτ λείπει όπως στο analysis", f10["days"] == {"2026-10-31": []} and f10["limits"] == {})
-check("τεχνητό: χωρίς analysis → ημέρες, κενά γεγονότα, manifest, χωρίς core", sorted(S.split(flows, None, None)) ==
-      sorted(["manifest.json", "months/2026-11.json", "months/2026-10.json", "months/2026-09.json",
-              "facts/2026-11.json", "facts/2026-10.json", "facts/2026-09.json"]))
+check("τεχνητό: Οκτώβριος: 31 Οκτ χωρίς γεγονότα (κενή λίστα), 1 Οκτ λείπει όπως στην ανάλυση", f10["days"] == {"2026-10-31": []} and f10["limits"] == {})
+check("τεχνητό: χωρίς ανάλυση → μόνο ημέρες και manifest (γεγονότα / core μένουν όπως ήταν)",
+      sorted(S.split(flows, None, meta)) == ["manifest.json", "months/2026-09.json", "months/2026-10.json", "months/2026-11.json"])
 
-# 2. Εγγραφή σε φάκελο: μόνο τα αλλαγμένα ξαναγράφονται· μήνας που έφυγε σβήνεται
 with tempfile.TemporaryDirectory() as tmp:
     t = Path(tmp)
+    # 2. Μετάβαση (D48): μόνο τα παλιά ενιαία αρχεία → διαβάζονται, γράφονται οι μήνες, σβήνονται τα ενιαία
     (t / "historical_flows.json").write_text(S.days_text(flows), encoding="utf-8")
     (t / "analysis.json").write_text(json.dumps(analysis), encoding="utf-8")
     (t / "meta.json").write_text(json.dumps(meta), encoding="utf-8")
-    (t / "months").mkdir()
-    (t / "months" / "2026-05.json").write_text("[]", encoding="utf-8")       # μήνας που δεν υπάρχει πια
-    (t / "months" / "notes.txt").write_text("x", encoding="utf-8")           # ό,τι δεν είναι ΕΕΕΕ-ΜΜ.json μένει
+    loaded = S.load_days(t)
+    check("μετάβαση: διαβάζει το παλιό ενιαίο όταν δεν υπάρχουν μήνες", [d["Date"] for d in loaded] == [d["Date"] for d in sorted(flows, key=lambda d: d["Date"], reverse=True)])
+    S.write_split(loaded, analysis, meta, t, log=lambda m: None)
+    check("μετάβαση: σβήνονται historical_flows.json και analysis.json", not (t / "historical_flows.json").exists() and not (t / "analysis.json").exists())
+    check("μετάβαση: το meta.json μένει (το διαβάζει το hub)", (t / "meta.json").exists())
+    check("μετάβαση: μετά διαβάζει από τους μήνες, ίδιες ημέρες", S.load_days(t) == loaded)
+
+    # 3. Εγγραφή: μόνο τα αλλαγμένα· μήνας που έφυγε σβήνεται· χωρίς ανάλυση τα γεγονότα μένουν
+    (t / "months" / "2026-05.json").write_text("[]", encoding="utf-8")
+    (t / "months" / "notes.txt").write_text("x", encoding="utf-8")
     logs = []
-    S.write_split(t, log=logs.append)
+    S.write_split(S.load_days(t), analysis, meta, t, log=logs.append)
     check("φάκελος: σβήνεται μόνο το 2026-05.json", not (t / "months" / "2026-05.json").exists() and (t / "months" / "notes.txt").exists())
     logs.clear()
-    S.write_split(t, log=logs.append)
-    check("φάκελος: δεύτερη εκτέλεση χωρίς αλλαγές → τίποτα δεν ξαναγράφεται", "άλλαξαν 0" in logs[-1], logs[-1])
+    S.write_split(S.load_days(t), analysis, meta, t, log=logs.append)
+    check("φάκελος: δεύτερη εγγραφή χωρίς αλλαγές → τίποτα δεν ξαναγράφεται", "άλλαξαν 0" in logs[-1], logs[-1])
+    before = (t / "facts" / "2026-11.json").read_text(encoding="utf-8")
+    S.write_split(S.load_days(t), None, dict(meta, fetched="2026-11-03T05:06:00Z"), t, log=lambda m: None)
+    m2 = json.loads((t / "manifest.json").read_text(encoding="utf-8"))
+    check("ανάλυση απέτυχε: γεγονότα και core ίδια, το manifest κρατά την ώρα της προηγούμενης ανάλυσης",
+          (t / "facts" / "2026-11.json").read_text(encoding="utf-8") == before and (t / "analysis_core.json").exists()
+          and m2["analysis_generated"] == analysis["generated"] and m2["fetched"] == "2026-11-03T05:06:00Z")
     check("φάκελος: κανένα .tmp δεν μένει", not list(t.rglob("*.tmp")))
 
-# 3. Τα πραγματικά αρχεία του repo, σε αντίγραφο
+# 4. Τα πραγματικά αρχεία του repo, σε αντίγραφο: διάβασμα → εγγραφή δίνει τα ίδια bytes
 src = ROOT / "data"
-if (src / "historical_flows.json").exists():
+if (src / "manifest.json").exists() and (src / "months").is_dir():
     with tempfile.TemporaryDirectory() as tmp:
-        t = Path(tmp)
-        for n in ("historical_flows.json", "analysis.json", "meta.json"):
-            if (src / n).exists():
-                shutil.copy(src / n, t / n)
-        S.write_split(t, log=lambda m: None)
-        flows = json.loads((t / "historical_flows.json").read_text(encoding="utf-8"))
-        an = json.loads((t / "analysis.json").read_text(encoding="utf-8")) if (t / "analysis.json").exists() else {}
-        man, flows2, facts2, limits2, core2 = reassemble(t)
-        check("repo: ίδιες ημέρες, ίδια σειρά (νεότερη πρώτη)", [d["Date"] for d in flows2] == [d["Date"] for d in flows],
-              f"{len(flows2)} ημέρες, {len(man['months'])} μήνες")
-        check("repo: κάθε ημέρα ίδια byte προς byte", all(S._dump(a) == S._dump(b) for a, b in zip(flows, flows2)))
-        check("repo: πληρότητα manifest = Flags.complete", man["days"] == {d["Date"]: bool(d["Flags"].get("complete")) for d in flows})
-        if an:
-            check("repo: γεγονότα ίδια", facts2 == an.get("days", {}), f"{len(facts2)} ημέρες")
-            check("repo: παρατηρούμενα όρια ίδια", limits2 == an.get("limits", {}), f"{len(limits2)} ημέρες")
-            check("repo: core + μηνιαία = analysis.json", dict(core2, days=facts2, limits=limits2) == an)
-        print(f"   (repo: {len(man['months'])} μήνες, {len(flows2)} ημέρες)")
+        t = Path(tmp) / "data"
+        shutil.copytree(src, t)
+        man = json.loads((t / "manifest.json").read_text(encoding="utf-8"))
+        days = S.load_days(t)
+        check("repo: οι ημέρες των μηνών = οι ημέρες του manifest, ίδια σειρά", [d["Date"] for d in days] == list(man["days"]),
+              f"{len(days)} ημέρες, {len(man['months'])} μήνες")
+        check("repo: πληρότητα manifest = Flags.complete", man["days"] == {d["Date"]: bool(d["Flags"].get("complete")) for d in days})
+        check("repo: κάθε μήνας έχει αρχείο γεγονότων", all((t / "facts" / f"{m}.json").exists() for m in man["months"]))
+        before = {p: p.read_bytes() for p in t.rglob("*.json")}
+        S.write_split(days, None, {"fetched": man["fetched"], "next_update": man["next_update"]}, t, log=lambda m: None)
+        after = {p: p.read_bytes() for p in t.rglob("*.json")}
+        check("repo: διάβασμα και ξαναγράψιμο χωρίς αλλαγές → ίδια αρχεία byte προς byte",
+              {p: b for p, b in after.items() if p.name not in S.LEGACY} == {p: b for p, b in before.items() if p.name not in S.LEGACY})
+        print(f"   (repo: {len(man['months'])} μήνες, {len(days)} ημέρες)")
 
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")

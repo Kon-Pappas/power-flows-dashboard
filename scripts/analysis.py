@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Ανάλυση διασυνδέσεων (D34) → data/analysis.json. Υπολογίζεται από ΟΛΟ το ιστορικό σε κάθε εκτέλεση
+Ανάλυση διασυνδέσεων (D34) → data/analysis_core.json και data/facts/ΕΕΕΕ-ΜΜ.json (D48). Υπολογίζεται από ΟΛΟ το ιστορικό σε κάθε εκτέλεση
 (ο κανόνας «το Python υπολογίζει, η σελίδα δείχνει»). Η σελίδα γράφει τις προτάσεις από τα «γεγονότα».
 
 Περιέχει:
@@ -13,6 +13,7 @@
 Όλες οι ώρες σε ώρα Ελλάδας (D33). Δεν χρειάζεται δίκτυο· καλείται από το update_flows.py ή μόνο του:
     python3 scripts/analysis.py
 """
+import copy
 import json
 import math
 from datetime import datetime, timedelta, timezone
@@ -482,7 +483,8 @@ def ntc_facts(day, history, c):
 
 
 def build(days):
-    days = sorted((expand_market(d) for d in days), key=lambda d: d["Date"])
+    # D48: σε αντίγραφο· το expand_market προσθέτει πεδία ανά ώρα, που δεν πρέπει να φτάσουν στα αρχεία των μηνών
+    days = sorted((expand_market(copy.deepcopy(d)) for d in days), key=lambda d: d["Date"])
     cash_daily = {d["Date"]: day_cash(d) for d in days if (d.get("Flags") or {}).get("complete")}
     cash_monthly = {}
     for date, per in cash_daily.items():
@@ -526,13 +528,11 @@ def build(days):
 
 
 def main():
-    days = json.loads((ROOT / "data" / "historical_flows.json").read_text(encoding="utf-8"))
-    out = build(days)
-    tmp = ROOT / "data" / "analysis.json.tmp"
-    tmp.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    tmp.replace(ROOT / "data" / "analysis.json")
+    """Χωρίς δίκτυο: ξαναϋπολογίζει την ανάλυση από τους μήνες και ξαναγράφει γεγονότα / core (D48)."""
+    import split_data
+    out = split_data.rebuild()
     n = sum(len(v) for v in out["days"].values())
-    print(f"analysis.json: {len(out['days'])} days, {n} facts, status {[(c, s['zero_streak']) for c, s in out['status'].items()]}")
+    print(f"analysis: {len(out['days'])} days, {n} facts, status {[(c, s['zero_streak']) for c, s in out['status'].items()]}")
 
 
 if __name__ == "__main__":

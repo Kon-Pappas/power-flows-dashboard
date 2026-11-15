@@ -872,13 +872,6 @@ def merge_ntc(new, old):
                 log(f"   → {new['Date']}: κρατάω το προηγούμενο {k} {c} σε {len(kept)} ώρες (χωρίς νέα τιμή από το ENTSO-E)")
 
 
-def load_existing(json_path):
-    if os.path.exists(json_path) and os.path.getsize(json_path) > 0:
-        with open(json_path, 'r', encoding='utf-8') as f:
-            return json.load(f)   # αν το αρχείο είναι χαλασμένο, σταματάει (ασφαλές)
-    return []
-
-
 def save_atomic(json_path, data):
     """Ατομική εγγραφή. Λίστα ημερών → μία ημέρα ανά γραμμή, χωρίς κενά (D34: ≈ −25 % gzip, ευανάγνωστο diff ανά ημέρα)."""
     tmp = json_path + ".tmp"
@@ -904,14 +897,18 @@ def next_update_utc(now_utc):
     return None
 
 
-def write_meta(now_utc):
-    """data/meta.json (D06): μοναδικός writer αυτό το script. Η σελίδα το διαβάζει για τα
-    «Τελευταία / Επόμενη ενημέρωση». Γράφεται ΜΟΝΟ αφού γραφτούν επιτυχώς τα δεδομένα."""
+def make_meta(now_utc):
+    """data/meta.json (D06): τελευταία λήψη και επόμενη προγραμματισμένη. Από το D48 τα ίδια μπαίνουν και στο
+    manifest.json (τα διαβάζει η σελίδα)· το meta.json μένει γιατί το διαβάζει το hub (kon-pappas.github.io)."""
     nxt = next_update_utc(now_utc)
-    meta = {
+    return {
         "fetched": now_utc.replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "next_update": nxt.replace(microsecond=0).isoformat().replace("+00:00", "Z") if nxt else None,
     }
+
+
+def write_meta(meta):
+    """Γράφεται ΜΟΝΟ αφού γραφτούν επιτυχώς τα δεδομένα."""
     save_atomic(META_PATH, meta)
     log(f"meta.json: fetched={meta['fetched']} next_update={meta['next_update']}")
 
@@ -943,8 +940,8 @@ def dates_from_env():
 if __name__ == "__main__":
     dates_to_fetch = dates_from_env()
 
-    json_path = "data/historical_flows.json"
-    all_data = load_existing(json_path)
+    import split_data
+    all_data = split_data.load_days()                               # D48: από τους μήνες (ή, μία φορά, από το παλιό ενιαίο)
     by_date = {x["Date"]: x for x in all_data}
 
     day_delay = float(os.environ.get("DAY_DELAY_SECONDS", "2"))     # D31: ευγένεια προς ΑΔΜΗΕ / ENTSO-E, όπως στο BESS
@@ -961,22 +958,21 @@ if __name__ == "__main__":
     # Η πληρότητα ξαναϋπολογίζεται για ΟΛΟ το ιστορικό σε κάθε εκτέλεση (D13)
     for day in result:
         day.setdefault("Flags", {})["complete"] = day_complete(day)
-    save_atomic(json_path, result)
-    write_meta(datetime.now(timezone.utc))
 
-    # Ανάλυση διασυνδέσεων (D34) από όλο το ιστορικό → data/analysis.json. Αν αποτύχει, τα δεδομένα μένουν σωστά.
+    # Ανάλυση διασυνδέσεων (D34) από όλο το ιστορικό. Αν αποτύχει, οι ημέρες γράφονται κανονικά και τα
+    # γεγονότα / core μένουν όπως ήταν.
     try:
         import analysis
-        analysis.main()
+        an = analysis.build(result)
+        log(f"analysis: {len(an['days'])} days, {sum(len(v) for v in an['days'].values())} facts, "
+            f"status {[(c, s['zero_streak']) for c, s in an['status'].items()]}")
     except Exception as e:
-        log(f"   ! analysis.json: δεν ενημερώθηκε ({type(e).__name__}: {e})")
+        an = None
+        log(f"   ! analysis: δεν ενημερώθηκε ({type(e).__name__}: {e})")
 
-    # Μηνιαία αρχεία (D46), δίπλα στα ενιαία που διαβάζει ακόμα η σελίδα. Αν αποτύχει, τα ενιαία μένουν σωστά.
-    try:
-        import split_data
-        split_data.write_split(log=log)
-    except Exception as e:
-        log(f"   ! μηνιαία αρχεία (D46): δεν ενημερώθηκαν ({type(e).__name__}: {e})")
+    meta = make_meta(datetime.now(timezone.utc))
+    split_data.write_split(result, an, meta, log=log)              # D48: μήνες, γεγονότα, core, manifest
+    write_meta(meta)
 
     log("--- Σύνοψη ---")
     for d in dates_to_fetch:

@@ -1,10 +1,12 @@
-let rawData = [];
+let rawData = [];          // D48: οι ημέρες των μηνών που έχουν φορτωθεί (νεότερη πρώτη)
+let manifest = null;       // D48: data/manifest.json — όλες οι ημέρες με την πληρότητά τους, οι μήνες, τελευταία / επόμενη ενημέρωση
+const monthCache = {};     // D48: μήνας → { days, facts } από data/months/ΕΕΕΕ-ΜΜ.json και data/facts/ΕΕΕΕ-ΜΜ.json
 let currentLang = 'en';
 // D04 (όπως live D10): αγγλικά από προεπιλογή· η τελευταία επιλογή του επισκέπτη κρατιέται στον browser του,
 // στο κοινό κλειδί kp_lang, οπότε η γλώσσα τον ακολουθεί σε όλο το hub.
 try { const l = localStorage.getItem('kp_lang'); if (l === 'el' || l === 'en') currentLang = l; } catch (e) { /* ιδιωτική περιήγηση */ }
 let metaData = null;
-let analysisData = null;   // data/analysis.json (D34, D36)   // data/meta.json: πότε έγινε η τελευταία λήψη και πότε η επόμενη (D06)
+let analysisData = null;   // D48: data/analysis_core.json (όλη η περίοδος) + τα γεγονότα / όρια των μηνών που έχουν φορτωθεί
 
 let totalsChartInstance = null;
 let flowsChartInstance = null;
@@ -770,7 +772,7 @@ function fmtTimeAthens(isoTs) {
 }
 
 // Τελευταία ενημέρωση = πότε έτρεξε πραγματικά η λήψη· Επόμενη = η επόμενη προγραμματισμένη (cron-job.org, 07:02).
-// Και οι δύο τιμές γράφονται από το scripts/update_flows.py στο data/meta.json· η σελίδα μόνο τις δείχνει.
+// Και οι δύο τιμές γράφονται από το scripts/update_flows.py στο data/manifest.json (D48)· η σελίδα μόνο τις δείχνει.
 function updateHeader() {
     const m = metaData;
     document.getElementById('lastUpdateVal').innerText = m ? fmtTimeAthens(m.fetched) : '–';
@@ -1640,7 +1642,7 @@ function renderCountryTab() {
 const fmtEur = (v) => v >= 1e6 ? `${fmtN(v / 1e6, 1)} ${currentLang === 'el' ? 'εκ. €' : 'M€'}` : `${fmtN(v, 0)} €`;
 function hourSpan(hhmm) { const h = parseInt(hhmm, 10); return `${String(h).padStart(2, '0')}–${String(h + 1).padStart(2, '0')}`; }
 
-// Οι προτάσεις της ημέρας από τα γεγονότα του analysis.json (D34, D35): πρώτα τιμές, μετά πρόγραμμα / μέτρηση / χρήματα
+// Οι προτάσεις της ημέρας από τα γεγονότα της ανάλυσης (D34, D35; data/facts/ΕΕΕΕ-ΜΜ.json, D48): πρώτα τιμές, μετά πρόγραμμα / μέτρηση / χρήματα
 function factSentences(f) {
     const t = i18n[currentLang], S = t.sent, L = t.lineCodes[f.line] || '';
     const dur = (h) => { const q = Math.round(h * 4); if (q < 4) return q === 1 ? S.q1 : S.qn.replace('{n}', q);
@@ -1884,19 +1886,69 @@ function todayAthens() {
     return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Athens' }).format(new Date());   // YYYY-MM-DD
 }
 
+// ---- Μηνιαία αρχεία (D48) ----------------------------------------------------
+// Πρώτη φορά: η τελευταία ΠΛΗΡΗΣ ημέρα (αλλιώς η τελευταία) και ο τελευταίος μήνας.
+function defaultDay() {
+    const done = (manifest && manifest.days) || {};
+    const dates = Object.keys(done).sort().reverse();
+    return dates.find(d => done[d]) || dates[0] || '';
+}
+function defaultMonth() { return ((manifest && manifest.months) || [])[0] || ''; }
+
+// Κατεβάζει όσους από τους μήνες δεν έχουν φορτωθεί ακόμα (ημέρες + γεγονότα). onFile: πρόοδος της οθόνης φόρτωσης.
+async function ensureMonths(list, onFile) {
+    const known = new Set((manifest && manifest.months) || []);
+    const need = [...new Set(list)].filter(m => m && known.has(m) && !monthCache[m]);
+    await Promise.all(need.map(async (m) => {
+        const [days, facts] = await Promise.all([
+            getJSON(`data/months/${m}.json`).then((v) => { if (onFile) onFile(); return v; }),
+            getJSON(`data/facts/${m}.json`).catch((e) => { console.warn(`facts/${m}`, e); return null; })   // όχι κρίσιμο
+                .then((v) => { if (onFile) onFile(); return v; })
+        ]);
+        monthCache[m] = { days: Array.isArray(days) ? days : [], facts };
+    }));
+    if (!need.length) return;
+    rawData = Object.keys(monthCache).sort().reverse().flatMap(m => monthCache[m].days);
+    if (analysisData) {
+        analysisData.days = {}; analysisData.limits = {};
+        Object.values(monthCache).forEach(({ facts }) => {
+            if (!facts) return;
+            Object.assign(analysisData.days, facts.days || {});
+            Object.assign(analysisData.limits, facts.limits || {});
+        });
+    }
+}
+// Ο μήνας της επιλεγμένης ημέρας και ο μήνας του MTD
+function pickedMonths() {
+    return [document.getElementById('dateSelect').value.slice(0, 7), document.getElementById('monthSelect').value];
+}
+let lastPick = null;       // η τελευταία επιλογή που φορτώθηκε· σε αποτυχία λήψης η επιλογή γυρίζει εκεί
+async function onPickChange() {
+    const dSel = document.getElementById('dateSelect'), mSel = document.getElementById('monthSelect');
+    const box = document.getElementById('pickerBox');
+    box.setAttribute('aria-busy', 'true');
+    try {
+        await ensureMonths(pickedMonths());
+    } catch (e) {
+        console.warn('month', e);
+        if (lastPick) { dSel.value = lastPick.d; mSel.value = lastPick.m; }
+    } finally { box.removeAttribute('aria-busy'); }
+    lastPick = { d: dSel.value, m: mSel.value };
+    renderCharts();
+}
+
 // Γεμίζει τις επιλογές· κρατά την τρέχουσα επιλογή (π.χ. όταν αλλάζει η γλώσσα).
 // Πρώτη φορά: τελευταία ΠΛΗΡΗΣ ημέρα και τελευταίος μήνας.
 function fillPickers() {
     const dSel = document.getElementById('dateSelect'), mSel = document.getElementById('monthSelect');
-    const keepDay = rawData.some(r => r.Date === dSel.value) ? dSel.value : null;
+    const done = (manifest && manifest.days) || {};          // D48: όλες οι ημέρες από το manifest, όχι μόνο οι φορτωμένες
+    const keepDay = dSel.value in done ? dSel.value : null;
     const keepMonth = /^\d{4}-\d{2}$/.test(mSel.value) ? mSel.value : null;
     const t = i18n[currentLang], today = todayAthens();
-    const dates = [...new Set(rawData.map(row => row.Date))].sort().reverse();
-    const byDate = {};
-    rawData.forEach(r => { byDate[r.Date] = r; });
-    dSel.innerHTML = dates.map(d => `<option value="${d}">${fmtDay(d)}${d === today ? ` (${t.today})` : ''}${dayComplete(byDate[d]) ? '' : ' ⚠'}</option>`).join('');
-    dSel.value = keepDay || dates.find(d => dayComplete(byDate[d])) || dates[0] || '';
-    const months = [...new Set(rawData.map(row => row.Date.substring(0, 7)))].sort().reverse();
+    const dates = Object.keys(done).sort().reverse();
+    dSel.innerHTML = dates.map(d => `<option value="${d}">${fmtDay(d)}${d === today ? ` (${t.today})` : ''}${done[d] ? '' : ' ⚠'}</option>`).join('');
+    dSel.value = keepDay || defaultDay();
+    const months = ((manifest && manifest.months) || []).slice();
     mSel.innerHTML = months.map(m => `<option value="${m}">${fmtMonth(m)}</option>`).join('');
     mSel.value = keepMonth || months[0] || '';
 }
@@ -1925,20 +1977,25 @@ async function boot() {
         Chart.defaults.plugins.legend.labels.boxHeight = 12;
         Chart.defaults.animation.duration = REDUCE_MOTION ? 0 : 400;
 
-        // Βήμα 1: πραγματική πρόοδος (2 αρχεία: meta + ροές), με ελάχιστο χρόνο ανάγνωσης
+        // Βήμα 1 (D48): πραγματική πρόοδος σε όσα αρχεία κατεβαίνουν — manifest + core, μετά ο μήνας της ημέρας
+        // που θα δειχτεί (και του MTD, αν είναι άλλος), ημέρες + γεγονότα· με ελάχιστο χρόνο ανάγνωσης
         loadActivate(1);
         const t0 = Date.now();
-        const files = [
-            getJSON('data/meta.json').catch((e) => { console.warn('meta.json', e); return null; }),   // όχι κρίσιμο
-            getJSON('data/historical_flows.json'),
-            getJSON('data/analysis.json').catch((e) => { console.warn('analysis.json', e); return null; })   // όχι κρίσιμο (D36)
-        ];
-        let done = 0;
-        const [meta, flows, analysis] = await Promise.all(files.map((p) => p.then((v) => { loadSet(1, Math.round(++done / files.length * 100)); return v; })));
-        if (!Array.isArray(flows) || flows.length === 0) throw new Error('historical_flows.json is empty');
-        rawData = flows;
-        metaData = meta;
-        analysisData = analysis;
+        let done = 0, total = 2;
+        const tick = () => loadSet(1, Math.round(++done / total * 100));
+        const [man, core] = await Promise.all([
+            getJSON('data/manifest.json').then((v) => { tick(); return v; }),
+            getJSON('data/analysis_core.json').catch((e) => { console.warn('analysis_core.json', e); return null; })   // όχι κρίσιμο (D36)
+                .then((v) => { tick(); return v; })
+        ]);
+        if (!man || !man.days || Object.keys(man.days).length === 0) throw new Error('manifest.json has no days');
+        manifest = man;
+        metaData = man;
+        analysisData = core ? Object.assign(core, { days: {}, limits: {} }) : null;
+        const first = [defaultDay().slice(0, 7), defaultMonth()];
+        total += 2 * new Set(first).size;
+        await ensureMonths(first, tick);
+        if (rawData.length === 0) throw new Error('no days loaded');
         updateHeader();
         await pause(Math.max(0, LOAD_MIN_READ - (Date.now() - t0)));
         loadDone(1);
@@ -1946,7 +2003,7 @@ async function boot() {
 
         // Βήματα 2…5: ένα ανά tab, με τη σειρά των tabs
         let day = null;
-        await loadStep(2, async () => { fillPickers(); updatePicker(); day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); updateDayZeroNotes(day); renderTotalsTab(day); });
+        await loadStep(2, async () => { fillPickers(); updatePicker(); lastPick = { d: document.getElementById('dateSelect').value, m: document.getElementById('monthSelect').value }; day = selectedDayData(); updateStatusBadge(day); updateDataNotice(day); updateDayZeroNotes(day); renderTotalsTab(day); });
         await loadStep(3, async () => { renderHourlyTab(day); });
         await loadStep(4, async () => { renderArbitrageTab(day); });
         await loadStep(5, async () => { renderMTDView(); });
@@ -1962,8 +2019,8 @@ async function boot() {
     } catch (err) { loadFailed(err); }
 }
 
-document.getElementById('dateSelect').addEventListener('change', renderCharts);
-document.getElementById('monthSelect').addEventListener('change', renderCharts);
+document.getElementById('dateSelect').addEventListener('change', onPickChange);    // D48: φορτώνει τον μήνα αν χρειάζεται
+document.getElementById('monthSelect').addEventListener('change', onPickChange);
 
 // ---- Κουμπί «επάνω» (κινητό, D29 / BESS D72) ----
 function scrollToTop() {

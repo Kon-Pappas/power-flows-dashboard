@@ -238,4 +238,12 @@ with mock.patch.object(U, "log", lambda m: None):
     d = ntc_day([]); U.merge_ntc(d, ntc_day([]))
     check("NTC: ούτε παλιό ούτε νέο → μένει κενό", d["Market"]["TR"]["ntc_exp"] == [])
 
+# 15. Η ανάλυση δεν αλλάζει τις ημέρες που της δίνονται (D48: οι ίδιες ημέρες γράφονται μετά στους μήνες)
+import copy as _copy, json as _json
+_days = [ntc_day([[0, 166]], [[0, 50]])]
+_days[0].update({"Totals": {"SCADA": {}, "ISP": {}}, "Flags": {"complete": False}})
+_before = _json.dumps(_days, sort_keys=True)
+A.build(_copy.copy(_days))
+check("ανάλυση: οι ημέρες εισόδου μένουν ίδιες (χωρίς πεδία ISP_ / NTC_ ανά ώρα)", _json.dumps(_days, sort_keys=True) == _before)
+
 print(f"\nΌλοι οι έλεγχοι πέρασαν ({ok}).")
