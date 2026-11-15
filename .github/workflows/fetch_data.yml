@@ -41,6 +41,9 @@ jobs:
       - name: Check the interconnection analysis (D34; no network)
         run: python scripts/test_analysis.py
 
+      - name: Check the monthly files (D46; no network)
+        run: python scripts/test_split.py
+
       - name: Run Python script
         env:
           ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
@@ -55,5 +58,5 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Fetcher"
-          git add data/historical_flows.json data/meta.json data/analysis.json
+          git add data/   # D46: all data files, monthly ones included (does not fail if one is missing)
           git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update power flows data" && git push)
